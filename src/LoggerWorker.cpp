@@ -1,12 +1,16 @@
 #include "LoggerWorker.hpp"
 
-LoggerWorker::LoggerWorker(PlayingArea & playingArea,
-	     const bool & stopped,
-	     QVector<SocketWorker> & playersInterfaces,
-	     QVector<QThread> & playersInterfacesThreads,
-	     Qvector<PlayerState> & playersStates,
-	     const qint16 & port)
-  : _port(port),
+LoggerWorker::LoggerWorker(QTcpServer & tcpServer,
+			   QVector<QTcpSocket*> & sockets,
+			   PlayingArea & playingArea,
+			   const bool & stopped,
+			   QVector<SocketWorker> & playersInterfaces,
+			   QVector<QThread> & playersInterfacesThreads,
+			   Qvector<PlayerState> & playersStates,
+			   const qint16 & port)
+  : _tcpServer(tcpServer),
+    _sockets(sockets),
+    _port(port),
     _playingArea(playingArea),
     _stopped(stopped),
     _playersSockets(playersInterfaces),
@@ -19,9 +23,15 @@ void LoggerWorker::waitConnection()
 {
   _server.listen(QHostAddress::Any, _port);
 
-  _socket = _server.nextPendingConnection();
+  connect(_server, SIGNAL(newConnection()), this, SLOT(newConnectionSlot()));
+}
 
-  _playersInterfaces.pushback(SocketWorker(_socket, playingArea, stopped, playersStates));
+void LoggerWorker::newConnectionSlot()
+{
+  _sockets.push_back( _server.nextPendingConnection() );
+  QSocket & socket = **_sockets.rbegin();
+
+  _playersInterfaces.pushback(SocketWorker(socket, playingArea, stopped, playersStates));
   SocketWorker & interface = *_playersInterfaces.rbegin();
 
   _playersInterfacesThreads.push_back(QThread());
@@ -30,4 +40,3 @@ void LoggerWorker::waitConnection()
   connect(interfaceThread, SIGNAL(started()), interface, SLOT(beginInteract()));
      interface.moveToThread(interfaceThread);
 }
-

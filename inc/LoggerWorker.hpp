@@ -15,7 +15,9 @@ class LoggerWorker : public QObject
   Q_OBJECT
 
   public:
-  LoggerWorker(PlayingArea & playingArea,
+  LoggerWorker(QTcpServer & tcpServer,
+	       QVector<QTcpSocket*> & sockets,
+	       PlayingArea & playingArea,
 	       Qvector<PlayerState> & playersStates,
 	       const bool & stopped,
 	       QVector<SocketWorker> & playersInterfaces,
@@ -28,11 +30,12 @@ signals:
 
 public slots:
   void waitConnection();
+  void newConnectionSlot();
 
 private:
-  QTcpServer _server;
-  QTcpSocket _socket;
-  qint16 _port;
+  QTcpServer & _tcpServer;
+  QVector<QTcpSocket*> & _sockets;
+  const qint16 & _port;
 
   PlayingArea & _playingArea;
   const bool & _stopped;

@@ -25,6 +25,9 @@ private:
   PlayingArea _playingArea; //shared memory
   bool _stopped; //shared memory (read only for other threads)
 
+  QTcpServer _tcpServer;
+  QVector<QTcpSocket*> _sockets;
+
   GameStateWorker _gameStateChecker;
   LoggerWorker _playerLogger;
   QVector<SocketWorker> _playersInterfaces;
