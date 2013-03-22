@@ -6,11 +6,14 @@ PongServer::PongServer(const int & maxPlayers,
   : _maxPlayers(maxPlayers),
     _playingArea(renderAreaWidth, ball),
     _gameStateChecker(_playingArea, _playersStates, _stopped),
-    _playerLogger(_playersSockets, _playersSocketsThreads, _playersStates)
+    _playerLogger(_playingArea, _playersStates, _stopped, _playersInterfaces, _playersInterfacesThreads, _playersStates)
 {
-  connect(gameStateCheckerThread, SIGNAL(started()), gameStateChecker, SLOT(checkState()));
+  connect(_gameStateCheckerThread, SIGNAL(started()), gameStateChecker, SLOT(checkState()));
 
   connect(_playersLoggerThread, SIGNAL(started()), playersLogger, SLOT(waitConnection()));
+
+  _gameStateChecker.moveToThread(_gameStateCheckerThread);
+  _playersLogger.moveToThread(_playersLoggerThread);
 }
 
 void PongServer::_begin()

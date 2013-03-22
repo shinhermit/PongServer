@@ -14,7 +14,7 @@ class GameStateWorker : public QObject
   public:
   GameStateWorker(PlayingArea & playingArea,
 		  Qvector<PlayerState> & playersStates,
-		  bool stopped);
+		  const bool & stopped);
 
 public slots:
   void checkState();

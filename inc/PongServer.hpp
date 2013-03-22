@@ -23,16 +23,16 @@ public:
 private:
   short _maxPlayers;
   PlayingArea _playingArea; //shared memory
-  bool _stopped;
+  bool _stopped; //shared memory (read only for other threads)
 
   GameStateWorker _gameStateChecker;
   LoggerWorker _playerLogger;
-  QVector<SocketWorker> _playersSockets;
+  QVector<SocketWorker> _playersInterfaces;
   Qvector<PlayerState> _playersStates; //shared memory
 
   QThread _gameStateCheckerThread;
   QThread _playerLoggerThread;
-  QVector<QThread> _playersSocketsThreads;
+  QVector<QThread> _playersInterfacesThreads;
 
 private slots:
   void _playerLoggedSlot(); //active le bouton "begin"

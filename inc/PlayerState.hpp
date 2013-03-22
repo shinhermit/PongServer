@@ -10,7 +10,7 @@ Q_OBJECT
 public:
   PlayerState(const int & racketPosition=0,
 	      const int & concededPoints=0,
-	      bool failState=false);
+	      const bool & failState=false);
 
 private:
   int _racketPosition;
