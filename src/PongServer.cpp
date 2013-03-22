@@ -1,16 +1,16 @@
 #include "PongServer.hpp"
 
-PongServer::PongServer(const int & maxPlayers=6,
-		       const int & renderAreaWidth=256,
-		       const std::pair<int,int> & ballPosition)
+PongServer::PongServer(const int & maxPlayers,
+		       const int & renderAreaWidth,
+		       const Ball & ball)
   : _maxPlayers(maxPlayers),
-    _playingArea(renderAreaWidth, ballPosition),
+    _playingArea(renderAreaWidth, ball),
     _gameStateChecker(_playingArea, _playersStates, _stopped),
-    _playersLogger(_playersSockets, _playersSocketsThreads, _playersStates)
+    _playerLogger(_playersSockets, _playersSocketsThreads, _playersStates)
 {
   connect(gameStateCheckerThread, SIGNAL(started()), gameStateChecker, SLOT(checkState()));
 
-  connect(_playersLoggerThread, SIGNAL(started()), playersLogger, SLOT(checkState()));
+  connect(_playersLoggerThread, SIGNAL(started()), playersLogger, SLOT(waitConnection()));
 }
 
 void PongServer::_begin()

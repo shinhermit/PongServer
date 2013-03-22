@@ -18,7 +18,7 @@ Q_OBJECT
 public:
   PongServer(const int & maxPlayers=6,
 	     const int & renderAreaWidth=256,
-	     const std::pair<int,int> & ballPosition);
+	     const Ball & ball);
 
 private:
   short _maxPlayers;
