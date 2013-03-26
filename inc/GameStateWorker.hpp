@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QList>
 #include <QGraphicsItem>
+#include <QPointF>
 #include <QVector>
 #include <QMutex>
 

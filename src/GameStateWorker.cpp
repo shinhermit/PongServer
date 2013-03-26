@@ -9,6 +9,24 @@ GameStateWorker::GameStateWorker(PlayingArea & playingArea,
 
 void GameStateWorker::_update_rackets()
 {
+  for(int i=0; i < _playersStates.size(); ++i)
+    {
+      QLine racket;
+      QPointF & playinAreaCenter = _playingArea.centerPoint();
+      int & nbPlayers = playersStates.size();
+
+      _playersStatesMutexes[i].lock();
+      QLine racket = _playersStates[i].relativeRacket();
+      _playersStatesMutexes[i].unlock();
+
+      //racket.setTransformOriginPoint( playingAreaCenter ); //plûtot dans la classe qui communique avec le processus distant
+      racket.setRotation( i * (360/nbPlayers) );
+
+      _playingAreaMutex.lock();
+      _playingArea.racket(i).setP1( racket.p1() );
+      _playingArea.racket(i).setP2( racket.p2() );
+      _playingAreaMutex.unlock();
+    }
 }
 
 void GameStateWorker::_check_collisions()
