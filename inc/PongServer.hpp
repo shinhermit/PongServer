@@ -32,7 +32,7 @@ private:
   //Mutexes for shared memories
   QMutex _playingAreaMutex;
   QMutex _stoppedMutex;
-  QVector<PlayerState> _playersStatesMutexes;
+  QVector<QMutex> _playersStatesMutexes;
 
   //network
   QTcpServer _tcpServer;

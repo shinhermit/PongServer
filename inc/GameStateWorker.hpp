@@ -12,6 +12,7 @@
 
 #include "PlayingArea.hpp"
 #include "PlayerState.hpp"
+#include "PongTypes.hpp"
 
 class GameStateWorker : public QObject
 {
@@ -22,8 +23,8 @@ class GameStateWorker : public QObject
 		  QMutex & playingAreaMutex,
 		  Qvector<PlayerState> & playersStates,
 		  Qvector<QMutex> & playersStatesMutexes,
-		  const bool & stopped,
-		  QMutex & stoppedMutex);
+		  GameState & gameState,
+		  QMutex & gameState);
 
 public slots:
   void checkState();
@@ -31,11 +32,11 @@ public slots:
 private:
   PlayingArea & _playingArea;
   Qvector<PlayerState> & _playersStates;
-  const bool & _stopped;
+  GameState & _gameState;
 
   QMutex & _playingAreaMutex;
   Qvector<QMutex> & _playersStatesMutexes;
-  QMutex & _stoppedMutex;
+  QMutex & _gameStateMutex;
 
   //read rackets delta(x)
   //update playingArea
@@ -43,15 +44,25 @@ private:
 
   void _check_collisions();
 
-  void _manage_goal();
+  //change credits (ie conceded goals)
+  //eventually discard player
+  //bring in a new ball (position+direction+speed)
+  void _manage_goal(const int & cageIndex);
 
-  void _manage_racket_collision();
+  //=> remove cage (+ racket ?) of the player
+  //put player in discarded state
+  void _discard_player(const int & racketIndex);
 
-  void _manage_wall_collision();
+  //determine ball (position, direction)
+  void _manage_wall_collision(const int & wallIndex);
+
+  //determine ball (position, direction, speed)
+  //eventually according to the the racket speed
+  void _manage_racket_collision(const int & racketIndex);
 
   bool _game_over();
 
-    void _manage_game_over();
+  void _manage_game_over();
 
   //just moves the ball in the direction of
   //ball _playingArea.ball().direction()
