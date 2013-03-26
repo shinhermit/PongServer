@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QThread>
 #include <QVector>
+#include <QMutex>
 
 #include <utility>
 
@@ -22,17 +23,27 @@ public:
 
 private:
   short _maxPlayers;
+
+  //shared memories
   PlayingArea _playingArea; //shared memory
   bool _stopped; //shared memory (read only for other threads)
+  Qvector<PlayerState> _playersStates; //shared memory
 
+  //Mutexes for shared memories
+  QMutex _playingAreaMutex;
+  QMutex _stoppedMutex;
+  QVector<PlayerState> _playersStatesMutexes;
+
+  //network
   QTcpServer _tcpServer;
   QVector<QTcpSocket*> _sockets;
 
+  //worker classes for threads
   GameStateWorker _gameStateChecker;
   LoggerWorker _playerLogger;
   QVector<SocketWorker> _playersInterfaces;
-  Qvector<PlayerState> _playersStates; //shared memory
 
+  //thread objects
   QThread _gameStateCheckerThread;
   QThread _playerLoggerThread;
   QVector<QThread> _playersInterfacesThreads;
