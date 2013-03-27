@@ -1,10 +1,8 @@
 #ifndef _Ball
 #define _Ball
 
-class Ball : public QObject
+class Ball
 {
-  Q_OBJECT
-
   public:
   Ball(int xcoord, int ycoord, int radius);
 

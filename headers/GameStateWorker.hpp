@@ -12,19 +12,18 @@
 
 #include "PlayingArea.hpp"
 #include "PlayerState.hpp"
+#include "GameState.hpp"
 #include "PongTypes.hpp"
 
-class GameStateWorker : public QObject
+class GameStateWorker
 {
-  Q_OBJECT
-
   public:
   GameStateWorker(PlayingArea & playingArea,
 		  QMutex & playingAreaMutex,
 		  Qvector<PlayerState> & playersStates,
 		  Qvector<QMutex> & playersStatesMutexes,
 		  GameState & gameState,
-		  QMutex & gameState);
+		  QMutex & gameStateMutex);
 
 public slots:
   void checkState();

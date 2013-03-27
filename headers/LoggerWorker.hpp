@@ -1,7 +1,6 @@
 #ifndef _LoggerWorker
 #define _LoggerWorker
 
-#include <QObject>
 #include <QThread>
 #include <QVector>
 #include <QTcpServer>
@@ -10,10 +9,8 @@
 #include "PlayerState.hpp"
 #include "SocketWorker.hpp"
 
-class LoggerWorker : public QObject
+class LoggerWorker
 {
-  Q_OBJECT
-
   public:
   LoggerWorker(QTcpServer & tcpServer,
 	       QVector<QTcpSocket*> & sockets,

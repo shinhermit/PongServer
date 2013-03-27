@@ -4,10 +4,8 @@
 #include <QObject>
 #include <QTcpSocket>
 
-class SocketWorker : public QObject
+class SocketWorker
 {
-Q_OBJECT
-
 public:
   SocketWorker(QTcpSocket & _socket,
 	       PlayingArea & playingArea,

@@ -4,8 +4,8 @@ GameStateWorker::GameStateWorker(PlayingArea & playingArea,
 				 QMutex & playingAreaMutex,
 				 Qvector<PlayerState> & playersStates,
 				 Qvector<QMutex> & playersStatesMutexes,
-				 const bool & stopped,
-				 QMutex & stoppedMutex);
+				 GameState & gameState,
+				 QMutex & gameStateMutex);
 
 void GameStateWorker::_update_rackets()
 {
@@ -23,8 +23,7 @@ void GameStateWorker::_update_rackets()
       racket.setRotation( i * (360/nbPlayers) );
 
       _playingAreaMutex.lock();
-      _playingArea.racket(i).setP1( racket.p1() );
-      _playingArea.racket(i).setP2( racket.p2() );
+      _playingArea.setRacketCoord(i, racket.p1(), racket.p2() );
       _playingAreaMutex.unlock();
     }
 }
@@ -35,7 +34,7 @@ void GameStateWorker::_check_collisions()
 
   _playingAreaMutex.lock();
 
-  QList<QGraphicsItem*> colliders = _playingArea.ball().graphicsItem().collidingItems();
+  QList<QGraphicsItem*> colliders = _playingArea.getBallColliders();
 
   if( !colliders.empty() )
     {
@@ -44,19 +43,19 @@ void GameStateWorker::_check_collisions()
       QGraphicsItem & collided = *colliders.at(0);
       
 
-      if( ( pos = _playingArea.cages().indexOf(collided) ) !=  -1)
+      if( ( pos = _playingArea.cageIndex(collided) ) !=  -1)
 	{
 	  _manage_goal(pos);
 	}
 
-      else if( ( pos = _playingArea.rackets().indexOf(collided) ) != -1)
+      else if( ( pos = _playingArea.racketIndex(collided) ) != -1)
 	{
 	  _manage_racket_collision(pos);
 	}
 
       else
 	{
-	  pos = _playingArea.walls().indexOf(collided);
+	  pos = _playingArea.wallIndex(collided);
 
 	  _manage_wall_collision(pos);
 	}
@@ -72,10 +71,10 @@ void GameStateWorker::_manage_goal(const int & cageIndex)
   _gameStateMutex.lock();
 
   //decrease credits
-  _playersStates[cageIndex].decreaseCredits();
+  _playersStates[cageIndex].decreaseCredit();
 
   //discard player ?
-  if( _playersStates[cageIndex].credits() == 0 )
+  if( _playersStates[cageIndex].credit() == 0 )
     {
       if( _playersStates.size() > 2)
 	{
@@ -115,36 +114,67 @@ void GameStateWorker::_discard_player(const int & racketIndex)
 
 void GameStateWorker::_manage_wall_collision(const int & wallIndex)
 {
-  //new direction
-  
+  qreal alpha = _playingArea.walls(i).rotation();
 
-  //new position
+  // change referential to wall's referential
+  //rotation of wall's angle
+  // |cos(a) -sin(a) |
+  // | sin(a) cos(a) |
+  _playingArea.rotateBallDirection(alpha);
+
+  //********** new direction
+  //axial symetry with x axis:
+  // |-1 0 |
+  // | 0 1 |
+  //use QTransform
+  _playingArea.mirrorBallDirection(-1,0,0,1);
+
+  //come back to ball's referential)
+  //rotation of wall's angle
+  // |cos(a) -sin(a) |
+  // |sin(a)  cos(a) |
+  //use QTransform
+  _playinArea.rotateBallDirection(-alpha);
 }
 
 void GameStateWorker::_manage_racket_collision(const int & racketIndex)
 {
+  //for now, just do the same thing
+  //may change later
+  _manage_wall_collision(const int & wallIndex);  
 }
 
 void GameStateWorker::_move_ball()
 {
+  _playingAreaMutex.lock();
+
+  //translate in relative referential
+  _playingArea.moveBall();
+
+  _playingAreaMutex.unlock();
 }
 
 bool GameStateWorker::_game_over()
 {
+  return _gameState.state() == PongTypes::GAMEOVER;
 }
 
 void GameStateWorker::_manage_game_over()
 {
+  //maybe some actions will be needed later
 }
 
 void GameStateWorker::checkState()
 {
-  _update_rackets();
-  _check_collisions();
+  while( !_game_over() )
+    {
+      _update_rackets();
+      _check_collisions();
 
-  if( !_game_over() )
-    _move_ball();
+      if( !_game_over() )
+	_move_ball();
 
-  else
-    _manage_game_over();
+      else
+	_manage_game_over();
+    }
 }

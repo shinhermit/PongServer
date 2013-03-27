@@ -12,10 +12,8 @@
 #include "PlayingArea.hpp"
 #include "PlayerState.hpp"
 
-class PongServer : public QWidget
+class PongServer
 {
-Q_OBJECT
-
 public:
   PongServer(const int & maxPlayers=6,
 	     const int & renderAreaWidth=256,
