@@ -2,35 +2,42 @@
 
 GameStateWorker::GameStateWorker(PlayingArea & playingArea,
 				 QMutex & playingAreaMutex,
-				 Qvector<PlayerState> & playersStates,
-				 Qvector<QMutex> & playersStatesMutexes,
+				 QVector<PlayerState> & playersStates,
+				 QVector<QMutex*> & playersStatesMutexes,
 				 GameState & gameState,
-				 QMutex & gameStateMutex);
+				 QMutex & gameStateMutex)
+ :_playingArea(playingArea),
+  _playersStates(playersStates),
+  _gameState(gameState),
+  _playingAreaMutex(playingAreaMutex),
+  _playersStatesMutexes(playersStatesMutexes),
+  _gameStateMutex(gameStateMutex)
+{}
 
 void GameStateWorker::_update_rackets()
 {
   for(int i=0; i < _playersStates.size(); ++i)
     {
-      QLine racket;
-      QPointF & playinAreaCenter = _playingArea.centerPoint();
-      int & nbPlayers = playersStates.size();
+      QGraphicsLineItem racket;
+      const QPointF & playingAreaCenter = _playingArea.centerPoint();
+      int nbPlayers = _playersStates.size();
 
-      _playersStatesMutexes[i].lock();
-      QLine racket = _playersStates[i].relativeRacket();
-      _playersStatesMutexes[i].unlock();
+      _playersStatesMutexes[i]->lock();
+      racket.setLine( _playersStates[i].relativeRacket() );
+      _playersStatesMutexes[i]->unlock();
 
       racket.setTransformOriginPoint( playingAreaCenter );
       racket.setRotation( i * (360/nbPlayers) );
 
       _playingAreaMutex.lock();
-      _playingArea.setRacketCoord(i, racket.p1(), racket.p2() );
+      _playingArea.setRacketCoord(i, racket.line().p1(), racket.line().p2() );
       _playingAreaMutex.unlock();
     }
 }
 
 void GameStateWorker::_check_collisions()
 {
-  int i pos;
+  int pos;
 
   _playingAreaMutex.lock();
 
@@ -66,7 +73,7 @@ void GameStateWorker::_check_collisions()
 
 void GameStateWorker::_manage_goal(const int & cageIndex)
 {
-  _playersStatesMutexes[cageIndex].lock();
+  _playersStatesMutexes[cageIndex]->lock();
   _playingAreaMutex.lock();
   _gameStateMutex.lock();
 
@@ -93,13 +100,13 @@ void GameStateWorker::_manage_goal(const int & cageIndex)
 
   _gameStateMutex.unlock();
   _playingAreaMutex.unlock();
-  _playersStatesMutexes[cageIndex].unlock();
+  _playersStatesMutexes[cageIndex]->unlock();
 }
 
 void GameStateWorker::_discard_player(const int & racketIndex)
 {
   _playingAreaMutex.lock();
-  _playersStatesMutexes[racketIndex].lock();
+  _playersStatesMutexes[racketIndex]->lock();
 
   //remove cage and racket
   _playingArea.removeCage(racketIndex);
@@ -108,13 +115,15 @@ void GameStateWorker::_discard_player(const int & racketIndex)
   //set playerState to discarded
   _playersStates[racketIndex].setState(PongTypes::DISCARDED);
 
-  _playersStatesMutexes[racketIndex].unlock();
+  _playersStatesMutexes[racketIndex]->unlock();
   _playingAreaMutex.unlock();
 }
 
 void GameStateWorker::_manage_wall_collision(const int & wallIndex)
 {
-  qreal alpha = _playingArea.walls(i).rotation();
+  _playingAreaMutex.lock();
+
+  qreal alpha = _playingArea.getWallRotation(wallIndex);
 
   // change referential to wall's referential
   //rotation of wall's angle
@@ -134,14 +143,16 @@ void GameStateWorker::_manage_wall_collision(const int & wallIndex)
   // |cos(a) -sin(a) |
   // |sin(a)  cos(a) |
   //use QTransform
-  _playinArea.rotateBallDirection(-alpha);
+  _playingArea.rotateBallDirection(-alpha);
+
+  _playingAreaMutex.unlock();
 }
 
 void GameStateWorker::_manage_racket_collision(const int & racketIndex)
 {
   //for now, just do the same thing
   //may change later
-  _manage_wall_collision(const int & wallIndex);  
+  _manage_wall_collision(racketIndex);
 }
 
 void GameStateWorker::_move_ball()

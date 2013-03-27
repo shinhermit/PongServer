@@ -10,6 +10,6 @@ private:
   int _abs;
   int _ord;
   int _rad;
-}
+};
 
 #endif

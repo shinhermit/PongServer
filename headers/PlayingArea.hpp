@@ -27,6 +27,8 @@ public:
   int racketIndex(const QGraphicsItem & item)const;
   int wallIndex(const QGraphicsItem & item)const;
 
+  qreal getWallRotation(const int & wallIndex);
+
   void update();
 
   void resetBall();
@@ -38,17 +40,17 @@ public:
   void moveBall(const qreal & delta=20);
   QList<QGraphicsItem*> getBallColliders()const;
 
-  void setRacketAbss(const int & i,
+  void setRacketAbss(const int & racketIndex,
 		    const qreal & abss);
-  void setRacketOrd(const int & i,
+  void setRacketOrd(const int & racketIndex,
 		    const qreal & ord);
-  void setRacketCoord(const int & i,
-		      const qreal & abss,
-		      const qreal & ord);
+  void setRacketCoord(const int & racketIndex,
+		      const QPointF & p1,
+		      const QPointF & p2);
 
-  void removeCage(const int & i);
-  void removeRacket(const int & i);
-  void removeWall(const int & i);
+  void removeCage(const int & cageIndex);
+  void removeRacket(const int & racketIndex);
+  void removeWall(const int & wallIndex);
 
 private:
   int _renderAreaWidth;

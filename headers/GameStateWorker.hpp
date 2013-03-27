@@ -6,6 +6,8 @@
 #include <QObject>
 #include <QList>
 #include <QGraphicsItem>
+#include <QGraphicsLineItem>
+#include <QLineF>
 #include <QPointF>
 #include <QVector>
 #include <QMutex>
@@ -15,13 +17,15 @@
 #include "GameState.hpp"
 #include "PongTypes.hpp"
 
-class GameStateWorker
+class GameStateWorker : public QObject
 {
-  public:
+Q_OBJECT
+
+public:
   GameStateWorker(PlayingArea & playingArea,
 		  QMutex & playingAreaMutex,
-		  Qvector<PlayerState> & playersStates,
-		  Qvector<QMutex> & playersStatesMutexes,
+		  QVector<PlayerState> & playersStates,
+		  QVector<QMutex*> & playersStatesMutexes,
 		  GameState & gameState,
 		  QMutex & gameStateMutex);
 
@@ -30,11 +34,11 @@ public slots:
 
 private:
   PlayingArea & _playingArea;
-  Qvector<PlayerState> & _playersStates;
+  QVector<PlayerState> & _playersStates;
   GameState & _gameState;
 
   QMutex & _playingAreaMutex;
-  Qvector<QMutex> & _playersStatesMutexes;
+  QVector<QMutex*> & _playersStatesMutexes;
   QMutex & _gameStateMutex;
 
   //read rackets delta(x)
@@ -66,6 +70,6 @@ private:
   //just moves the ball in the direction of
   //ball _playingArea.ball().direction()
   void _move_ball();
-}
+};
 
 #endif
