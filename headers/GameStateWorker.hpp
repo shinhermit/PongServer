@@ -41,35 +41,95 @@ private:
   QVector<QMutex*> & _playersStatesMutexes;
   QMutex & _gameStateMutex;
 
-  //read rackets delta(x)
-  //update playingArea
   void _update_rackets();
 
   void _check_collisions();
 
-  //change credits (ie conceded goals)
-  //eventually discard player
-  //bring in a new ball (position+direction+speed)
   void _manage_goal(const int & cageIndex);
 
-  //=> remove cage (+ racket ?) of the player
-  //put player in discarded state
   void _discard_player(const int & racketIndex);
 
-  //determine ball (position, direction)
   void _manage_wall_collision(const int & wallIndex);
 
-  //determine ball (position, direction, speed)
-  //eventually according to the the racket speed
   void _manage_racket_collision(const int & racketIndex);
 
   bool _game_over();
 
   void _manage_game_over();
 
-  //just moves the ball in the direction of
-  //ball _playingArea.ball().direction()
   void _move_ball();
 };
+
+/*!
+ *\class GameStateWorker GameStateWorker.hpp "headers/GameStateWorker.hpp"
+ * \brief The GameStateWorker class is mean to be runned by a thread
+ *This class checks shared memories and update the game state (rackets positions, game over, discard player, etc.)
+ */
+
+/*!
+* \fn GameStateWorker
+* \param playingArea
+* \param playingAreaMutex
+* \param playersStates
+* \param playersStatesMutexes
+* \param gameState
+* \param gameStateMutex
+*
+* Constructor
+*/
+
+/*!
+ * \fn _update_rackets
+ * read rackets delta(x)
+ * update playingArea
+ */
+
+/*!
+ * \fn _check_collisions
+ */
+
+ /*!
+ * \fn _manage_goal
+ * \param cageIndex
+ * change credits (ie conceded goals)
+ * eventually discard player
+ *bring in a new ball (position+direction+speed)
+ */
+
+/*!
+ * \fn _discard_player
+ * \param racketIndex
+ * remove cage (+ racket ?) of the player
+ * put player in discarded state
+ */
+
+/*!
+ * \fn _manage_wall_collision
+ * \param wallIndex
+ *determine ball (position, direction)
+ */
+
+/*!
+ * \fn _manage_racket_collision
+ * \param racketIndex
+ * determine ball (position, direction, speed)
+ * eventually according to the the racket speed
+ */
+
+/*!
+ * \fn _game_over
+ * \return true if the state of the game is PongTypes::GAMEOVER
+ */
+
+/*!
+ * \fn _manage_game_over
+ * planned for any action eventually needed in a game over state
+ */
+
+/*!
+ * \fn _move_ball
+ * just moves the ball in the direction of
+ * ball _playingArea.ball().direction()
+ */
 
 #endif

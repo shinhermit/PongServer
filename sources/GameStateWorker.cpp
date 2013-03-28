@@ -19,7 +19,7 @@ void GameStateWorker::_update_rackets()
   for(int i=0; i < _playersStates.size(); ++i)
     {
       QGraphicsLineItem racket;
-      const QPointF & playingAreaCenter = _playingArea.centerPoint();
+      const QPointF playingAreaCenter(0,0);
       int nbPlayers = _playersStates.size();
 
       _playersStatesMutexes[i]->lock();
@@ -45,7 +45,7 @@ void GameStateWorker::_check_collisions()
 
   if( !colliders.empty() )
     {
-      assert(colliders.size() == 1);
+      assert( colliders.size() == 1 );
 
       QGraphicsItem & collided = *colliders.at(0);
       
