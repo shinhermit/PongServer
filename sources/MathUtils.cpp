@@ -2,7 +2,7 @@
 
 double MathUtils::DegreeToRadian(const double & alpha)
 {
-    return (alpha * 180) / Pi();
+    return (alpha * Pi()) / 180;
 }
 
 
