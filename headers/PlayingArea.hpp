@@ -20,9 +20,7 @@ public:
                 const QRectF &ball);
 
     PlayingArea(const int & nbPlayers=3,
-                const qreal &renderAreaWidth=350);
-
-    ~PlayingArea();
+                const qreal &renderAreaWidth=350.);
 
     const qreal & centerAngle()const;
     qreal areaWidth()const;
