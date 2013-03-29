@@ -5,9 +5,12 @@
 
 #include <QVector>
 #include <QPointF>
+//#include <QLineF>
 #include <QGraphicsScene>
 #include <QGraphicsLineItem>
 #include <QGraphicsRectItem>
+
+#include "MathUtils.hpp"
 
 class PlayingArea
 {
@@ -20,7 +23,7 @@ public:
                 const QRectF &ball);
 
     PlayingArea(const int & nbPlayers=3,
-                const qreal &renderAreaWidth=350.);
+                const qreal &renderAreaWidth=600.);
 
     const qreal & centerAngle()const;
     qreal areaWidth()const;
@@ -41,7 +44,7 @@ public:
                const qreal & renderAreaWidth,
                const QRectF &ball);
     void reset(const int & nbPlayers=3,
-               const qreal & renderAreaWidth=350);
+               const qreal & renderAreaWidth=600.);
 
     void resetBall();
     void rotateBallDirection(const qreal & alpha);
@@ -79,6 +82,7 @@ private:
     static const qreal _cageRatio;
     static const qreal _racketRatio;
     static const qreal _racketToWallSpace;
+    static const qreal _penWidth;
 };
 
 #endif
