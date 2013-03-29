@@ -13,7 +13,7 @@ void PlayingArea::_generate_area()
     qreal beta = (180 - _centerAngle) / 2;
 
     qreal sideLength = radius * ( ::sin(_centerAngle) / ::sin(beta) );
-    qreal altitude = 2 * radius * ::sin(_centerAngle/2);
+    qreal altitude = -2 * radius * ::sin(_centerAngle/2);
     qreal wallLength = sideLength * _wallRatio;
     qreal cageLength = sideLength * _cageRatio;
 
@@ -24,7 +24,7 @@ void PlayingArea::_generate_area()
 
     dx = (0. - sideLength) / 2;
     _walls[0]->moveBy(dx, dy);
-    _walls[0]->setPen(QPen(Qt::red, 10, Qt::DashDotLine));
+    _walls[0]->setPen(QPen(Qt::red, 3, Qt::DashDotLine));
 
     dx += wallLength;
     _cages[0]->moveBy(dx, dy);
@@ -69,7 +69,7 @@ PlayingArea::PlayingArea(const int & nbPlayers,
     :_nbPlayers(nbPlayers),
       _renderAreaWidth(renderAreaWidth),
       _centerAngle(360/nbPlayers),
-      _scene(new QGraphicsScene( QRectF( -50, -50, 400, 200 ) ) )
+      _scene(new QGraphicsScene( QRectF( -renderAreaWidth/2, -renderAreaWidth/2, renderAreaWidth, renderAreaWidth ) ) )
 {
   _ball = new QGraphicsRectItem(ball, 0, _scene);
   _generate_area();
@@ -80,11 +80,11 @@ PlayingArea::PlayingArea(const int & nbPlayers,
     :_nbPlayers(nbPlayers),
       _renderAreaWidth(renderAreaWidth),
       _centerAngle(360/nbPlayers),
-     _scene(new QGraphicsScene( QRectF( -50, -50, 400, 200 ) ) )
+     _scene(new QGraphicsScene( QRectF( -renderAreaWidth/2, -renderAreaWidth/2, renderAreaWidth, renderAreaWidth) ) )
 {
-  _ball = new QGraphicsRectItem(QRectF( -25, 25, 200, 40 ), 0, _scene);
+  _ball = new QGraphicsRectItem(QRectF( 0, 0, 10, 10 ), 0, _scene);
   _ball->setPen( QPen( Qt::red, 3, Qt::DashDotLine ) );
-  _ball->setBrush( Qt::gray );
+  _ball->setBrush( Qt::red );
   _generate_area();
 }
 
