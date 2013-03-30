@@ -7,6 +7,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsLineItem>
 #include <QGraphicsRectItem>
+#include <QDebug>
 
 #include "Trigo.hpp"
 #include "Random.hpp"
@@ -14,14 +15,16 @@
 class PlayingArea
 {
 private:
+    void _clear_scene();
     void _generate_area(const int & nbPlayers);
     void _generate_area();
     void _set_ball_random_direction();
+    void _init_ball(const QRectF &ballRect);
 
 public:
     PlayingArea(const int & nbPlayers,
                 const qreal & renderAreaWidth,
-                const QRectF &ball);
+                const QRectF &ballRect);
 
     PlayingArea(const int & nbPlayers=3,
                 const qreal &renderAreaWidth=600.);
@@ -30,39 +33,39 @@ public:
     qreal areaWidth()const;
     QGraphicsScene * scene();
 
-    bool isCage(const QGraphicsItem & item)const;
-    bool isRacket(const QGraphicsItem & item)const;
-    bool isWall(const QGraphicsItem & item)const;
+    bool isCage(QGraphicsLineItem *item)const;
+    bool isRacket(QGraphicsLineItem *item)const;
+    bool isWall(QGraphicsLineItem *item)const;
 
-    int cageIndex(const QGraphicsItem & item)const;
-    int racketIndex(const QGraphicsItem & item)const;
-    int wallIndex(const QGraphicsItem & item)const;
+    int cageIndex(QGraphicsLineItem *item)const;
+    int racketIndex(QGraphicsLineItem * item)const;
+    int wallIndex(QGraphicsLineItem *item)const;
 
     qreal getWallRotation(const int & wallIndex);
 
-    void update();
     void reset(const int & nbPlayers,
                const qreal & renderAreaWidth,
-               const QRectF &ball);
+               const QRectF &ballRect);
     void reset(const int & nbPlayers=3,
                const qreal & renderAreaWidth=600.);
 
-    void resetBall();
+    void resetBallPos();
     void rotateBallDirection(const qreal & alpha);
-    void mirrorBallDirection(const qreal & m11,
-                             const qreal & m12,
-                             const qreal & m21,
-                             const qreal & m22);
-    void moveBall(const qreal & delta=20);
+    void mirrorBallDirection(QGraphicsLineItem *axis);
+    void moveBall(const qreal & dx, const qreal &dy);
+    void moveBall();
     QList<QGraphicsItem*> getBallColliders()const;
+
+    void moveRacket(const int &racketIndex,
+                    const qreal & delta);
 
     void setRacketAbss(const int & racketIndex,
                        const qreal & abss);
     void setRacketOrd(const int & racketIndex,
                       const qreal & ord);
     void setRacketCoord(const int & racketIndex,
-                        const QPointF & p1,
-                        const QPointF & p2);
+                        const qreal & x,
+                        const qreal & y);
 
     void removeCage(const int & cageIndex);
     void removeRacket(const int & racketIndex);

@@ -84,11 +84,7 @@ void GameStateWorker::_manage_goal(const int & cageIndex)
   if( _playersStates[cageIndex].credit() == 0 )
     {
       if( _playersStates.size() > 2)
-	{
-	  _discard_player(cageIndex);
-
-	  _playingArea.update();
-	}
+	_discard_player(cageIndex);
 
       else
 	_gameState.setGameOverState(cageIndex);
