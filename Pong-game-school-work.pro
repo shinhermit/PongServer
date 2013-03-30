@@ -12,7 +12,11 @@ QT += network
 HEADERS += headers/PlayingArea.hpp \
            headers/PongTypes.hpp \
            headers/Workers.hpp \
-           headers/MathUtils.hpp
+    headers/Trigo.hpp \
+    headers/Random.hpp
 SOURCES += sources/PlayingArea.cpp \
-           sources/MathUtils.cpp\
-           tests/test_playing_area.cpp
+           tests/test_playing_area.cpp \
+    sources/Trigo.cpp \
+    sources/Random.cpp
+
+OTHER_FILES +=

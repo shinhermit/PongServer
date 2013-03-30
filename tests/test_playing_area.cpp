@@ -31,7 +31,7 @@ int main(int argc, char ** argv)
 
   QApplication app(argc, argv);
 
-  PlayingArea area(3);
+  PlayingArea area(2);
   QGraphicsView view;
 
     view.setScene( area.scene() );

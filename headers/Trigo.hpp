@@ -3,7 +3,10 @@
 
 #include <cmath>
 
-class MathUtils
+namespace MathJ
+{
+
+class Trigo
 {
 public:
     static double DegreeToRadian(const double & alpha);
@@ -13,4 +16,5 @@ public:
     static double Pi();
 };
 
+};
 #endif // MATHUTILS_H

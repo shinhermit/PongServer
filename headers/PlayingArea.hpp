@@ -4,18 +4,19 @@
 #include<cmath>
 
 #include <QVector>
-#include <QPointF>
-//#include <QLineF>
 #include <QGraphicsScene>
 #include <QGraphicsLineItem>
 #include <QGraphicsRectItem>
 
-#include "MathUtils.hpp"
+#include "Trigo.hpp"
+#include "Random.hpp"
 
 class PlayingArea
 {
 private:
+    void _generate_area(const int & nbPlayers);
     void _generate_area();
+    void _set_ball_random_direction();
 
 public:
     PlayingArea(const int & nbPlayers,
@@ -71,9 +72,11 @@ private:
     int _nbPlayers;
     qreal _renderAreaWidth;
     qreal _centerAngle;
+    MathJ::Random _rndGen;
 
     QGraphicsScene * _scene;
-    QGraphicsRectItem * _ball;
+    QGraphicsEllipseItem * _ball;
+    QLineF _ballDirection;
     QVector<QGraphicsLineItem*> _cages;
     QVector<QGraphicsLineItem*> _rackets;
     QVector<QGraphicsLineItem*> _walls;
@@ -83,6 +86,8 @@ private:
     static const qreal _racketRatio;
     static const qreal _racketToWallSpace;
     static const qreal _penWidth;
+    static const qreal _ballRadius;
+    static const qreal _ballTranslateQuantum;
 };
 
 #endif
