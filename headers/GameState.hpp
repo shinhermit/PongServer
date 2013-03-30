@@ -8,14 +8,18 @@ class GameState
   public:
   GameState();
 
-  void setGameOverState(const int & cageIndex);
+  void setGameOver(const int & cageIndex);
+  void setPaused();
+  void setExited();
+  void setRunning();
+  void setNoParty();
 
   const PongTypes::E_GameState & state()const;
+  const int & loserIndex()const;
 
 private:
   PongTypes::E_GameState _state;
-
-  int _gameOverLoserIndex;
+  int _loserIndex;
 };
 
 #endif

@@ -33,13 +33,17 @@ public:
     qreal areaWidth()const;
     QGraphicsScene * scene();
 
-    bool isCage(QGraphicsLineItem *item)const;
-    bool isRacket(QGraphicsLineItem *item)const;
-    bool isWall(QGraphicsLineItem *item)const;
+    bool isCage(QGraphicsItem *item)const;
+    bool isRacket(QGraphicsItem *item)const;
+    bool isWall(QGraphicsItem *item)const;
 
-    int cageIndex(QGraphicsLineItem *item)const;
-    int racketIndex(QGraphicsLineItem * item)const;
-    int wallIndex(QGraphicsLineItem *item)const;
+    int cageIndex(QGraphicsItem *item)const;
+    int racketIndex(QGraphicsItem * item)const;
+    int wallIndex(QGraphicsItem *item)const;
+
+    QGraphicsLineItem * wall(const int & index) const;
+    QGraphicsLineItem * cage(const int & index) const;
+    QGraphicsLineItem * racket(const int & index) const;
 
     qreal getWallRotation(const int & wallIndex);
 

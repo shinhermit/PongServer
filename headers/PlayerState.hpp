@@ -9,21 +9,30 @@
 class PlayerState
 {
 public:
-  PlayerState(const int & racketPosition=0,
-	      const int & concededPoints=0,
-	      const bool & failState=false,
-	      const int & initialCredit=3);
+    PlayerState(const qreal & dxRacket,
+                const int & credit,
+                const PongTypes::E_PlayerState & state=PongTypes::WAITING);
 
-  void decreaseCredit(const int & step=1);
-  void setState(const PongTypes::E_PlayerState & state);
+    PlayerState(const int & credit,
+                const PongTypes::E_PlayerState & state=PongTypes::WAITING);
 
-  const QLineF & relativeRacket()const;
-  const int & credit()const;
+    PlayerState(const PongTypes::E_PlayerState & state=PongTypes::WAITING);
+
+    void setCredit(const int &credit);
+    void decreaseCredit(const int & step=1);
+    void setState(const PongTypes::E_PlayerState & state);
+    void setFailState();
+
+    const qreal & dxRacket()const;
+    const int & credit()const;
+    const PongTypes::E_PlayerState & state()const;
 
 private:
-  QLineF _relativeRacket;
-  int _credit;
-  bool _failState;
+    qreal _dxRacket;
+    int _credit;
+    PongTypes::E_PlayerState _state;
+
+    static const int _defaultCredit;
 };
 
 #endif

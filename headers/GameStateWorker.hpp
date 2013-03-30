@@ -19,45 +19,45 @@
 
 class GameStateWorker : public QObject
 {
-Q_OBJECT
+    Q_OBJECT
 
 public:
-  GameStateWorker(PlayingArea & playingArea,
-		  QMutex & playingAreaMutex,
-		  QVector<PlayerState> & playersStates,
-		  QVector<QMutex*> & playersStatesMutexes,
-		  GameState & gameState,
-		  QMutex & gameStateMutex);
+    GameStateWorker(PlayingArea & playingArea,
+                    QMutex & playingAreaMutex,
+                    QVector<PlayerState> & playersStates,
+                    QVector<QMutex*> & playersStatesMutexes,
+                    GameState & gameState,
+                    QMutex & gameStateMutex);
 
 public slots:
-  void checkState();
+    void checkState();
 
 private:
-  PlayingArea & _playingArea;
-  QVector<PlayerState> & _playersStates;
-  GameState & _gameState;
+    PlayingArea & _playingArea;
+    QVector<PlayerState> & _playersStates;
+    GameState & _gameState;
 
-  QMutex & _playingAreaMutex;
-  QVector<QMutex*> & _playersStatesMutexes;
-  QMutex & _gameStateMutex;
+    QMutex & _playingAreaMutex;
+    QVector<QMutex*> & _playersStatesMutexes;
+    QMutex & _gameStateMutex;
 
-  void _update_rackets();
+    void _update_rackets();
 
-  void _check_collisions();
+    void _check_collisions();
 
-  void _manage_goal(const int & cageIndex);
+    void _manage_goal(const int & cageIndex);
 
-  void _discard_player(const int & racketIndex);
+    void _discard_player(const int & racketIndex);
 
-  void _manage_wall_collision(const int & wallIndex);
+    void _manage_wall_collision(const int & wallIndex);
 
-  void _manage_racket_collision(const int & racketIndex);
+    void _manage_racket_collision(const int & racketIndex);
 
-  bool _game_over();
+    bool _game_over();
 
-  void _manage_game_over();
+    void _manage_game_over();
 
-  void _move_ball();
+    void _move_ball();
 };
 
 /*!
@@ -88,7 +88,7 @@ private:
  * \fn _check_collisions
  */
 
- /*!
+/*!
  * \fn _manage_goal
  * \param cageIndex
  * change credits (ie conceded goals)

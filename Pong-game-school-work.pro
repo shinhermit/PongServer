@@ -13,10 +13,16 @@ HEADERS += headers/PlayingArea.hpp \
            headers/PongTypes.hpp \
            headers/Workers.hpp \
     headers/Trigo.hpp \
-    headers/Random.hpp
+    headers/Random.hpp \
+    headers/PlayerState.hpp \
+    headers/GameState.hpp \
+    headers/GameStateWorker.hpp
 SOURCES += sources/PlayingArea.cpp \
            tests/test_playing_area.cpp \
     sources/Trigo.cpp \
-    sources/Random.cpp
+    sources/Random.cpp \
+    sources/PlayerState.cpp \
+    sources/GameState.cpp \
+    sources/GameStateWorker.cpp
 
 OTHER_FILES +=

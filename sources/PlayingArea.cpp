@@ -159,34 +159,49 @@ QGraphicsScene * PlayingArea::scene()
     return _scene;
 }
 
-bool PlayingArea::isCage(QGraphicsLineItem * item)const
+bool PlayingArea::isCage(QGraphicsItem *item)const
 {
-    return _cages.indexOf(item) != -1;
+    return _cages.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item)) != -1;
 }
 
-bool PlayingArea::isRacket(QGraphicsLineItem *item)const
+bool PlayingArea::isRacket(QGraphicsItem *item)const
 {
-    return _rackets.indexOf(item) != -1;
+    return _rackets.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item)) != -1;
 }
 
-bool PlayingArea::isWall(QGraphicsLineItem * item)const
+bool PlayingArea::isWall(QGraphicsItem *item)const
 {
-    return _walls.indexOf(item) != -1;
+    return _walls.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item)) != -1;
 }
 
-int PlayingArea::cageIndex(QGraphicsLineItem * item)const
+int PlayingArea::cageIndex(QGraphicsItem *item)const
 {
-    return _cages.indexOf(item);
+    return _cages.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item));
 }
 
-int PlayingArea::racketIndex(QGraphicsLineItem *item)const
+int PlayingArea::racketIndex(QGraphicsItem *item)const
 {
-    return _rackets.indexOf(item);
+    return _rackets.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item));
 }
 
-int PlayingArea::wallIndex(QGraphicsLineItem * item)const
+int PlayingArea::wallIndex(QGraphicsItem *item)const
 {
-    return _walls.indexOf(item);
+    return _walls.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item));
+}
+
+QGraphicsLineItem *PlayingArea::wall(const int &index)const
+{
+    return _walls[index];
+}
+
+QGraphicsLineItem *PlayingArea::cage(const int &index) const
+{
+    return _cages[index];
+}
+
+QGraphicsLineItem *PlayingArea::racket(const int &index) const
+{
+    return _rackets[index];
 }
 
 qreal PlayingArea::getWallRotation(const int & wallIndex)
