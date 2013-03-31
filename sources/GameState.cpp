@@ -22,6 +22,11 @@ void GameState::setExited()
     _state = PongTypes::EXITED;
 }
 
+void GameState::setInitializing()
+{
+    _state = PongTypes::INITIALIZING;
+}
+
 void GameState::setRunning()
 {
     _state = PongTypes::RUNNING;

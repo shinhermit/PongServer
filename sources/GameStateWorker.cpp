@@ -3,12 +3,18 @@
 GameStateWorker::GameStateWorker(
         PlayingArea & playingArea,
         QVector<PlayerState*> & playersStates,
+        QMutex & playersStatesMutex,
         GameState & gameState
         ):
+    _downCounter(3),
     _playingArea(playingArea),
     _playersStates(playersStates),
+    _playersStatesMutex(playersStatesMutex),
     _gameState(gameState)
-{}
+{
+    QObject::connect( &_timer, SIGNAL(timeout()), this, SLOT(_count_down()) );
+    QObject::connect( this, SIGNAL(_checkRunningSignal()), this, SLOT(_countDownSlot()) );
+}
 
 void GameStateWorker::_update_rackets()
 {
@@ -138,7 +144,40 @@ void GameStateWorker::_manage_game_over()
     //maybe some actions will be needed later
 }
 
-void GameStateWorker::checkState()
+void GameStateWorker::checkInitSlot()
+{
+    bool ready;
+
+    ready = false;
+    while( !ready )
+    {
+        _playersStatesMutex.lock();
+
+        for(int i=0; i<_playersStates.size() && _playersStates.size() > 1 && ready; ++i)
+        {
+            ready = (_playersStates[i]->state() == PongTypes::READY);
+        }
+
+        if(ready)
+        {
+            _gameState.lock();
+            _gameState.setInitializing();
+            _gameState.unlock();
+        }
+
+        _playersStatesMutex.unlock();
+    }
+
+    _downCounterText = new QGraphicsTextItem( QString::number(_downCounter) );
+
+    _playingArea.lock();
+    _playingArea.scene()->addItem(_downCounterText);
+    _playingArea.unlock();
+
+    _timer.start(1000);
+}
+
+void GameStateWorker::checkRunningSlot()
 {
     while( !_game_over() )
     {
@@ -152,3 +191,29 @@ void GameStateWorker::checkState()
             _manage_game_over();
     }
 }
+
+void GameStateWorker::_countDownSlot()
+{
+    if(_downCounter > 0)
+    {
+        -- _downCounter;
+        _downCounterText->setPlainText( QString::number(_downCounter) );
+    }
+
+    else
+    {
+        _timer.stop();
+
+        _playingArea.lock();
+        _playingArea.scene()->removeItem(_downCounterText);
+        _playingArea.unlock();
+
+        _gameState.lock();
+        _gameState.setRunning();
+        _gameState.unlock();
+
+        emit checkRunningSignal();
+    }
+}
+
+

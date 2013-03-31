@@ -55,6 +55,8 @@ private:
 
     static const short _maxPlayers;
     static const short _maxPending;
+
+    bool _loggableGameState();
 };
 
 #endif

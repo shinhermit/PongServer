@@ -12,6 +12,7 @@ class GameState : public Lockable
   void setGameOver(const int & cageIndex);
   void setPaused();
   void setExited();
+  void setInitializing();
   void setRunning();
   void setNoParty();
 

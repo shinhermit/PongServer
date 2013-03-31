@@ -10,6 +10,7 @@
 #include <QLineF>
 #include <QPointF>
 #include <QVector>
+#include <QTimer>
 
 #include "PlayingArea.hpp"
 #include "PlayerState.hpp"
@@ -24,15 +25,28 @@ public:
     GameStateWorker(
             PlayingArea & playingArea,
             QVector<PlayerState*> & playersStates,
+            QMutex & playersStatesMutex,
             GameState & gameState
             );
 
+signals:
+    void checkRunningSignal();
+
 public slots:
-    void checkState();
+    void checkRunningSlot();
+    void checkInitSlot();
+
+private slots:
+    void _countDownSlot();
 
 private:
+    QTimer _timer;
+    int _downCounter;
+    QGraphicsTextItem * _downCounterText;
+
     PlayingArea & _playingArea;
     QVector<PlayerState*> & _playersStates;
+    QMutex & _playersStatesMutex;
     GameState & _gameState;
 
     void _update_rackets();

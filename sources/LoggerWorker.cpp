@@ -46,14 +46,10 @@ void LoggerWorker::waitConnections()
 
 void LoggerWorker::newConnectionSlot()
 {
-    _gameState.lock();
-    if(_nbAccepted < _maxPlayers && _gameState.state() != PongTypes::RUNNING)
+    if( _nbAccepted < _maxPlayers && _loggableGameState() )
     {
-        _gameState.unlock();
-
         _playersStatesMutex.lock();
         _playersStates.push_back( new PlayerState(*this,PongTypes::ACCEPTED) );
-        _playersStatesMutex.unlock();
 
 
         _sockets.push_back( _tcpServer.nextPendingConnection() );
@@ -69,5 +65,22 @@ void LoggerWorker::newConnectionSlot()
         interface.moveToThread(&interfaceThread);
 
         ++_nbAccepted;
+        _playersStatesMutex.unlock();
     }
+}
+
+bool LoggerWorker::_loggableGameState()
+{
+    bool loggable;
+
+    _gameState.lock();
+    loggable =
+            (_gameState.state() != PongTypes::INITIALIZING
+            &&
+            _gameState.state() != PongTypes::RUNNING
+            &&
+            _gameState.state() != PongTypes::PAUSED);
+    _gameState.unlock();
+
+    return loggable;
 }
