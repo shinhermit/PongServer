@@ -1,44 +1,60 @@
 #ifndef _LoggerWorker
 #define _LoggerWorker
 
+#include <QObject>
 #include <QThread>
 #include <QVector>
+#include <QMutex>
 #include <QTcpServer>
 #include <QTcpSocket>
 
 #include "PlayerState.hpp"
+#include "GameState.hpp"
+#include "PlayingArea.hpp"
 #include "SocketWorker.hpp"
 
-class LoggerWorker
+class LoggerWorker : public QObject
 {
-  public:
-  LoggerWorker(QTcpServer & tcpServer,
-	       QVector<QTcpSocket*> & sockets,
-	       PlayingArea & playingArea,
-	       Qvector<PlayerState> & playersStates,
-	       const bool & stopped,
-	       QVector<SocketWorker> & playersInterfaces,
-	       QVector<QThread> & playersInterfacesThreads,
-	       Qvector<PlayerState> & playersStates,
-	       const qint16 & port=7777);
+    Q_OBJECT
+public:
+    LoggerWorker(
+            QTcpServer & tcpServer,
+            QVector<QTcpSocket*> & sockets,
+            PlayingArea & playingArea,
+            GameState & gameState,
+            QVector<PlayerState*> & playersStates,
+            QMutex & playersStatesMutex,
+            QVector<SocketWorker*> & playersInterfaces,
+            QVector<QThread*> & playersInterfacesThreads,
+            const qint16 & port=7777
+            );
 
+    void reset(const short &nbAcceptable);
+
+    void reset();
 signals:
-  void _playerLoggedSignal(); //active le bouton "begin"
+    void _playerLoggedSignal(); //active le bouton "begin"
 
 public slots:
-  void waitConnection();
-  void newConnectionSlot();
+    void waitConnections();
+    void newConnectionSlot();
 
 private:
-  QTcpServer & _tcpServer;
-  QVector<QTcpSocket*> & _sockets;
-  const qint16 & _port;
+    short _nbAccepted;
+    const qint16 _port;
 
-  PlayingArea & _playingArea;
-  const bool & _stopped;
-  QVector<SocketWorker> & _playersInterfaces;
-  QVector<QThread> & _playersInterfacesThreads;
-  Qvector<PlayerState> & _playersStates;
+    QTcpServer & _tcpServer;
+    QVector<QTcpSocket*> & _sockets;
+
+    PlayingArea & _playingArea;
+    GameState & _gameState;
+    QVector<PlayerState*> & _playersStates;
+    QMutex & _playersStatesMutex;
+    QVector<SocketWorker*> & _playersInterfaces;
+    QVector<QThread*> & _playersInterfacesThreads;
+
+    static const short _maxPlayers;
+    static const short _maxPending;
 };
 
 #endif

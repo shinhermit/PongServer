@@ -16,13 +16,19 @@ HEADERS += headers/PlayingArea.hpp \
     headers/Random.hpp \
     headers/PlayerState.hpp \
     headers/GameState.hpp \
-    headers/GameStateWorker.hpp
+    headers/GameStateWorker.hpp \
+    headers/LoggerWorker.hpp \
+    headers/SocketWorker.hpp \
+    headers/Lockable.hpp
 SOURCES += sources/PlayingArea.cpp \
            tests/test_playing_area.cpp \
     sources/Trigo.cpp \
     sources/Random.cpp \
     sources/PlayerState.cpp \
     sources/GameState.cpp \
-    sources/GameStateWorker.cpp
+    sources/GameStateWorker.cpp \
+    sources/LoggerWorker.cpp \
+    sources/Lockable.cpp \
+    sources/SocketWorker.cpp
 
 OTHER_FILES +=

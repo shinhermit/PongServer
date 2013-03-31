@@ -10,7 +10,6 @@
 #include <QLineF>
 #include <QPointF>
 #include <QVector>
-#include <QMutex>
 
 #include "PlayingArea.hpp"
 #include "PlayerState.hpp"
@@ -22,24 +21,19 @@ class GameStateWorker : public QObject
     Q_OBJECT
 
 public:
-    GameStateWorker(PlayingArea & playingArea,
-                    QMutex & playingAreaMutex,
-                    QVector<PlayerState> & playersStates,
-                    QVector<QMutex*> & playersStatesMutexes,
-                    GameState & gameState,
-                    QMutex & gameStateMutex);
+    GameStateWorker(
+            PlayingArea & playingArea,
+            QVector<PlayerState*> & playersStates,
+            GameState & gameState
+            );
 
 public slots:
     void checkState();
 
 private:
     PlayingArea & _playingArea;
-    QVector<PlayerState> & _playersStates;
+    QVector<PlayerState*> & _playersStates;
     GameState & _gameState;
-
-    QMutex & _playingAreaMutex;
-    QVector<QMutex*> & _playersStatesMutexes;
-    QMutex & _gameStateMutex;
 
     void _update_rackets();
 

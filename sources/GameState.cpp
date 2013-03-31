@@ -5,6 +5,7 @@ GameState::GameState():
     _loserIndex(-1)
 {}
 
+
 void GameState::setGameOver(const int &cageIndex)
 {
     _state = PongTypes::GAMEOVER;

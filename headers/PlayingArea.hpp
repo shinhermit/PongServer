@@ -11,8 +11,9 @@
 
 #include "Trigo.hpp"
 #include "Random.hpp"
+#include "Lockable.hpp"
 
-class PlayingArea
+class PlayingArea : public Lockable
 {
 private:
     void _clear_scene();

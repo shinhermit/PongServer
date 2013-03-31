@@ -5,15 +5,29 @@
 #include <QLineF>
 
 #include "PongTypes.hpp"
+#include "Lockable.hpp"
 
-class PlayerState
+class PlayerState : public QObject, public Lockable
 {
+    Q_OBJECT
 public:
+    PlayerState(QObject & parent,
+                const qreal & dxRacket,
+                const int & credit,
+                const PongTypes::E_PlayerState & state=PongTypes::WAITING);
+
     PlayerState(const qreal & dxRacket,
                 const int & credit,
                 const PongTypes::E_PlayerState & state=PongTypes::WAITING);
 
+    PlayerState(QObject & parent,
+                const int & credit,
+                const PongTypes::E_PlayerState & state=PongTypes::WAITING);
+
     PlayerState(const int & credit,
+                const PongTypes::E_PlayerState & state=PongTypes::WAITING);
+
+    PlayerState(QObject & parent,
                 const PongTypes::E_PlayerState & state=PongTypes::WAITING);
 
     PlayerState(const PongTypes::E_PlayerState & state=PongTypes::WAITING);

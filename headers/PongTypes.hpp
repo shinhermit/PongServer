@@ -3,11 +3,33 @@
 
 struct PongTypes
 {
-  enum E_PlayerState{WAITING, PLAYING, DISCARDED};
+    enum E_PlayerState{
+        CONNECTED,
+        WAITING,
+        ACCEPTED,
+        READY,
+        PLAYING,
+        DISCARDED,
+        DISCONNECTED
+    };
 
-  enum E_GameState{GAMEOVER, PAUSED, EXITED, RUNNING, NOPARTY};
+    enum E_GameState{
+        NOPARTY,
+        WAITING_PLAYERS,
+        INITIALIZING,
+        RUNNING,
+        PAUSED,
+        GAMEOVER,
+        EXITED
+    };
 
-  enum E_BallDir{RIGHT, LEFT, UP, DOWN, RND_DIR};
+    enum E_BallDir{
+        RIGHT,
+        LEFT,
+        UP,
+        DOWN,
+        RND_DIR
+    };
 };
 
 #endif

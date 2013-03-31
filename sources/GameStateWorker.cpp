@@ -1,38 +1,34 @@
 #include "GameStateWorker.hpp"
 
-GameStateWorker::GameStateWorker(PlayingArea & playingArea,
-                                 QMutex & playingAreaMutex,
-                                 QVector<PlayerState> & playersStates,
-                                 QVector<QMutex*> & playersStatesMutexes,
-                                 GameState & gameState,
-                                 QMutex & gameStateMutex):
+GameStateWorker::GameStateWorker(
+        PlayingArea & playingArea,
+        QVector<PlayerState*> & playersStates,
+        GameState & gameState
+        ):
     _playingArea(playingArea),
     _playersStates(playersStates),
-    _gameState(gameState),
-    _playingAreaMutex(playingAreaMutex),
-    _playersStatesMutexes(playersStatesMutexes),
-    _gameStateMutex(gameStateMutex)
+    _gameState(gameState)
 {}
 
 void GameStateWorker::_update_rackets()
 {
-    _playingAreaMutex.lock();
+    _playingArea.lock();
     for(int i=0; i < _playersStates.size(); ++i)
     {
-        _playersStatesMutexes[i]->lock();
+        _playersStates[i]->lock();
 
-        _playingArea.moveRacket( i, _playersStates[i].dxRacket() );
+        _playingArea.moveRacket( i, _playersStates[i]->dxRacket() );
 
-        _playersStatesMutexes[i]->unlock();
+        _playersStates[i]->unlock();
     }
-    _playingAreaMutex.unlock();
+    _playingArea.unlock();
 }
 
 void GameStateWorker::_check_collisions()
 {
     int pos;
 
-    _playingAreaMutex.lock();
+    _playingArea.lock();
 
     QList<QGraphicsItem*> colliders = _playingArea.getBallColliders();
 
@@ -59,20 +55,20 @@ void GameStateWorker::_check_collisions()
         }
     }
 
-    _playingAreaMutex.unlock();
+    _playingArea.unlock();
 }
 
 void GameStateWorker::_manage_goal(const int & cageIndex)
 {
-    _playersStatesMutexes[cageIndex]->lock();
-    _playingAreaMutex.lock();
-    _gameStateMutex.lock();
+    _playersStates[cageIndex]->lock();
+    _playingArea.lock();
+    _gameState.lock();
 
     //decrease credits
-    _playersStates[cageIndex].decreaseCredit();
+    _playersStates[cageIndex]->decreaseCredit();
 
     //discard player ?
-    if( _playersStates[cageIndex].credit() == 0 )
+    if( _playersStates[cageIndex]->credit() == 0 )
     {
         if( _playersStates.size() > 2)
             _discard_player(cageIndex);
@@ -85,34 +81,34 @@ void GameStateWorker::_manage_goal(const int & cageIndex)
     if( !_game_over() )
         _playingArea.resetBallPos();
 
-    _gameStateMutex.unlock();
-    _playingAreaMutex.unlock();
-    _playersStatesMutexes[cageIndex]->unlock();
+    _gameState.unlock();
+    _playingArea.unlock();
+    _playersStates[cageIndex]->unlock();
 }
 
 void GameStateWorker::_discard_player(const int & racketIndex)
 {
-    _playingAreaMutex.lock();
-    _playersStatesMutexes[racketIndex]->lock();
+    _playingArea.lock();
+    _playersStates[racketIndex]->lock();
 
     //remove cage and racket
     _playingArea.removeCage(racketIndex);
     _playingArea.removeRacket(racketIndex);
 
     //set playerState to discarded
-    _playersStates[racketIndex].setState(PongTypes::DISCARDED);
+    _playersStates[racketIndex]->setState(PongTypes::DISCARDED);
 
-    _playersStatesMutexes[racketIndex]->unlock();
-    _playingAreaMutex.unlock();
+    _playersStates[racketIndex]->unlock();
+    _playingArea.unlock();
 }
 
 void GameStateWorker::_manage_wall_collision(const int & wallIndex)
 {
-    _playingAreaMutex.lock();
+    _playingArea.lock();
 
     _playingArea.mirrorBallDirection( _playingArea.wall(wallIndex) );
 
-    _playingAreaMutex.unlock();
+    _playingArea.unlock();
 }
 
 void GameStateWorker::_manage_racket_collision(const int & racketIndex)
@@ -124,12 +120,12 @@ void GameStateWorker::_manage_racket_collision(const int & racketIndex)
 
 void GameStateWorker::_move_ball()
 {
-    _playingAreaMutex.lock();
+    _playingArea.lock();
 
     //translate in relative referential
     _playingArea.moveBall();
 
-    _playingAreaMutex.unlock();
+    _playingArea.unlock();
 }
 
 bool GameStateWorker::_game_over()

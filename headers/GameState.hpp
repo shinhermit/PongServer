@@ -2,8 +2,9 @@
 #define _GameState
 
 #include "PongTypes.hpp"
+#include "Lockable.hpp"
 
-class GameState
+class GameState : public Lockable
 {
   public:
   GameState();

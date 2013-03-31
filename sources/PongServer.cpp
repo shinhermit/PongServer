@@ -10,7 +10,7 @@ PongServer::PongServer(const int & maxPlayers,
 {
   connect(_gameStateCheckerThread, SIGNAL(started()), gameStateChecker, SLOT(checkState()));
 
-  connect(_playersLoggerThread, SIGNAL(started()), playersLogger, SLOT(waitConnection()));
+  connect(_playersLoggerThread, SIGNAL(started()), playersLogger, SLOT(waitConnections()));
 
   _gameStateChecker.moveToThread(_gameStateCheckerThread);
   _playersLogger.moveToThread(_playersLoggerThread);
