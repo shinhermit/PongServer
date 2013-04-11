@@ -1,4 +1,4 @@
-﻿#include "PlayingArea.hpp"
+#include "PlayingArea.hpp"
 
 using namespace MathJ;
 

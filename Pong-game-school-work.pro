@@ -19,7 +19,8 @@ HEADERS += headers/PlayingArea.hpp \
     headers/GameStateWorker.hpp \
     headers/LoggerWorker.hpp \
     headers/SocketWorker.hpp \
-    headers/Lockable.hpp
+    headers/Lockable.hpp \
+    headers/PongServer.hpp
 SOURCES += sources/PlayingArea.cpp \
            tests/test_playing_area.cpp \
     sources/Trigo.cpp \
@@ -29,6 +30,7 @@ SOURCES += sources/PlayingArea.cpp \
     sources/GameStateWorker.cpp \
     sources/LoggerWorker.cpp \
     sources/Lockable.cpp \
-    sources/SocketWorker.cpp
+    sources/SocketWorker.cpp \
+    sources/PongServer.cpp
 
 OTHER_FILES +=
