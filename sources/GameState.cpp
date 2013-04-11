@@ -44,6 +44,16 @@ void GameState::setNoParty()
     _state = PongTypes::NOPARTY;
 }
 
+void GameState::setStateError()
+{
+    _state = PongTypes::STATE_ERROR;
+}
+
+void GameState::setStartRequested()
+{
+    _state = PongTypes::START_REQUESTED;
+}
+
 void GameState::setLoserIndex(const qint32 &index) throw(std::invalid_argument)
 {
     if(index < -1)

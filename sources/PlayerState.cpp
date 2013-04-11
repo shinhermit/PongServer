@@ -1,11 +1,11 @@
 #include "PlayerState.hpp"
 
-const int PlayerState::_defaultCredit = 3;
+const qint32 PlayerState::_defaultCredit = 3;
 
 
 PlayerState::PlayerState(QObject & parent,
                          const qreal &dxRacket,
-                         const int &credit,
+                         const qint32 &credit,
                          const PongTypes::E_PlayerState &state):
     QObject(&parent),
     _dxRacket(dxRacket),
@@ -14,7 +14,7 @@ PlayerState::PlayerState(QObject & parent,
 {}
 
 PlayerState::PlayerState(const qreal &dxRacket,
-                         const int &credit,
+                         const qint32 &credit,
                          const PongTypes::E_PlayerState &state):
     _dxRacket(dxRacket),
     _credit(credit),
@@ -22,7 +22,7 @@ PlayerState::PlayerState(const qreal &dxRacket,
 {}
 
 PlayerState::PlayerState(QObject &parent,
-                         const int & credit,
+                         const qint32 & credit,
                          const PongTypes::E_PlayerState & state):
     QObject(&parent),
     _dxRacket(0),
@@ -51,12 +51,12 @@ PlayerState::PlayerState(const PongTypes::E_PlayerState & state):
     _state(state)
 {}
 
-void PlayerState::setCredit(const int &credit)
+void PlayerState::setCredit(const qint32 &credit)
 {
     _credit = credit;
 }
 
-void PlayerState::decreaseCredit(const int &step)
+void PlayerState::decreaseCredit(const qint32 &step)
 {
     _credit -= step;
     if(_credit < 0)
@@ -83,7 +83,7 @@ const qreal &PlayerState::dxRacket() const
     return _dxRacket;
 }
 
-const int &PlayerState::credit() const
+const qint32 &PlayerState::credit() const
 {
     return _credit;
 }
@@ -91,4 +91,9 @@ const int &PlayerState::credit() const
 const PongTypes::E_PlayerState &PlayerState::state() const
 {
     return _state;
+}
+
+const qint32 &PlayerState::DefaultCredit()
+{
+    return _defaultCredit;
 }

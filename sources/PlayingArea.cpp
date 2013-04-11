@@ -232,6 +232,7 @@ void PlayingArea::reset(const qint32 &nbPlayers,
     _renderAreaWidth = renderAreaWidth;
     _ball->setRect(ballRect);
     resetBallPos();
+    _clear_scene();
     _generate_area();
 }
 

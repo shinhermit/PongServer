@@ -22,7 +22,8 @@ struct PongTypes
         RUNNING,
         PAUSED,
         GAMEOVER,
-        EXITED
+        EXITED,
+        STATE_ERROR
     };
 
     enum E_BallDir{

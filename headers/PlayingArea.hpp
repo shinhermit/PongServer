@@ -27,7 +27,7 @@ public:
                 const qreal & renderAreaWidth,
                 const QRectF &ballRect);
 
-    PlayingArea(const qint32 & nbPlayers=3,
+    PlayingArea(const qint32 & nbPlayers=6,
                 const qreal &renderAreaWidth=600.);
 
     const qreal & centerAngle()const;
@@ -55,7 +55,7 @@ public:
     void reset(const qint32 & nbPlayers,
                const qreal & renderAreaWidth,
                const QRectF &ballRect);
-    void reset(const qint32 & nbPlayers=3,
+    void reset(const qint32 & nbPlayers=6,
                const qreal & renderAreaWidth=600.);
 
     void resetBallPos();

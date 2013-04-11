@@ -41,6 +41,9 @@ public:
     void setId(const qint32 & index);
     const qint32 & id()const;
 
+signals:
+    void hostDisconnected();
+
 public slots:
     void beginInteract();
     void socketError( QAbstractSocket::SocketError socketError );

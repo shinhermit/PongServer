@@ -1,6 +1,8 @@
 #ifndef _LoggerWorker
 #define _LoggerWorker
 
+#include <cmath>
+
 #include <QObject>
 #include <QThread>
 #include <QVector>
@@ -26,18 +28,21 @@ public:
             QMutex & playersStatesMutex,
             QVector<SocketWorker*> & playersInterfaces,
             QVector<QThread*> & playersInterfacesThreads,
-            const qint16 & port=7777
+            const qint16 & port=6666
             );
 
+    void setNbConnected(const qint32 & nbConnected);
+    qint32 nbConnected()const;
+
 signals:
-    void _playerLoggedSignal(); //active le bouton "begin"
+    void newPlayersConnected();
 
 public slots:
     void waitConnections();
     void newConnectionSlot();
 
 private:
-    short _nbAccepted;
+    short _nbConnected;
     const qint16 _port;
 
     QTcpServer & _tcpServer;

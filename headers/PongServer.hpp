@@ -5,50 +5,60 @@
 #include <QThread>
 #include <QVector>
 #include <QMutex>
+#include <QDebug>
 
 #include <utility>
 
 #include "Workers.hpp"
+#include "GameState.hpp"
 #include "PlayingArea.hpp"
 #include "PlayerState.hpp"
 
-class PongServer
+class PongServer : public QObject
 {
+    Q_OBJECT
 public:
-  PongServer(const int & maxPlayers=6,
-	     const int & renderAreaWidth=256,
-	     const Ball & ball);
+    PongServer(const int & maxPlayers=6,
+               const int & renderAreaWidth=256,
+               const qint16 & port=6666);
 
+signals:
+    void gameStateErrorSignal(const QString & mess);
+    void startService();
+
+public slots:
+    void newGame();
+    void gameStateErrorSlot(const QString & mess);
+    void newPlayersConnected();
+    //button start push
+    void startRequestedSlot();
 private:
-  short _maxPlayers;
+    short _maxPlayers;
 
-  //shared memories
-  PlayingArea _playingArea; //shared memory
-  bool _stopped; //shared memory (read only for other threads)
-  Qvector<PlayerState> _playersStates; //shared memory
+    //shared memories
+    GameState _gameState; //shared memory
+    PlayingArea _playingArea; //shared memory
+    QVector<PlayerState*> _playersStates; //shared memory
 
-  //Mutexes for shared memories
-  QMutex _playingAreaMutex;
-  QMutex _stoppedMutex;
-  QVector<QMutex> _playersStatesMutexes;
+    //Mutexes for shared memories
+    QMutex _playersStatesMutex;
 
-  //network
-  QTcpServer _tcpServer;
-  QVector<QTcpSocket*> _sockets;
+    //network
+    QTcpServer _tcpServer;
+    QVector<QTcpSocket*> _sockets;
 
-  //worker classes for threads
-  GameStateWorker _gameStateChecker;
-  LoggerWorker _playerLogger;
-  QVector<SocketWorker> _playersInterfaces;
+    //worker classes for threads
+    GameStateWorker _gameStateChecker;
+    LoggerWorker _playerLogger;
+    QVector<SocketWorker*> _playersInterfaces;
 
-  //thread objects
-  QThread _gameStateCheckerThread;
-  QThread _playerLoggerThread;
-  QVector<QThread> _playersInterfacesThreads;
+    //thread objects
+    QThread _gameStateCheckerThread;
+    QThread _playerLoggerThread;
+    QVector<QThread*> _playersInterfacesThreads;
 
-private slots:
-  void _playerLoggedSlot(); //active le bouton "begin"
-  void _beginSlot();
+    void _reset_gameState();
+    void _reset_playersStates();
 };
 
 #endif

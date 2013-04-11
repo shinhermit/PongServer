@@ -110,7 +110,6 @@ const qint32 &SocketWorker::id() const
 
 void SocketWorker::beginInteract()
 {
-    //il faut que Félix rajoute _myIndex (mon ID) et downCounter (initialisation)
 
     while( _running_state() )
     {
@@ -127,6 +126,7 @@ void SocketWorker::socketError(QAbstractSocket::SocketError socketError)
     _playersStates[_myIndex]->unlock();
 
     qDebug() << "SocketWorker::socketError: " << socketError << endl;
+
 }
 
 void SocketWorker::disconnected()
@@ -136,6 +136,8 @@ void SocketWorker::disconnected()
     _playersStates[_myIndex]->unlock();
 
     qDebug() << "SocketWorker::disconnected: player " << _myIndex << " disconnected " << endl;
+
+    emit hostDisconnected();
 }
 
 bool SocketWorker::_running_state()

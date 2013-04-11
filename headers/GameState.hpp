@@ -19,6 +19,8 @@ class GameState : public Lockable
   void setInitializing();
   void setRunning();
   void setNoParty();
+  void setStateError();
+  void setStartRequested();
 
   void setLoserIndex(const qint32 & index) throw(std::invalid_argument);
   void setDownCounter(const qint32 & value);

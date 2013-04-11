@@ -14,7 +14,7 @@ LoggerWorker::LoggerWorker(
         QVector<QThread*> & playersInterfacesThreads,
         const qint16 & port
         ):
-    _nbAccepted(0),
+    _nbConnected(0),
     _port(port),
     _tcpServer(tcpServer),
     _sockets(sockets),
@@ -29,6 +29,16 @@ LoggerWorker::LoggerWorker(
     QObject::connect( &_tcpServer, SIGNAL(newConnection()), this, SLOT(newConnectionSlot()) );
 }
 
+void LoggerWorker::setNbConnected(const qint32 &nbConnected)
+{
+    _nbConnected = ::abs(nbConnected);
+}
+
+qint32 LoggerWorker::nbConnected() const
+{
+    return _nbConnected;
+}
+
 void LoggerWorker::waitConnections()
 {
     _tcpServer.listen(QHostAddress::Any, _port);
@@ -38,7 +48,7 @@ void LoggerWorker::newConnectionSlot()
 {
     int index;
 
-    if( _nbAccepted <= _maxPlayers && _loggableGameState() )
+    if( _nbConnected <= _maxPlayers && _loggableGameState() )
     {
         _playersStatesMutex.lock();
         _playersStates.push_back( new PlayerState(*this,PongTypes::ACCEPTED) );
@@ -55,11 +65,23 @@ void LoggerWorker::newConnectionSlot()
         _playersInterfacesThreads.push_back(new QThread(this));
         QThread & interfaceThread = *_playersInterfacesThreads[index];
 
-        QObject::connect(&interfaceThread, SIGNAL(started()), &interface, SLOT(beginInteract()));
+        connect(&interfaceThread, SIGNAL(started()), &interface, SLOT(beginInteract()));
+        connect( &interface, SIGNAL(hostDisconnected()), &interfaceThread, SLOT(quit()) );
         interface.moveToThread(&interfaceThread);
 
-        ++_nbAccepted;
+        ++_nbConnected;
+
+        _gameState.setNbPlayers(_nbConnected);
+
+        emit newPlayersConnected();
+
         _playersStatesMutex.unlock();
+    }
+
+    else
+    {
+        //stop listening -> !!!!!!!! potential error ?? (cant it be relunch ?)
+        _tcpServer.close();
     }
 }
 
