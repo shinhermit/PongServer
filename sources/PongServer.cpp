@@ -14,6 +14,8 @@ PongServer::PongServer(const int & maxPlayers,
 
     connect(&_playerLogger, SIGNAL(newPlayersConnected()), this, SLOT(newPlayersConnected()) );
 
+    connect(&_view, SIGNAL(startClickedSignal()), this, SLOT(startRequestedSlot()) );
+
     _gameStateChecker.moveToThread(&_gameStateCheckerThread);
   _playerLogger.moveToThread(&_playerLoggerThread);
 
@@ -40,9 +42,7 @@ void PongServer::newPlayersConnected()
     _gameState.unlock();
 
     if(nbPlayers > 1)
-        //activate button start
-        //tell game master
-        ;
+        _view.enableStartButton();
 }
 
 void PongServer::startRequestedSlot()

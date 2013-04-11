@@ -13,6 +13,7 @@
 #include "GameState.hpp"
 #include "PlayingArea.hpp"
 #include "PlayerState.hpp"
+#include "PongServerView.hpp"
 
 class PongServer : public QObject
 {
@@ -30,10 +31,11 @@ public slots:
     void newGame();
     void gameStateErrorSlot(const QString & mess);
     void newPlayersConnected();
-    //button start push
     void startRequestedSlot();
+
 private:
     short _maxPlayers;
+    PongServerView _view;
 
     //shared memories
     GameState _gameState; //shared memory
