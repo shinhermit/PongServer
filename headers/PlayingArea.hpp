@@ -17,17 +17,17 @@ class PlayingArea : public Lockable
 {
 private:
     void _clear_scene();
-    void _generate_area(const int & nbPlayers);
+    void _generate_area(const qint32 & nbPlayers);
     void _generate_area();
     void _set_ball_random_direction();
     void _init_ball(const QRectF &ballRect);
 
 public:
-    PlayingArea(const int & nbPlayers,
+    PlayingArea(const qint32 & nbPlayers,
                 const qreal & renderAreaWidth,
                 const QRectF &ballRect);
 
-    PlayingArea(const int & nbPlayers=3,
+    PlayingArea(const qint32 & nbPlayers=3,
                 const qreal &renderAreaWidth=600.);
 
     const qreal & centerAngle()const;
@@ -38,20 +38,24 @@ public:
     bool isRacket(QGraphicsItem *item)const;
     bool isWall(QGraphicsItem *item)const;
 
-    int cageIndex(QGraphicsItem *item)const;
-    int racketIndex(QGraphicsItem * item)const;
-    int wallIndex(QGraphicsItem *item)const;
+    qint32 nbCages()const;
+    qint32 nbRackets()const;
+    qint32 nbWalls()const;
 
-    QGraphicsLineItem * wall(const int & index) const;
-    QGraphicsLineItem * cage(const int & index) const;
-    QGraphicsLineItem * racket(const int & index) const;
+    qint32 cageIndex(QGraphicsItem *item)const;
+    qint32 racketIndex(QGraphicsItem * item)const;
+    qint32 wallIndex(QGraphicsItem *item)const;
 
-    qreal getWallRotation(const int & wallIndex);
+    QGraphicsLineItem * wall(const qint32 & index) const;
+    QGraphicsLineItem * cage(const qint32 & index) const;
+    QGraphicsLineItem * racket(const qint32 & index) const;
 
-    void reset(const int & nbPlayers,
+    qreal getWallRotation(const qint32 & wallIndex);
+
+    void reset(const qint32 & nbPlayers,
                const qreal & renderAreaWidth,
                const QRectF &ballRect);
-    void reset(const int & nbPlayers=3,
+    void reset(const qint32 & nbPlayers=3,
                const qreal & renderAreaWidth=600.);
 
     void resetBallPos();
@@ -61,23 +65,23 @@ public:
     void moveBall();
     QList<QGraphicsItem*> getBallColliders()const;
 
-    void moveRacket(const int &racketIndex,
+    void moveRacket(const qint32 &racketIndex,
                     const qreal & delta);
 
-    void setRacketAbss(const int & racketIndex,
+    void setRacketAbss(const qint32 & racketIndex,
                        const qreal & abss);
-    void setRacketOrd(const int & racketIndex,
+    void setRacketOrd(const qint32 & racketIndex,
                       const qreal & ord);
-    void setRacketCoord(const int & racketIndex,
+    void setRacketCoord(const qint32 & racketIndex,
                         const qreal & x,
                         const qreal & y);
 
-    void removeCage(const int & cageIndex);
-    void removeRacket(const int & racketIndex);
-    void removeWall(const int & wallIndex);
+    void removeCage(const qint32 & cageIndex);
+    void removeRacket(const qint32 & racketIndex);
+    void removeWall(const qint32 & wallIndex);
 
 private:
-    int _nbPlayers;
+    qint32 _nbPlayers;
     qreal _renderAreaWidth;
     qreal _centerAngle;
     MathJ::Random _rndGen;

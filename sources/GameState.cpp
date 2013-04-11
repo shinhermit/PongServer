@@ -2,11 +2,13 @@
 
 GameState::GameState():
     _state(PongTypes::NOPARTY),
-    _loserIndex(-1)
+    _loserIndex(-1),
+    _downCounter(0),
+    _nbPlayers(0)
 {}
 
 
-void GameState::setGameOver(const int &cageIndex)
+void GameState::setGameOver(const qint32 &cageIndex)
 {
     _state = PongTypes::GAMEOVER;
     _loserIndex = cageIndex;
@@ -20,6 +22,11 @@ void GameState::setPaused()
 void GameState::setExited()
 {
     _state = PongTypes::EXITED;
+}
+
+void GameState::setWaitingServer()
+{
+    _state = PongTypes::WAITING_SERVER;
 }
 
 void GameState::setInitializing()
@@ -37,13 +44,44 @@ void GameState::setNoParty()
     _state = PongTypes::NOPARTY;
 }
 
+void GameState::setLoserIndex(const qint32 &index) throw(std::invalid_argument)
+{
+    if(index < -1)
+        throw std::invalid_argument("GameState::setLoserIndex: index must be positive or -1 (no loser)");
+
+    _loserIndex = index;
+}
+
+void GameState::setDownCounter(const qint32 &value)
+{
+    _downCounter = ::abs(value);
+}
+
+void GameState::setNbPlayers(const qint32 &nbPlayers) throw(std::invalid_argument)
+{
+    if(nbPlayers < 0)
+        throw std::invalid_argument("GameState::setNbPlayers: invalid negative value");
+
+    _nbPlayers = nbPlayers;
+}
+
 const PongTypes::E_GameState &GameState::state() const
 {
     return _state;
 }
 
-const int & GameState::loserIndex() const
+const qint32 &GameState::loserIndex() const
 {
     return _loserIndex;
+}
+
+const qint32 &GameState::downCounter() const
+{
+    return _downCounter;
+}
+
+const qint32 &GameState::nbPlayers() const
+{
+    return _nbPlayers;
 }
 

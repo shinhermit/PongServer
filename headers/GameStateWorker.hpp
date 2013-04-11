@@ -30,19 +30,20 @@ public:
             );
 
 signals:
+    void checkInitSignal();
     void checkRunningSignal();
 
 public slots:
-    void checkRunningSlot();
+    void waitStartSlot();
     void checkInitSlot();
+    void checkRunningSlot();
 
 private slots:
     void _countDownSlot();
 
 private:
     QTimer _timer;
-    int _downCounter;
-    QGraphicsTextItem * _downCounterText;
+    qint32 _downCounter;
 
     PlayingArea & _playingArea;
     QVector<PlayerState*> & _playersStates;

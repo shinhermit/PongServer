@@ -73,6 +73,11 @@ void PlayerState::setFailState()
     _state = PongTypes::DISCARDED;
 }
 
+void PlayerState::setdxRacket(const qreal & dxRacket)
+{
+    _dxRacket = dxRacket;
+}
+
 const qreal &PlayerState::dxRacket() const
 {
     return _dxRacket;

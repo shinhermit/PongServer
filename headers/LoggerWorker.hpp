@@ -29,9 +29,6 @@ public:
             const qint16 & port=7777
             );
 
-    void reset(const short &nbAcceptable);
-
-    void reset();
 signals:
     void _playerLoggedSignal(); //active le bouton "begin"
 

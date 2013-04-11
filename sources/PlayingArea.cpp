@@ -12,17 +12,17 @@ const qreal PlayingArea::_ballTranslateQuantum = 30;
 
 void PlayingArea::_clear_scene()
 {
-    for(int i=0; i<_walls.size(); ++i)
+    for(qint32 i=0; i<_walls.size(); ++i)
     {
         _scene->removeItem(_walls[i]);
     }
 
-    for(int i=0; i<_rackets.size(); ++i)
+    for(qint32 i=0; i<_rackets.size(); ++i)
     {
         _scene->removeItem(_rackets[i]);
     }
 
-    for(int i=0; i<_cages.size(); ++i)
+    for(qint32 i=0; i<_cages.size(); ++i)
     {
         _scene->removeItem(_cages[i]);
     }
@@ -32,9 +32,9 @@ void PlayingArea::_clear_scene()
     _cages.clear();
 }
 
-void PlayingArea::_generate_area(const int & nbPlayers)
+void PlayingArea::_generate_area(const qint32 & nbPlayers)
 {
-    int j;
+    qint32 j;
     qreal dx, dy;
     qreal radius = _renderAreaWidth / 2;
     qreal alpha = 360 / nbPlayers;
@@ -47,7 +47,7 @@ void PlayingArea::_generate_area(const int & nbPlayers)
     qreal altitude = radius * ::cos( Trigo::DegreeToRadian(alpha/2) );
 
     j = 0;
-    for(int i=0; i < nbPlayers; ++i)
+    for(qint32 i=0; i < nbPlayers; ++i)
     {
         _walls.push_back( new QGraphicsLineItem(0.,altitude, -wallLength,altitude, 0, _scene) );
         _walls.push_back( new QGraphicsLineItem(0.,altitude, -wallLength,altitude, 0, _scene) );
@@ -117,7 +117,7 @@ void PlayingArea::_init_ball(const QRectF & ballRect)
     _set_ball_random_direction();
 }
 
-PlayingArea::PlayingArea(const int & nbPlayers,
+PlayingArea::PlayingArea(const qint32 & nbPlayers,
                          const qreal & renderAreaWidth,
                          const QRectF & ballRect)
     :_nbPlayers(nbPlayers),
@@ -131,7 +131,7 @@ PlayingArea::PlayingArea(const int & nbPlayers,
     _generate_area();
 }
 
-PlayingArea::PlayingArea(const int & nbPlayers,
+PlayingArea::PlayingArea(const qint32 & nbPlayers,
                          const qreal & renderAreaWidth)
     :_nbPlayers(nbPlayers),
       _renderAreaWidth(renderAreaWidth),
@@ -174,42 +174,57 @@ bool PlayingArea::isWall(QGraphicsItem *item)const
     return _walls.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item)) != -1;
 }
 
-int PlayingArea::cageIndex(QGraphicsItem *item)const
+qint32 PlayingArea::nbCages()const
+{
+    return _cages.size();
+}
+
+qint32 PlayingArea::nbRackets()const
+{
+    return _rackets.size();
+}
+
+qint32 PlayingArea::nbWalls()const
+{
+    return _walls.size();
+}
+
+qint32 PlayingArea::cageIndex(QGraphicsItem *item)const
 {
     return _cages.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item));
 }
 
-int PlayingArea::racketIndex(QGraphicsItem *item)const
+qint32 PlayingArea::racketIndex(QGraphicsItem *item)const
 {
     return _rackets.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item));
 }
 
-int PlayingArea::wallIndex(QGraphicsItem *item)const
+qint32 PlayingArea::wallIndex(QGraphicsItem *item)const
 {
     return _walls.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item));
 }
 
-QGraphicsLineItem *PlayingArea::wall(const int &index)const
+QGraphicsLineItem *PlayingArea::wall(const qint32 &index)const
 {
     return _walls[index];
 }
 
-QGraphicsLineItem *PlayingArea::cage(const int &index) const
+QGraphicsLineItem *PlayingArea::cage(const qint32 &index) const
 {
     return _cages[index];
 }
 
-QGraphicsLineItem *PlayingArea::racket(const int &index) const
+QGraphicsLineItem *PlayingArea::racket(const qint32 &index) const
 {
     return _rackets[index];
 }
 
-qreal PlayingArea::getWallRotation(const int & wallIndex)
+qreal PlayingArea::getWallRotation(const qint32 & wallIndex)
 {
     return _walls[wallIndex]->rotation();
 }
 
-void PlayingArea::reset(const int &nbPlayers,
+void PlayingArea::reset(const qint32 &nbPlayers,
                         const qreal &renderAreaWidth,
                         const QRectF &ballRect)
 {
@@ -220,7 +235,7 @@ void PlayingArea::reset(const int &nbPlayers,
     _generate_area();
 }
 
-void PlayingArea::reset(const int &nbPlayers,
+void PlayingArea::reset(const qint32 &nbPlayers,
                         const qreal &renderAreaWidth)
 {
     reset(nbPlayers, renderAreaWidth, QRectF( -_ballRadius, -_ballRadius, 2*_ballRadius, 2*_ballRadius ) );
@@ -265,7 +280,7 @@ QList<QGraphicsItem*> PlayingArea::getBallColliders()const
     return _ball->collidingItems();
 }
 
-void PlayingArea::moveRacket(const int & racketIndex,
+void PlayingArea::moveRacket(const qint32 & racketIndex,
                              const qreal & delta)
 {
     if( 0 <= racketIndex && racketIndex < _rackets.size() )
@@ -282,7 +297,7 @@ void PlayingArea::moveRacket(const int & racketIndex,
         qDebug() << "PlayingArea::moveRacket : erreur index racket " << racketIndex << endl;
 }
 
-void PlayingArea::setRacketAbss(const int & racketIndex,
+void PlayingArea::setRacketAbss(const qint32 & racketIndex,
                                 const qreal & abss)
 {
     if( 0 <= racketIndex && racketIndex < _rackets.size() )
@@ -291,7 +306,7 @@ void PlayingArea::setRacketAbss(const int & racketIndex,
     }
 }
 
-void PlayingArea::setRacketOrd(const int & racketIndex,
+void PlayingArea::setRacketOrd(const qint32 & racketIndex,
                                const qreal & ord)
 {
     if( 0 <= racketIndex && racketIndex < _rackets.size() )
@@ -300,7 +315,7 @@ void PlayingArea::setRacketOrd(const int & racketIndex,
     }
 }
 
-void PlayingArea::setRacketCoord(const int & racketIndex,
+void PlayingArea::setRacketCoord(const qint32 & racketIndex,
                                  const qreal & x,
                                  const qreal & y)
 {
@@ -308,7 +323,7 @@ void PlayingArea::setRacketCoord(const int & racketIndex,
     setRacketOrd(racketIndex, y);
 }
 
-void PlayingArea::removeCage(const int & cageIndex)
+void PlayingArea::removeCage(const qint32 & cageIndex)
 {
     if( 0 <= cageIndex && cageIndex < _cages.size() )
     {
@@ -327,7 +342,7 @@ void PlayingArea::removeCage(const int & cageIndex)
     }
 }
 
-void PlayingArea::removeRacket(const int & racketIndex)
+void PlayingArea::removeRacket(const qint32 & racketIndex)
 {
     if( 0 <= racketIndex && racketIndex < _rackets.size() )
     {
@@ -336,7 +351,7 @@ void PlayingArea::removeRacket(const int & racketIndex)
     }
 }
 
-void PlayingArea::removeWall(const int & wallIndex)
+void PlayingArea::removeWall(const qint32 & wallIndex)
 {
     if( 0 <= wallIndex && wallIndex < _walls.size() && _nbPlayers >= 3)
     {

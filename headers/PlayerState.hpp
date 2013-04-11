@@ -37,6 +37,7 @@ public:
     void setState(const PongTypes::E_PlayerState & state);
     void setFailState();
 
+    void setdxRacket(const qreal & dxRacket);
     const qreal & dxRacket()const;
     const int & credit()const;
     const PongTypes::E_PlayerState & state()const;

@@ -10,12 +10,14 @@ struct PongTypes
         READY,
         PLAYING,
         DISCARDED,
-        DISCONNECTED
+        DISCONNECTED,
+        SOCKET_ERROR
     };
 
     enum E_GameState{
         NOPARTY,
-        WAITING_PLAYERS,
+        WAITING_SERVER,
+        START_REQUESTED,
         INITIALIZING,
         RUNNING,
         PAUSED,
