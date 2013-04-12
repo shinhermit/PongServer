@@ -38,10 +38,13 @@ public:
 
 signals:
     void newPlayersConnected();
+    void finishedSignal();
+    void quitSignal();
 
 public slots:
     void waitConnections();
     void newConnectionSlot();
+    void quitSlot();
 
 private:
     short _nbConnected;

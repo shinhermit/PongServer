@@ -23,12 +23,15 @@ public:
                const int & renderAreaWidth=256,
                const qint16 & port=6666);
 
+    ~PongServer();
+
     void start();
 
 signals:
     void gameStateErrorSignal(const QString & mess);
     void newGameSignal();
     void startService();
+    void stopService();
 
 public slots:
     void newGameSlot();
@@ -65,7 +68,7 @@ private:
 
     void _reset_gameState();
     void _reset_playersStates();
-    bool _all_interfaces_finished()const;
+    bool _exists_running_interface()const;
 };
 
 #endif

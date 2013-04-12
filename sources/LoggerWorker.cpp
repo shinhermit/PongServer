@@ -63,22 +63,25 @@ void LoggerWorker::newConnectionSlot()
     if( _nbConnected <= _maxPlayers && _loggableGameState() )
     {
         _playersStatesMutex.lock();
-        _playersStates.push_back( new PlayerState(*this,PongTypes::ACCEPTED) );
+        _playersStates.push_back( new PlayerState(PongTypes::ACCEPTED) );
 
         index = _sockets.size();
         _sockets.push_back( _tcpServer.nextPendingConnection() );
         QTcpSocket & socket = *_sockets.at(index);
 
         index = _playersInterfaces.size();
-        _playersInterfaces.push_back( new SocketWorker(*this, index, _view, socket, _playingArea, _gameState, _playersStates) );
+        _playersInterfaces.push_back( new SocketWorker(index, _view, socket, _playingArea, _gameState, _playersStates) );
         SocketWorker & interface = *_playersInterfaces[index];
 
         index = _playersInterfacesThreads.size();
-        _playersInterfacesThreads.push_back(new QThread(this));
+        _playersInterfacesThreads.push_back(new QThread());
         QThread & interfaceThread = *_playersInterfacesThreads[index];
 
         connect(&interfaceThread, SIGNAL(started()), &interface, SLOT(beginInteract()));
         connect( &interface, SIGNAL(hostDisconnected()), &interfaceThread, SLOT(quit()) );
+        connect( this, SIGNAL(quitSignal()), &interface, SLOT(quitSlot()) );
+        connect( &interface, SIGNAL(finishedSignal()), &interfaceThread, SLOT(quit()) );
+
         interface.moveToThread(&interfaceThread);
         interfaceThread.start();
 
@@ -97,6 +100,13 @@ void LoggerWorker::newConnectionSlot()
         _view.appendStatus("LoggerWorker::newConnectionSlot: connection accepted");
         _view.unlock();
     }
+}
+
+void LoggerWorker::quitSlot()
+{
+    _tcpServer.close();
+    emit quitSignal();
+    emit finishedSignal();
 }
 
 bool LoggerWorker::_loggableGameState()

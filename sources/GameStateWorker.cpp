@@ -97,6 +97,12 @@ void GameStateWorker::checkRunningSlot()
     _view.unlock();
 }
 
+void GameStateWorker::quitSlot()
+{
+    _timer.stop();
+    emit finishedSignal();
+}
+
 void GameStateWorker::_countDownSlot()
 {
     if(_downCounter > 0)

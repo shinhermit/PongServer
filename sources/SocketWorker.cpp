@@ -168,6 +168,12 @@ void SocketWorker::disconnected()
     _view.unlock();
 }
 
+void SocketWorker::quitSlot()
+{
+    _socket.close();
+    emit finishedSignal();
+}
+
 bool SocketWorker::_running_state()
 {
     PongTypes::E_GameState gameState;

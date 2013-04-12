@@ -33,11 +33,13 @@ public:
 signals:
     void checkInitSignal();
     void checkRunningSignal();
+    void finishedSignal();
 
 public slots:
     void waitStartSlot();
     void checkInitSlot();
     void checkRunningSlot();
+    void quitSlot();
 
 private slots:
     void _countDownSlot();

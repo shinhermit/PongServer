@@ -46,11 +46,13 @@ public:
 
 signals:
     void hostDisconnected();
+    void finishedSignal();
 
 public slots:
     void beginInteract();
     void socketError( QAbstractSocket::SocketError socketError );
     void disconnected();
+    void quitSlot();
 
 private:
     PongServerView & _view;

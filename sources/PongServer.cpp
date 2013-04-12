@@ -12,8 +12,12 @@ PongServer::PongServer(const int & maxPlayers,
     connect( this, SIGNAL(newGameSignal()), this, SLOT(newGameSlot()) );
 
     connect(this, SIGNAL(startService()), &_gameStateChecker, SLOT(waitStartSlot()) );
+    connect( this, SIGNAL(stopService()), &_gameStateChecker, SLOT(quitSlot()) );
+    connect( &_gameStateChecker, SIGNAL(finishedSignal()), &_gameStateCheckerThread, SLOT(quit()) );
 
     connect(this, SIGNAL(startService()), &_playerLogger, SLOT(waitConnections()) );
+    connect( this, SIGNAL(stopService()), &_playerLogger, SLOT(quitSlot()) );
+    connect( &_playerLogger, SIGNAL(finishedSignal()), &_playerLoggerThread, SLOT(quit()) );
 
     connect(&_playerLogger, SIGNAL(newPlayersConnected()), this, SLOT(newPlayersConnected()) );
 
@@ -30,6 +34,15 @@ PongServer::PongServer(const int & maxPlayers,
     _view.lock();
     _view.appendStatus("Server Active; GameState set to NOPARTY; Ckecker and Logger Threads lunched");
     _view.unlock();
+}
+
+PongServer::~PongServer()
+{
+    for(int i=0; i < _playersInterfaces.size(); ++i)
+        _playersInterfaces[i]->deleteLater();
+
+    for(int i=0; i < _playersInterfacesThreads.size(); ++i)
+        _playersInterfacesThreads[i]->deleteLater();
 }
 
 void PongServer::start()
@@ -80,18 +93,12 @@ void PongServer::startRequestedSlot()
 
 void PongServer::quitSlot()
 {
-    _gameStateCheckerThread.exit();
+    //debug
+    _view.lock();
+    _view.appendStatus("PongServer::quitSlot: quitSignal received");
+    _view.unlock();
 
-    _playerLoggerThread.exit();
-
-    for(int i=0; i < _playersInterfacesThreads.size(); ++i)
-        _playersInterfacesThreads[i]->exit();
-
-    while(!_gameStateCheckerThread.isFinished()
-          ||
-          !_playerLoggerThread.isFinished()
-          ||
-          !_all_interfaces_finished()) ;
+    emit stopService();
 
     _view.close();
 }
@@ -179,16 +186,16 @@ void PongServer::_reset_playersStates()
     }
 }
 
-bool PongServer::_all_interfaces_finished() const
+bool PongServer::_exists_running_interface() const
 {
-    bool finished = true;
+    bool running = false;
 
     int i=0;
-    while( i < _playersInterfacesThreads.size() && finished)
+    while( i < _playersInterfacesThreads.size() && !running )
     {
-        finished = _playersInterfacesThreads[i]->isFinished();
+        running = _playersInterfacesThreads[i]->isRunning();
         ++i;
     }
 
-    return finished;
+    return running;
 }
