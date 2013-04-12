@@ -26,6 +26,7 @@ void PongServerView::disableStartButton()
     _ui.startButton->setEnabled(false);
 }
 
+
 QString PongServerView::status() const
 {
     return _ui.statusText->toPlainText();
@@ -35,4 +36,9 @@ QString PongServerView::status() const
 void PongServerView::startClickedSlot()
 {
     emit startClickedSignal();
+}
+
+void PongServerView::quitClickedSlot()
+{
+    emit closeSignal();
 }

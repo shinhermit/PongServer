@@ -20,9 +20,11 @@ public:
 
 signals:
     void startClickedSignal();
+    void closeSignal();
 
 private slots:
     void startClickedSlot();
+    void quitClickedSlot();
 
 private:
     Ui_PonServerView _ui;

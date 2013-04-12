@@ -17,6 +17,19 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
+      <widget class="QPushButton" name="quitButton">
+       <property name="maximumSize">
+        <size>
+         <width>100</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Quit</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="startButton">
        <property name="enabled">
         <bool>false</bool>
@@ -55,8 +68,8 @@
    <slot>startClickedSlot()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>247</x>
-     <y>18</y>
+     <x>409</x>
+     <y>28</y>
     </hint>
     <hint type="destinationlabel">
      <x>394</x>
@@ -64,8 +77,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>quitButton</sender>
+   <signal>clicked()</signal>
+   <receiver>PonServerView</receiver>
+   <slot>quitClickedSlot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>134</x>
+     <y>23</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>266</x>
+     <y>40</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>startClickedSlot()</slot>
+  <slot>quitClickedSlot()</slot>
  </slots>
 </ui>

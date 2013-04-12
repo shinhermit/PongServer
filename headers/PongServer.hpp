@@ -23,6 +23,8 @@ public:
                const int & renderAreaWidth=256,
                const qint16 & port=6666);
 
+    void start();
+
 signals:
     void gameStateErrorSignal(const QString & mess);
     void newGameSignal();
@@ -33,6 +35,7 @@ public slots:
     void gameStateErrorSlot(const QString & mess);
     void newPlayersConnected();
     void startRequestedSlot();
+    void quitSlot();
 
 private:
     short _maxPlayers;
@@ -62,6 +65,7 @@ private:
 
     void _reset_gameState();
     void _reset_playersStates();
+    bool _all_interfaces_finished()const;
 };
 
 #endif

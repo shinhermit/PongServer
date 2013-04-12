@@ -11,20 +11,23 @@
 #include "PlayerState.hpp"
 #include "PlayingArea.hpp"
 #include "GameState.hpp"
+#include "PongServerView.hpp"
 
 class SocketWorker : public QObject
 {
     Q_OBJECT
 public:
-    SocketWorker(QObject & parent,
+    SocketWorker(QObject &parent,
                  qint32 myIndex,
-                 QTcpSocket & socket,
-                 PlayingArea & playingArea,
-                 GameState & gameState,
-                 QVector<PlayerState*> & playersStates
+                 PongServerView &view,
+                 QTcpSocket &socket,
+                 PlayingArea &playingArea,
+                 GameState &gameState,
+                 QVector<PlayerState *> &playersStates
                  );
 
     SocketWorker(qint32 myIndex,
+                 PongServerView & view,
                  QTcpSocket & socket,
                  PlayingArea & playingArea,
                  GameState & gameState,
@@ -50,6 +53,7 @@ public slots:
     void disconnected();
 
 private:
+    PongServerView & _view;
     QTcpSocket & _socket;
     PlayingArea & _playingArea;
     GameState & _gameState;

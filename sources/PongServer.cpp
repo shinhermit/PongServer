@@ -6,8 +6,8 @@ PongServer::PongServer(const int & maxPlayers,
   : _maxPlayers(maxPlayers),
     _gameState(PongTypes::NOPARTY),
     _playingArea(renderAreaWidth),
-    _gameStateChecker(_playingArea, _playersStates, _playersStatesMutex, _gameState),
-    _playerLogger(_tcpServer, _sockets, _playingArea, _gameState, _playersStates, _playersStatesMutex, _playersInterfaces, _playersInterfacesThreads, port)
+    _gameStateChecker(_view, _playingArea, _playersStates, _playersStatesMutex, _gameState),
+    _playerLogger(_view, _tcpServer, _sockets, _playingArea, _gameState, _playersStates, _playersStatesMutex, _playersInterfaces, _playersInterfacesThreads, port)
 {
     connect( this, SIGNAL(newGameSignal()), this, SLOT(newGameSlot()) );
 
@@ -18,6 +18,7 @@ PongServer::PongServer(const int & maxPlayers,
     connect(&_playerLogger, SIGNAL(newPlayersConnected()), this, SLOT(newPlayersConnected()) );
 
     connect(&_view, SIGNAL(startClickedSignal()), this, SLOT(startRequestedSlot()) );
+    connect(&_view, SIGNAL(closeSignal()), this, SLOT(quitSlot()) );
 
     _gameStateChecker.moveToThread(&_gameStateCheckerThread);
     _playerLogger.moveToThread(&_playerLoggerThread);
@@ -28,6 +29,12 @@ PongServer::PongServer(const int & maxPlayers,
     //debug
     _view.lock();
     _view.appendStatus("Server Active; GameState set to NOPARTY; Ckecker and Logger Threads lunched");
+    _view.unlock();
+}
+
+void PongServer::start()
+{
+    _view.show();
 
     emit newGameSignal();
 }
@@ -46,6 +53,11 @@ void PongServer::newPlayersConnected()
 {
     qint32 nbPlayers;
 
+    //debug
+    _view.lock();
+    _view.appendStatus("PongServer::newPlayersConnected : signal received");
+    _view.unlock();
+
     _gameState.lock();
     nbPlayers = _gameState.nbPlayers();
     _gameState.unlock();
@@ -59,19 +71,40 @@ void PongServer::startRequestedSlot()
     _gameState.lock();
     _gameState.setStartRequested();
     _gameState.unlock();
+
+    //debug
+    _view.lock();
+    _view.appendStatus("PongServer::startRequestedSlot: gameState set to START_REQUESTED");
+    _view.unlock();
+}
+
+void PongServer::quitSlot()
+{
+    _gameStateCheckerThread.exit();
+
+    _playerLoggerThread.exit();
+
+    for(int i=0; i < _playersInterfacesThreads.size(); ++i)
+        _playersInterfacesThreads[i]->exit();
+
+    while(!_gameStateCheckerThread.isFinished()
+          ||
+          !_playerLoggerThread.isFinished()
+          ||
+          !_all_interfaces_finished()) ;
+
+    _view.close();
 }
 
 void PongServer::newGameSlot()
 {
-    //debug
     _view.lock();
+    _view.disableStartButton();
+    //debug
     _view.appendStatus("PongServer::newGameSlot : resetting Game");
     _view.unlock();
 
     //delete workers and thread for disconnected players
-    _view.lock();
-    _view.disableStartButton();
-    _view.unlock();
 
     _playersStatesMutex.lock();
     if(_playersStates.size() > 0)
@@ -113,6 +146,11 @@ void PongServer::newGameSlot()
 
     //start workers
     emit startService();
+
+    //debug
+    _view.lock();
+    _view.appendStatus("PongServer::newGameSlot : startService() signal emitted");
+    _view.unlock();
 }
 
 void PongServer::_reset_gameState()
@@ -139,4 +177,18 @@ void PongServer::_reset_playersStates()
 
         _playersStates[i]->unlock();
     }
+}
+
+bool PongServer::_all_interfaces_finished() const
+{
+    bool finished = true;
+
+    int i=0;
+    while( i < _playersInterfacesThreads.size() && finished)
+    {
+        finished = _playersInterfacesThreads[i]->isFinished();
+        ++i;
+    }
+
+    return finished;
 }

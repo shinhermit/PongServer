@@ -16,13 +16,14 @@
 #include "PlayerState.hpp"
 #include "GameState.hpp"
 #include "PongTypes.hpp"
+#include "PongServerView.hpp"
 
 class GameStateWorker : public QObject
 {
     Q_OBJECT
 
 public:
-    GameStateWorker(
+    GameStateWorker(PongServerView & view,
             PlayingArea & playingArea,
             QVector<PlayerState*> & playersStates,
             QMutex & playersStatesMutex,
@@ -45,6 +46,7 @@ private:
     QTimer _timer;
     qint32 _downCounter;
 
+    PongServerView & _view;
     PlayingArea & _playingArea;
     QVector<PlayerState*> & _playersStates;
     QMutex & _playersStatesMutex;

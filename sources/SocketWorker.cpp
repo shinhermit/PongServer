@@ -3,12 +3,13 @@
 SocketWorker::SocketWorker(
         QObject &parent,
         qint32 myIndex,
+        PongServerView &view,
         QTcpSocket &socket,
         PlayingArea &playingArea,
-        GameState &gameState,
-        QVector<PlayerState *> &playersStates
+        GameState &gameState, QVector<PlayerState *> &playersStates
         ):
     QObject(&parent),
+    _view(view),
     _socket(socket),
     _playingArea(playingArea),
     _gameState(gameState),
@@ -22,11 +23,13 @@ SocketWorker::SocketWorker(
 
 
 SocketWorker::SocketWorker(qint32 myIndex,
+                           PongServerView &view,
                            QTcpSocket &socket,
                            PlayingArea &playingArea,
                            GameState &gameState,
                            QVector<PlayerState *> &playersStates
                            ):
+    _view(view),
     _socket(socket),
     _playingArea(playingArea),
     _gameState(gameState),
@@ -111,6 +114,10 @@ const qint32 &SocketWorker::id() const
 
 void SocketWorker::beginInteract()
 {
+    //debug
+    _view.lock();
+    _view.appendStatus("SocketWorker::beginInteract: Entering interact routine");
+    _view.unlock();
 
     while( _running_state() )
     {
@@ -118,6 +125,11 @@ void SocketWorker::beginInteract()
 
         (*this) << _socket_stream;
     }
+
+    //debug
+    _view.lock();
+    _view.appendStatus("SocketWorker::beginInteract: Leaving interact routine");
+    _view.unlock();
 }
 
 void SocketWorker::socketError(QAbstractSocket::SocketError socketError)
@@ -128,10 +140,20 @@ void SocketWorker::socketError(QAbstractSocket::SocketError socketError)
 
     qDebug() << "SocketWorker::socketError: " << socketError << endl;
 
+    //debug
+    _view.lock();
+    _view.appendStatus("SocketWorker::socketError: error sent in qDebug()");
+    _view.unlock();
+
 }
 
 void SocketWorker::disconnected()
 {
+    //debug
+    _view.lock();
+    _view.appendStatus("SocketWorker::disconnected: players disconnected");
+    _view.unlock();
+
     _playersStates[_myIndex]->lock();
     _playersStates[_myIndex]->setState(PongTypes::DISCONNECTED);
     _playersStates[_myIndex]->unlock();
@@ -139,6 +161,11 @@ void SocketWorker::disconnected()
     qDebug() << "SocketWorker::disconnected: player " << _myIndex << " disconnected " << endl;
 
     emit hostDisconnected();
+
+    //debug
+    _view.lock();
+    _view.appendStatus("SocketWorker::disconnected: signal hostDisconnected emitted");
+    _view.unlock();
 }
 
 bool SocketWorker::_running_state()

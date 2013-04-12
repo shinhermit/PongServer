@@ -34,5 +34,5 @@ SOURCES += sources/GameState.cpp \
            sources/Random.cpp \
            sources/SocketWorker.cpp \
            sources/Trigo.cpp \
-           tests/test_playing_area.cpp \
-    sources/PongServerView.cpp
+    sources/PongServerView.cpp \
+    sources/main.cpp

@@ -14,12 +14,14 @@
 #include "GameState.hpp"
 #include "PlayingArea.hpp"
 #include "SocketWorker.hpp"
+#include "PongServerView.hpp"
 
 class LoggerWorker : public QObject
 {
     Q_OBJECT
 public:
     LoggerWorker(
+            PongServerView & view,
             QTcpServer & tcpServer,
             QVector<QTcpSocket*> & sockets,
             PlayingArea & playingArea,
@@ -45,6 +47,7 @@ private:
     short _nbConnected;
     const qint16 _port;
 
+    PongServerView & _view;
     QTcpServer & _tcpServer;
     QVector<QTcpSocket*> & _sockets;
 

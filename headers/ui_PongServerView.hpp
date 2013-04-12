@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'PongServerView.ui'
 **
-** Created: Fri Apr 12 01:09:45 2013
+** Created: Fri Apr 12 15:44:16 2013
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -29,6 +29,7 @@ class Ui_PonServerView
 public:
     QVBoxLayout *verticalLayout_2;
     QHBoxLayout *horizontalLayout_4;
+    QPushButton *quitButton;
     QPushButton *startButton;
     QLabel *label;
     QPlainTextEdit *statusText;
@@ -42,6 +43,12 @@ public:
         verticalLayout_2->setObjectName(QString::fromUtf8("verticalLayout_2"));
         horizontalLayout_4 = new QHBoxLayout();
         horizontalLayout_4->setObjectName(QString::fromUtf8("horizontalLayout_4"));
+        quitButton = new QPushButton(PonServerView);
+        quitButton->setObjectName(QString::fromUtf8("quitButton"));
+        quitButton->setMaximumSize(QSize(100, 16777215));
+
+        horizontalLayout_4->addWidget(quitButton);
+
         startButton = new QPushButton(PonServerView);
         startButton->setObjectName(QString::fromUtf8("startButton"));
         startButton->setEnabled(false);
@@ -65,6 +72,7 @@ public:
 
         retranslateUi(PonServerView);
         QObject::connect(startButton, SIGNAL(clicked()), PonServerView, SLOT(startClickedSlot()));
+        QObject::connect(quitButton, SIGNAL(clicked()), PonServerView, SLOT(quitClickedSlot()));
 
         QMetaObject::connectSlotsByName(PonServerView);
     } // setupUi
@@ -72,6 +80,7 @@ public:
     void retranslateUi(QWidget *PonServerView)
     {
         PonServerView->setWindowTitle(QApplication::translate("PonServerView", "PongServerView", 0, QApplication::UnicodeUTF8));
+        quitButton->setText(QApplication::translate("PonServerView", "Quit", 0, QApplication::UnicodeUTF8));
         startButton->setText(QApplication::translate("PonServerView", "Start", 0, QApplication::UnicodeUTF8));
         label->setText(QApplication::translate("PonServerView", "Status message", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
