@@ -16,7 +16,8 @@ SocketWorker::SocketWorker(
     _socket_stream(&_socket),
     _myIndex(myIndex)
 {
-    QObject::connect( &_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)) );
+    connect( &_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)) );
+    connect( &_socket, SIGNAL(disconnected()), this, SLOT(disconnected()) );
 }
 
 
@@ -33,8 +34,8 @@ SocketWorker::SocketWorker(qint32 myIndex,
     _socket_stream(&_socket),
     _myIndex(myIndex)
 {
-    QObject::connect( &_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)) );
-    QObject::connect( &_socket, SIGNAL(disconnected()), this, SLOT(disconnected()) );
+    connect( &_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)) );
+    connect( &_socket, SIGNAL(disconnected()), this, SLOT(disconnected()) );
 }
 
 void SocketWorker::operator >>(QDataStream &out) const

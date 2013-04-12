@@ -68,6 +68,7 @@ void LoggerWorker::newConnectionSlot()
         connect(&interfaceThread, SIGNAL(started()), &interface, SLOT(beginInteract()));
         connect( &interface, SIGNAL(hostDisconnected()), &interfaceThread, SLOT(quit()) );
         interface.moveToThread(&interfaceThread);
+        interfaceThread.start();
 
         ++_nbConnected;
 

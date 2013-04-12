@@ -1,7 +1,7 @@
 #include "GameState.hpp"
 
-GameState::GameState():
-    _state(PongTypes::NOPARTY),
+GameState::GameState(const PongTypes::E_GameState & initialState):
+    _state(initialState),
     _loserIndex(-1),
     _downCounter(0),
     _nbPlayers(0)

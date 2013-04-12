@@ -10,7 +10,7 @@
 class GameState : public Lockable
 {
   public:
-  GameState();
+  GameState(const PongTypes::E_GameState & initialState=PongTypes::NOPARTY);
 
   void setGameOver(const qint32 & cageIndex);
   void setPaused();

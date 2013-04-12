@@ -25,10 +25,11 @@ public:
 
 signals:
     void gameStateErrorSignal(const QString & mess);
+    void newGameSignal();
     void startService();
 
 public slots:
-    void newGame();
+    void newGameSlot();
     void gameStateErrorSlot(const QString & mess);
     void newPlayersConnected();
     void startRequestedSlot();

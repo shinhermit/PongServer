@@ -4,10 +4,13 @@ PongServer::PongServer(const int & maxPlayers,
                        const int & renderAreaWidth,
                        const qint16 & port)
   : _maxPlayers(maxPlayers),
+    _gameState(PongTypes::NOPARTY),
     _playingArea(renderAreaWidth),
     _gameStateChecker(_playingArea, _playersStates, _playersStatesMutex, _gameState),
     _playerLogger(_tcpServer, _sockets, _playingArea, _gameState, _playersStates, _playersStatesMutex, _playersInterfaces, _playersInterfacesThreads, port)
 {
+    connect( this, SIGNAL(newGameSignal()), this, SLOT(newGameSlot()) );
+
     connect(this, SIGNAL(startService()), &_gameStateChecker, SLOT(waitStartSlot()) );
 
     connect(this, SIGNAL(startService()), &_playerLogger, SLOT(waitConnections()) );
@@ -21,6 +24,8 @@ PongServer::PongServer(const int & maxPlayers,
 
   _gameStateCheckerThread.start();
   _playerLoggerThread.start();
+
+  emit newGameSignal();
 }
 
 void PongServer::gameStateErrorSlot(const QString &mess)
@@ -52,7 +57,7 @@ void PongServer::startRequestedSlot()
     _gameState.unlock();
 }
 
-void PongServer::newGame()
+void PongServer::newGameSlot()
 {
     //delete workers and thread for disconnected players
     _playersStatesMutex.lock();

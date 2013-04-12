@@ -12,7 +12,7 @@ GameStateWorker::GameStateWorker(
     _playersStatesMutex(playersStatesMutex),
     _gameState(gameState)
 {
-    QObject::connect( &_timer, SIGNAL(timeout()), this, SLOT(_count_down()) );
+    QObject::connect( &_timer, SIGNAL(timeout()), this, SLOT(_countDownSlot()) );
     QObject::connect( this, SIGNAL(checkInitSignal()), this, SLOT(checkInitSlot()) );
     QObject::connect( this, SIGNAL(checkRunningSignal()), this, SLOT(checkRunningSlot()) );
 }
@@ -30,14 +30,13 @@ void GameStateWorker::waitStartSlot()
 
     while(state != PongTypes::START_REQUESTED)
     {
-        nbPlayers = _playersStates.size();
-
         _gameState.lock();
-        _gameState.setNbPlayers(nbPlayers);
 
         state = _gameState.state();
+
         _gameState.unlock();
     }
+
     emit checkInitSignal();
 }
 
