@@ -3,14 +3,16 @@
 
 #include <QWidget>
 
+#include "Lockable.hpp"
 #include "ui_PongServerView.hpp"
 
-class PongServerView : public QWidget
+class PongServerView : public QWidget, public Lockable
 {
     Q_OBJECT
 public:
     PongServerView();
     void setStatus(const QString & status);
+    void appendStatus(const QString & status);
     void enableStartButton();
     void disableStartButton();
 

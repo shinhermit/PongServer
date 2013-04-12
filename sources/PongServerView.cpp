@@ -8,7 +8,12 @@ PongServerView::PongServerView()
 
 void PongServerView::setStatus(const QString &status)
 {
-    _ui.statusText->setPlainText( _ui.statusText->toPlainText() + ". " + status + "\n" );
+    _ui.statusText->setPlainText(". " + status);
+}
+
+void PongServerView::appendStatus(const QString &status)
+{
+    _ui.statusText->setPlainText( _ui.statusText->toPlainText() + "\n. " + status);
 }
 
 void PongServerView::enableStartButton()

@@ -20,12 +20,16 @@ PongServer::PongServer(const int & maxPlayers,
     connect(&_view, SIGNAL(startClickedSignal()), this, SLOT(startRequestedSlot()) );
 
     _gameStateChecker.moveToThread(&_gameStateCheckerThread);
-  _playerLogger.moveToThread(&_playerLoggerThread);
+    _playerLogger.moveToThread(&_playerLoggerThread);
 
-  _gameStateCheckerThread.start();
-  _playerLoggerThread.start();
+    _gameStateCheckerThread.start();
+    _playerLoggerThread.start();
 
-  emit newGameSignal();
+    //debug
+    _view.lock();
+    _view.appendStatus("Server Active; GameState set to NOPARTY; Ckecker and Logger Threads lunched");
+
+    emit newGameSignal();
 }
 
 void PongServer::gameStateErrorSlot(const QString &mess)
@@ -59,7 +63,16 @@ void PongServer::startRequestedSlot()
 
 void PongServer::newGameSlot()
 {
+    //debug
+    _view.lock();
+    _view.appendStatus("PongServer::newGameSlot : resetting Game");
+    _view.unlock();
+
     //delete workers and thread for disconnected players
+    _view.lock();
+    _view.disableStartButton();
+    _view.unlock();
+
     _playersStatesMutex.lock();
     if(_playersStates.size() > 0)
     {
@@ -79,6 +92,13 @@ void PongServer::newGameSlot()
         }
     }
     _playersStatesMutex.unlock();
+
+    if( _playersInterfaces.size() > 1 )
+    {
+        _view.lock();
+        _view.enableStartButton();
+        _view.unlock();
+    }
 
     //update _myIndex for remaining Players
     for(int i=0; i < _playersInterfaces.size(); ++i)
