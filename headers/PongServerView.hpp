@@ -4,13 +4,18 @@
 #include <QWidget>
 
 #include "Lockable.hpp"
-#include "ui_PongServerView.hpp"
+
+namespace Ui {
+    class PonServerView;
+}
 
 class PongServerView : public QWidget, public Lockable
 {
     Q_OBJECT
 public:
     PongServerView();
+    ~PongServerView();
+
     void setStatus(const QString & status);
     void appendStatus(const QString & status);
     void enableStartButton();
@@ -27,7 +32,7 @@ private slots:
     void quitClickedSlot();
 
 private:
-    Ui_PonServerView _ui;
+    Ui::PonServerView * _ui;
 };
 
 #endif // PONGSERVERVIEW_HPP
