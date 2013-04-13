@@ -18,7 +18,6 @@ class SocketWorker : public QObject
     Q_OBJECT
 public:
     SocketWorker(
-            PongServerView &view,
             QTcpSocket &socket,
             PlayingArea &playingArea,
             GameState &gameState,
@@ -37,6 +36,7 @@ public:
 signals:
     void hostDisconnected(); //stop thread
     void finishedSignal();
+    void appendStatusSignal(const QString & status);
 
 public slots:
     void beginInteract();
@@ -46,7 +46,6 @@ public slots:
 private:
     QDataStream _socket_stream;
 
-    PongServerView & _view;
     QTcpSocket & _socket;
     PlayingArea & _playingArea;
     GameState & _gameState;

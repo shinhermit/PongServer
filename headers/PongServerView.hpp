@@ -9,7 +9,7 @@ namespace Ui {
     class PongServerView;
 }
 
-class PongServerView : public QWidget, public Lockable
+class PongServerView : public QWidget
 {
     Q_OBJECT
 public:
@@ -25,7 +25,10 @@ public:
 
 signals:
     void startClickedSignal();
-    void closeSignal();
+    void exitSignal();
+
+public slots:
+    void appendStatusSlot(const QString & status);
 
 private slots:
     void startClickedSlot();

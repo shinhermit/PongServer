@@ -47,5 +47,11 @@ void PongServerView::startClickedSlot()
 
 void PongServerView::quitClickedSlot()
 {
-    emit closeSignal();
+    emit exitSignal();
+}
+
+
+void PongServerView::appendStatusSlot(const QString &status)
+{
+    appendStatus(status);
 }

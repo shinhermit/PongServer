@@ -1,12 +1,11 @@
 #include "SocketWorker.hpp"
 
-SocketWorker::SocketWorker(PongServerView &view,
+SocketWorker::SocketWorker(
         QTcpSocket &socket,
         PlayingArea &playingArea,
         GameState &gameState,
         PlayerState &playerState
         ):
-    _view(view),
     _socket(socket),
     _playingArea(playingArea),
     _gameState(gameState),
@@ -25,7 +24,7 @@ SocketWorker::~SocketWorker()
         _socket.close();
 }
 
-void SocketWorker::operator >>(QDataStream &out) const
+void SocketWorker::operator>>(QDataStream &out) const
 {
     qint32 nbRackets, nbPlayers, loserIndex, gameState, downCounter=-1;
     QLineF racketLine;
@@ -61,7 +60,7 @@ void SocketWorker::operator >>(QDataStream &out) const
 
 }
 
-void SocketWorker::operator <<(QDataStream & in)
+void SocketWorker::operator<<(QDataStream & in)
 {
     qreal dxRacket;
 
@@ -89,9 +88,7 @@ QDataStream & operator>>(QDataStream &in, SocketWorker &sckw)
 void SocketWorker::beginInteract()
 {
     //debug
-    _view.lock();
-    _view.appendStatus("SocketWorker::beginInteract: Entering interact routine");
-    _view.unlock();
+    emit appendStatusSignal("SocketWorker::beginInteract: Entering interact routine");
 
     while( _running_state() )
     {
@@ -102,9 +99,7 @@ void SocketWorker::beginInteract()
     }
 
     //debug
-    _view.lock();
-    _view.appendStatus("SocketWorker::beginInteract: Leaving interact routine");
-    _view.unlock();
+    emit appendStatusSignal("SocketWorker::beginInteract: Leaving interact routine");
 
     if( _exit_requested() )
         emit finishedSignal();
@@ -119,18 +114,13 @@ void SocketWorker::socketError(QAbstractSocket::SocketError socketError)
     qDebug() << "SocketWorker::socketError: " << socketError << endl;
 
     //debug
-    _view.lock();
-    _view.appendStatus( QString("SocketWorker::socketError: ")+socketError );
-    _view.unlock();
-
+    emit appendStatusSignal( "SocketWorker::socketError: " + socketError );
 }
 
 void SocketWorker::disconnected()
 {
     //debug
-    _view.lock();
-    _view.appendStatus("SocketWorker::disconnected: players disconnected");
-    _view.unlock();
+    emit appendStatusSignal("SocketWorker::disconnected: players disconnected");
 
     _playerState.lock();
     _playerState.setState(PongTypes::DISCONNECTED);
@@ -141,9 +131,7 @@ void SocketWorker::disconnected()
     emit hostDisconnected();
 
     //debug
-    _view.lock();
-    _view.appendStatus("SocketWorker::disconnected: signal hostDisconnected emitted");
-    _view.unlock();
+    emit appendStatusSignal("SocketWorker::disconnected: signal hostDisconnected emitted");
 }
 
 bool SocketWorker::_running_state()

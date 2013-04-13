@@ -5,7 +5,6 @@ const short LoggerWorker::_maxPlayers = 6;
 const short LoggerWorker::_maxPending = 12;
 
 LoggerWorker::LoggerWorker(
-        PongServerView &view,
         GameState &gameState,
         PlayingArea &playingArea,
         QVector<PlayerState *> &playersStates,
@@ -15,7 +14,6 @@ LoggerWorker::LoggerWorker(
         const qint16 &port
         ):
     _port(port),
-    _view(view),
     _playingArea(playingArea),
     _gameState(gameState),
     _playersStates(playersStates),
@@ -50,9 +48,7 @@ void LoggerWorker::waitConnections()
             _tcpServer.listen(QHostAddress::Any, _port);
 
         //debug
-        _view.lock();
-        _view.appendStatus("LoggerWorker::waitConnections: listening");
-        _view.unlock();
+        emit appendStatusSignal("LoggerWorker::waitConnections: listening");
 
         _timer.start(_timerInterval);
     }
@@ -74,9 +70,7 @@ void LoggerWorker::newConnectionSlot()
         _timer.stop();
 
     //debug
-    _view.lock();
-    _view.appendStatus("LoggerWorker::newConnectionSlot: connection demand");
-    _view.unlock();
+    emit appendStatusSignal("LoggerWorker::newConnectionSlot: connection demand");
 
     if( _nbPlayers() <= _maxPlayers && _loggableGameState() )
     {
@@ -85,31 +79,23 @@ void LoggerWorker::newConnectionSlot()
         _playersStates.push_back( new PlayerState(index, PongTypes::ACCEPTED, this) );
 
         QTcpSocket & socket = *_tcpServer.nextPendingConnection();
-        _socketWorkers.push_back( new SocketWorker(_view, socket, _playingArea, _gameState, *_playersStates[index]) );
+        _socketWorkers.push_back( new SocketWorker(socket, _playingArea, _gameState, *_playersStates[index]) );
         index = _socketWorkers.size() - 1;
-        SocketWorker & worker = *_socketWorkers[index];
+        SocketWorker * worker = _socketWorkers[index];
 
         _socketThreads.push_back( new QThread(this) );
         index = _socketThreads.size() - 1;
-        QThread & thread = *_socketThreads[index];
+        QThread * thread = _socketThreads[index];
 
-        connect(&thread, SIGNAL(started()), &worker, SLOT(beginInteract()));
-        connect( &worker, SIGNAL(hostDisconnected()), &thread, SLOT(quit()) );
-        connect( &worker, SIGNAL(finishedSignal()), &thread, SLOT(quit()) );
-
-        worker.moveToThread(&thread);
-        thread.start();
 
         _incNbPlayers();
 
-        emit newPlayerConnected();
+        emit newPlayerConnected(worker, thread);
 
         _playersStatesMutex.unlock();
 
         //debug
-        _view.lock();
-        _view.appendStatus("LoggerWorker::newConnectionSlot: connection accepted");
-        _view.unlock();
+        emit appendStatusSignal("LoggerWorker::newConnectionSlot: connection accepted");
 
         _timer.start(_timerInterval);
     }

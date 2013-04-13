@@ -28,12 +28,11 @@ public:
 signals:
     void gameStateErrorSignal(const QString & mess);
     void newGameSignal();
-    void startService();
 
 public slots:
     void newGameSlot();
     void gameStateErrorSlot(const QString & mess);
-    void newPlayerConnected();
+    void newPlayerConnected(SocketWorker*worker, QThread*thread);
     void startRequestedSlot();
     void quitSlot();
 
@@ -49,20 +48,19 @@ private:
     //Mutex for shared memory
     QMutex _playersStatesMutex;
 
-    //network
-    QVector<SocketWorker*> _socketWorkers;
-    QVector<QThread*> _socketThreads;
-
     //worker classes for threads
     GameStateWorker _gameStateChecker;
     LoggerWorker _playerLogger;
+    QVector<SocketWorker*> _socketWorkers;
 
     //thread objects
     QThread _gameStateCheckerThread;
     QThread _playerLoggerThread;
+    QVector<QThread*> _socketThreads;
 
     void _reset_gameState();
     void _reset_playersStates();
+    bool _all_threads_finished();
 };
 
 #endif

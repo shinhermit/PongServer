@@ -1,14 +1,12 @@
 #include "GameStateWorker.hpp"
 
 GameStateWorker::GameStateWorker(
-        PongServerView &view,
         GameState &gameState,
         PlayingArea &playingArea,
         QVector<PlayerState *> &playersStates,
         QMutex &playersStatesMutex
         ):
     _downCounter(-1),
-    _view(view),
     _playingArea(playingArea),
     _playersStates(playersStates),
     _playersStatesMutex(playersStatesMutex),
@@ -24,9 +22,7 @@ void GameStateWorker::waitStartSlot()
     PongTypes::E_GameState state;
 
     //debug
-    _view.lock();
-    _view.appendStatus("GameStateWorker::waitStartSlot: Entering waitStart routine");
-    _view.unlock();
+    emit appendStatusSignal("GameStateWorker::waitStartSlot: Entering waitStart routine");
 
     _gameState.lock();
     _gameState.setWaitingServer();
@@ -44,10 +40,8 @@ void GameStateWorker::waitStartSlot()
     }
 
     //debug
-    _view.lock();
-    _view.appendStatus("GameStateWorker::waitStartSlot: getting out of waitStart routine");
-    _view.appendStatus("GameStateWorker::waitStartSlot: emitting checkInitSignal");
-    _view.unlock();
+    emit appendStatusSignal("GameStateWorker::waitStartSlot: getting out of waitStart routine");
+    emit appendStatusSignal("GameStateWorker::waitStartSlot: emitting checkInitSignal");
 
     if(state != PongTypes::EXIT_REQUESTED)
         emit checkInitSignal();
@@ -64,10 +58,8 @@ void GameStateWorker::checkInitSlot()
     _downCounter = 4;
 
     //debug
-    _view.lock();
-    _view.appendStatus("GameStateWorker::checkInitSlot: gameState set to INITIALIZING");
-    _view.appendStatus("GameStateWorker::checkInitSlot: arming timer, with downCounter initialized to 4");
-    _view.unlock();
+    emit appendStatusSignal("GameStateWorker::checkInitSlot: gameState set to INITIALIZING");
+    emit appendStatusSignal("GameStateWorker::checkInitSlot: arming timer, with downCounter initialized to 4");
 
     if( !_exit_requested() )
         _timer.start(1000);
@@ -78,9 +70,7 @@ void GameStateWorker::checkInitSlot()
 void GameStateWorker::checkRunningSlot()
 {
     //debug
-    _view.lock();
-    _view.appendStatus("GameStateWorker::checkRunningSlot: entering checkRunning routine");
-    _view.unlock();
+    emit appendStatusSignal("GameStateWorker::checkRunningSlot: entering checkRunning routine");
 
     _gameState.lock();
     _gameState.setRunning();
@@ -99,9 +89,7 @@ void GameStateWorker::checkRunningSlot()
     }
 
     //debug
-    _view.lock();
-    _view.appendStatus("GameStateWorker::checkRunningSlot: leaving checkRunning routine");
-    _view.unlock();
+    emit appendStatusSignal("GameStateWorker::checkRunningSlot: leaving checkRunning routine");
 
     if( _exit_requested() )
         emit finishedSignal();
@@ -195,9 +183,7 @@ void GameStateWorker::_manage_goal(const int & cageIndex)
     _gameState.lock();
 
     //debug
-    _view.lock();
-    _view.appendStatus("GameStateWorker::_manage_goal: player "+QString::number(cageIndex)+"  conceded a goal");
-    _view.unlock();
+    emit appendStatusSignal("GameStateWorker::_manage_goal: player "+QString::number(cageIndex)+"  conceded a goal");
 
     //decrease credits
     _playersStates[cageIndex]->decreaseCredit();
@@ -237,9 +223,7 @@ void GameStateWorker::_discard_player(const int & racketIndex)
     _playingArea.unlock();
 
     //debug
-    _view.lock();
-    _view.appendStatus("GameStateWorker::_discard_player: player "+QString::number(racketIndex)+"  discarded");
-    _view.unlock();
+    emit appendStatusSignal("GameStateWorker::_discard_player: player "+QString::number(racketIndex)+"  discarded");
 }
 
 void GameStateWorker::_manage_wall_collision(const int & wallIndex)
@@ -276,11 +260,7 @@ bool GameStateWorker::_game_over()
 void GameStateWorker::_manage_game_over()
 {
     //debug
-    _view.lock();
-    _view.appendStatus("GameStateWorker::_manage_game_over: game over state detected");
-    _view.unlock();
+    emit appendStatusSignal("GameStateWorker::_manage_game_over: game over state detected");
 
     //maybe some actions will be needed later
 }
-
-

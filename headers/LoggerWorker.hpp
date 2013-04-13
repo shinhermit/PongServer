@@ -22,7 +22,6 @@ class LoggerWorker : public QObject
     Q_OBJECT
 public:
     LoggerWorker(
-            PongServerView & view,
             GameState & gameState,
             PlayingArea & playingArea,
             QVector<PlayerState*> & playersStates,
@@ -35,8 +34,9 @@ public:
     ~LoggerWorker();
 
 signals:
-    void newPlayerConnected();
+    void newPlayerConnected(SocketWorker * worker, QThread * thread);
     void finishedSignal();
+    void appendStatusSignal(const QString & status);
 
 public slots:
     void waitConnections();
@@ -50,7 +50,6 @@ private:
     QTcpServer _tcpServer;
     QTimer _timer;
 
-    PongServerView & _view;
     PlayingArea & _playingArea;
     GameState & _gameState;
     QVector<PlayerState*> & _playersStates;
