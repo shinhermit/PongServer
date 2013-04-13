@@ -23,12 +23,12 @@ class GameStateWorker : public QObject
     Q_OBJECT
 
 public:
-    GameStateWorker(PongServerView & view,
+    GameStateWorker(
+            PongServerView & view,
+            GameState & gameState,
             PlayingArea & playingArea,
             QVector<PlayerState*> & playersStates,
-            QMutex & playersStatesMutex,
-            GameState & gameState
-            );
+            QMutex & playersStatesMutex);
 
 signals:
     void checkInitSignal();
@@ -39,7 +39,6 @@ public slots:
     void waitStartSlot();
     void checkInitSlot();
     void checkRunningSlot();
-    void quitSlot();
 
 private slots:
     void _countDownSlot();
@@ -53,6 +52,8 @@ private:
     QVector<PlayerState*> & _playersStates;
     QMutex & _playersStatesMutex;
     GameState & _gameState;
+
+    bool _exit_requested();
 
     void _update_rackets();
 

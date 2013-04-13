@@ -14,7 +14,7 @@ class GameState : public Lockable
 
   void setGameOver(const qint32 & cageIndex);
   void setPaused();
-  void setExited();
+  void setExitRequested();
   void setWaitingServer();
   void setInitializing();
   void setRunning();

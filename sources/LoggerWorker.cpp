@@ -1,97 +1,108 @@
 #include "LoggerWorker.hpp"
 
+const int LoggerWorker::_timerInterval = 300;
 const short LoggerWorker::_maxPlayers = 6;
 const short LoggerWorker::_maxPending = 12;
 
 LoggerWorker::LoggerWorker(
         PongServerView &view,
-        QTcpServer &tcpServer,
-        QVector<QTcpSocket *> &sockets,
-        PlayingArea &playingArea,
         GameState &gameState,
+        PlayingArea &playingArea,
         QVector<PlayerState *> &playersStates,
         QMutex &playersStatesMutex,
-        QVector<SocketWorker *> &playersInterfaces,
-        QVector<QThread *> &playersInterfacesThreads, const qint16 &port
+        QVector<SocketWorker *> &socketWorkers,
+        QVector<QThread *> &socketThreads,
+        const qint16 &port
         ):
-    _nbConnected(0),
     _port(port),
     _view(view),
-    _tcpServer(tcpServer),
-    _sockets(sockets),
     _playingArea(playingArea),
     _gameState(gameState),
     _playersStates(playersStates),
     _playersStatesMutex(playersStatesMutex),
-    _playersInterfaces(playersInterfaces),
-    _playersInterfacesThreads(playersInterfacesThreads)
+    _socketWorkers(socketWorkers),
+    _socketThreads(socketThreads)
 {
     _tcpServer.setMaxPendingConnections(_maxPending);
-    QObject::connect( &_tcpServer, SIGNAL(newConnection()), this, SLOT(newConnectionSlot()) );
+    connect( &_tcpServer, SIGNAL(newConnection()), this, SLOT(newConnectionSlot()) );
+
+    connect( &_timer, SIGNAL(timeout()), this, SLOT(_checkExitRequested()) );
 }
 
-void LoggerWorker::setNbConnected(const qint32 &nbConnected)
+LoggerWorker::~LoggerWorker()
 {
-    _nbConnected = ::abs(nbConnected);
-}
+    if(_timer.isActive())
+        _timer.stop();
 
-qint32 LoggerWorker::nbConnected() const
-{
-    return _nbConnected;
+    if( _tcpServer.isListening() )
+        _tcpServer.close();
 }
 
 void LoggerWorker::waitConnections()
 {
-    if( !_tcpServer.isListening() )
-        _tcpServer.listen(QHostAddress::Any, _port);
+    //we don't want to be interrupted
+    if( _timer.isActive() )
+        _timer.stop();
 
-    //debug
-    _view.lock();
-    _view.appendStatus("LoggerWorker::waitConnections: listening");
-    _view.unlock();
+    if( !_exit_requested() )
+    {
+        if( !_tcpServer.isListening() )
+            _tcpServer.listen(QHostAddress::Any, _port);
+
+        //debug
+        _view.lock();
+        _view.appendStatus("LoggerWorker::waitConnections: listening");
+        _view.unlock();
+
+        _timer.start(_timerInterval);
+    }
+
+    else
+    {
+        _tcpServer.close();
+
+        emit finishedSignal();
+    }
 }
 
 void LoggerWorker::newConnectionSlot()
 {
     int index;
 
+    //we don't want to be interrupted
+    if( _timer.isActive() )
+        _timer.stop();
+
     //debug
     _view.lock();
     _view.appendStatus("LoggerWorker::newConnectionSlot: connection demand");
     _view.unlock();
 
-    if( _nbConnected <= _maxPlayers && _loggableGameState() )
+    if( _nbPlayers() <= _maxPlayers && _loggableGameState() )
     {
         _playersStatesMutex.lock();
-        _playersStates.push_back( new PlayerState(PongTypes::ACCEPTED) );
+        index = _playersStates.size();
+        _playersStates.push_back( new PlayerState(index, PongTypes::ACCEPTED, this) );
 
-        index = _sockets.size();
-        _sockets.push_back( _tcpServer.nextPendingConnection() );
-        QTcpSocket & socket = *_sockets.at(index);
+        QTcpSocket & socket = *_tcpServer.nextPendingConnection();
+        _socketWorkers.push_back( new SocketWorker(_view, socket, _playingArea, _gameState, *_playersStates[index]) );
+        index = _socketWorkers.size() - 1;
+        SocketWorker & worker = *_socketWorkers[index];
 
-        index = _playersInterfaces.size();
-        _playersInterfaces.push_back( new SocketWorker(index, _view, socket, _playingArea, _gameState, _playersStates) );
-        SocketWorker & interface = *_playersInterfaces[index];
+        _socketThreads.push_back( new QThread(this) );
+        index = _socketThreads.size() - 1;
+        QThread & thread = *_socketThreads[index];
 
-        index = _playersInterfacesThreads.size();
-        _playersInterfacesThreads.push_back(new QThread());
-        QThread & interfaceThread = *_playersInterfacesThreads[index];
+        connect(&thread, SIGNAL(started()), &worker, SLOT(beginInteract()));
+        connect( &worker, SIGNAL(hostDisconnected()), &thread, SLOT(quit()) );
+        connect( &worker, SIGNAL(finishedSignal()), &thread, SLOT(quit()) );
 
-        connect(&interfaceThread, SIGNAL(started()), &interface, SLOT(beginInteract()));
-        connect( &interface, SIGNAL(hostDisconnected()), &interfaceThread, SLOT(quit()) );
-        connect( this, SIGNAL(quitSignal()), &interface, SLOT(quitSlot()) );
-        connect( &interface, SIGNAL(finishedSignal()), &interfaceThread, SLOT(quit()) );
+        worker.moveToThread(&thread);
+        thread.start();
 
-        interface.moveToThread(&interfaceThread);
-        interfaceThread.start();
+        _incNbPlayers();
 
-        ++_nbConnected;
-
-        _gameState.lock();
-        _gameState.setNbPlayers(_nbConnected);
-        _gameState.unlock();
-
-        emit newPlayersConnected();
+        emit newPlayerConnected();
 
         _playersStatesMutex.unlock();
 
@@ -99,14 +110,28 @@ void LoggerWorker::newConnectionSlot()
         _view.lock();
         _view.appendStatus("LoggerWorker::newConnectionSlot: connection accepted");
         _view.unlock();
+
+        _timer.start(_timerInterval);
+    }
+
+    else if( _exit_requested() )
+    {
+        _tcpServer.close();
+        emit finishedSignal();
     }
 }
 
-void LoggerWorker::quitSlot()
+void LoggerWorker::_checkExitRequested()
 {
-    _tcpServer.close();
-    emit quitSignal();
-    emit finishedSignal();
+    _timer.stop();
+
+    if( _exit_requested() )
+    {
+        _tcpServer.close();
+        emit finishedSignal();
+    }
+
+    _timer.start(_timerInterval);
 }
 
 bool LoggerWorker::_loggableGameState()
@@ -119,8 +144,47 @@ bool LoggerWorker::_loggableGameState()
             &&
             _gameState.state() != PongTypes::RUNNING
             &&
-            _gameState.state() != PongTypes::PAUSED);
+            _gameState.state() != PongTypes::PAUSED
+            &&
+            _gameState.state() != PongTypes::EXIT_REQUESTED);
     _gameState.unlock();
 
     return loggable;
+}
+
+bool LoggerWorker::_exit_requested()
+{
+    bool requested;
+
+    _gameState.lock();
+    requested = ( _gameState.state() == PongTypes::EXIT_REQUESTED );
+    _gameState.unlock();
+
+    return requested;
+}
+
+void LoggerWorker::_setNbPlayers(const qint32 &nbPlayers)
+{
+    _gameState.lock();
+    _gameState.setNbPlayers(nbPlayers);
+    _gameState.unlock();
+}
+
+void LoggerWorker::_incNbPlayers()
+{
+    _gameState.lock();
+    _gameState.setNbPlayers( _gameState.nbPlayers() + 1 );
+    _gameState.unlock();
+
+}
+
+qint32 LoggerWorker::_nbPlayers()
+{
+    qint32 nbPlayers;
+
+    _gameState.lock();
+    nbPlayers = _gameState.nbPlayers();
+    _gameState.unlock();
+
+    return nbPlayers;
 }

@@ -7,8 +7,6 @@
 #include <QMutex>
 #include <QDebug>
 
-#include <utility>
-
 #include "Workers.hpp"
 #include "GameState.hpp"
 #include "PlayingArea.hpp"
@@ -31,12 +29,11 @@ signals:
     void gameStateErrorSignal(const QString & mess);
     void newGameSignal();
     void startService();
-    void stopService();
 
 public slots:
     void newGameSlot();
     void gameStateErrorSlot(const QString & mess);
-    void newPlayersConnected();
+    void newPlayerConnected();
     void startRequestedSlot();
     void quitSlot();
 
@@ -49,26 +46,23 @@ private:
     PlayingArea _playingArea; //shared memory
     QVector<PlayerState*> _playersStates; //shared memory
 
-    //Mutexes for shared memories
+    //Mutex for shared memory
     QMutex _playersStatesMutex;
 
     //network
-    QTcpServer _tcpServer;
-    QVector<QTcpSocket*> _sockets;
+    QVector<SocketWorker*> _socketWorkers;
+    QVector<QThread*> _socketThreads;
 
     //worker classes for threads
     GameStateWorker _gameStateChecker;
     LoggerWorker _playerLogger;
-    QVector<SocketWorker*> _playersInterfaces;
 
     //thread objects
     QThread _gameStateCheckerThread;
     QThread _playerLoggerThread;
-    QVector<QThread*> _playersInterfacesThreads;
 
     void _reset_gameState();
     void _reset_playersStates();
-    bool _exists_running_interface()const;
 };
 
 #endif

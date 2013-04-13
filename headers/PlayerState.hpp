@@ -1,6 +1,8 @@
 #ifndef _PlayerState
 #define _PlayerState
 
+#include <cmath>
+
 #include <QObject>
 #include <QLineF>
 
@@ -11,33 +13,20 @@ class PlayerState : public QObject, public Lockable
 {
     Q_OBJECT
 public:
-    PlayerState(QObject & parent,
-                const qreal & dxRacket,
-                const qint32 &credit,
-                const PongTypes::E_PlayerState & state=PongTypes::WAITING);
+    PlayerState(
+            const qint32 & id,
+            const PongTypes::E_PlayerState & state=PongTypes::WAITING,
+            QObject * parent=0
+            );
 
-    PlayerState(const qreal & dxRacket,
-                const qint32 & credit,
-                const PongTypes::E_PlayerState & state=PongTypes::WAITING);
-
-    PlayerState(QObject & parent,
-                const qint32 & credit,
-                const PongTypes::E_PlayerState & state=PongTypes::WAITING);
-
-    PlayerState(const int & credit,
-                const PongTypes::E_PlayerState & state=PongTypes::WAITING);
-
-    PlayerState(QObject & parent,
-                const PongTypes::E_PlayerState & state=PongTypes::WAITING);
-
-    PlayerState(const PongTypes::E_PlayerState & state=PongTypes::WAITING);
-
+    void setId(const qint32 & id);
     void setCredit(const qint32 &credit);
     void decreaseCredit(const qint32 & step=1);
     void setState(const PongTypes::E_PlayerState & state);
     void setFailState();
     void setdxRacket(const qreal & dxRacket);
 
+    const qint32 & id()const;
     const qreal & dxRacket()const;
     const qint32 & credit()const;
     const PongTypes::E_PlayerState & state()const;
@@ -45,6 +34,7 @@ public:
     static const qint32 &DefaultCredit();
 
 private:
+    qint32 _myIndex;
     qreal _dxRacket;
     qint32 _credit;
     PongTypes::E_PlayerState _state;

@@ -19,9 +19,9 @@ void GameState::setPaused()
     _state = PongTypes::PAUSED;
 }
 
-void GameState::setExited()
+void GameState::setExitRequested()
 {
-    _state = PongTypes::EXITED;
+    _state = PongTypes::EXIT_REQUESTED;
 }
 
 void GameState::setWaitingServer()

@@ -2,10 +2,10 @@
 
 GameStateWorker::GameStateWorker(
         PongServerView &view,
+        GameState &gameState,
         PlayingArea &playingArea,
         QVector<PlayerState *> &playersStates,
-        QMutex &playersStatesMutex,
-        GameState &gameState
+        QMutex &playersStatesMutex
         ):
     _downCounter(-1),
     _view(view),
@@ -14,9 +14,9 @@ GameStateWorker::GameStateWorker(
     _playersStatesMutex(playersStatesMutex),
     _gameState(gameState)
 {
-    QObject::connect( &_timer, SIGNAL(timeout()), this, SLOT(_countDownSlot()) );
-    QObject::connect( this, SIGNAL(checkInitSignal()), this, SLOT(checkInitSlot()) );
-    QObject::connect( this, SIGNAL(checkRunningSignal()), this, SLOT(checkRunningSlot()) );
+    connect( &_timer, SIGNAL(timeout()), this, SLOT(_countDownSlot()) );
+    connect( this, SIGNAL(checkInitSignal()), this, SLOT(checkInitSlot()) );
+    connect( this, SIGNAL(checkRunningSignal()), this, SLOT(checkRunningSlot()) );
 }
 
 void GameStateWorker::waitStartSlot()
@@ -34,7 +34,7 @@ void GameStateWorker::waitStartSlot()
     state = _gameState.state();
     _gameState.unlock();
 
-    while(state != PongTypes::START_REQUESTED)
+    while(state != PongTypes::START_REQUESTED && state != PongTypes::EXIT_REQUESTED)
     {
         _gameState.lock();
 
@@ -49,7 +49,10 @@ void GameStateWorker::waitStartSlot()
     _view.appendStatus("GameStateWorker::waitStartSlot: emitting checkInitSignal");
     _view.unlock();
 
-    emit checkInitSignal();
+    if(state != PongTypes::EXIT_REQUESTED)
+        emit checkInitSignal();
+    else
+        emit finishedSignal();
 }
 
 void GameStateWorker::checkInitSlot()
@@ -59,13 +62,17 @@ void GameStateWorker::checkInitSlot()
     _gameState.unlock();
 
     _downCounter = 4;
-    _timer.start(1000);
 
     //debug
     _view.lock();
     _view.appendStatus("GameStateWorker::checkInitSlot: gameState set to INITIALIZING");
-    _view.appendStatus("GameStateWorker::checkInitSlot: timer armed, with downCounter initialized to 4");
+    _view.appendStatus("GameStateWorker::checkInitSlot: arming timer, with downCounter initialized to 4");
     _view.unlock();
+
+    if( !_exit_requested() )
+        _timer.start(1000);
+    else
+        emit finishedSignal();
 }
 
 void GameStateWorker::checkRunningSlot()
@@ -79,7 +86,7 @@ void GameStateWorker::checkRunningSlot()
     _gameState.setRunning();
     _gameState.unlock();
 
-    while( !_game_over() )
+    while( !_game_over() && !_exit_requested() )
     {
         _update_rackets();
         _check_collisions();
@@ -95,17 +102,14 @@ void GameStateWorker::checkRunningSlot()
     _view.lock();
     _view.appendStatus("GameStateWorker::checkRunningSlot: leaving checkRunning routine");
     _view.unlock();
-}
 
-void GameStateWorker::quitSlot()
-{
-    _timer.stop();
-    emit finishedSignal();
+    if( _exit_requested() )
+        emit finishedSignal();
 }
 
 void GameStateWorker::_countDownSlot()
 {
-    if(_downCounter > 0)
+    if( _downCounter > 0 && !_exit_requested() )
     {
         -- _downCounter;
 
@@ -118,12 +122,22 @@ void GameStateWorker::_countDownSlot()
     {
         _timer.stop();
 
-        _gameState.lock();
-        _gameState.setRunning();
-        _gameState.unlock();
-
-        emit checkRunningSignal();
+        if( !_exit_requested() )
+            emit checkRunningSignal();
+        else
+            emit finishedSignal();
     }
+}
+
+bool GameStateWorker::_exit_requested()
+{
+    bool requested;
+
+    _gameState.lock();
+    requested  = ( _gameState.state() == PongTypes::EXIT_REQUESTED );
+    _gameState.unlock();
+
+    return requested;
 }
 
 void GameStateWorker::_update_rackets()

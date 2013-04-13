@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>PonServerView</class>
- <widget class="QWidget" name="PonServerView">
+ <class>PongServerView</class>
+ <widget class="QWidget" name="PongServerView">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -64,7 +64,7 @@
   <connection>
    <sender>startButton</sender>
    <signal>clicked()</signal>
-   <receiver>PonServerView</receiver>
+   <receiver>PongServerView</receiver>
    <slot>startClickedSlot()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -80,7 +80,7 @@
   <connection>
    <sender>quitButton</sender>
    <signal>clicked()</signal>
-   <receiver>PonServerView</receiver>
+   <receiver>PongServerView</receiver>
    <slot>quitClickedSlot()</slot>
    <hints>
     <hint type="sourcelabel">

@@ -9,6 +9,7 @@
 #include <QMutex>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QTimer>
 
 #include "PlayerState.hpp"
 #include "GameState.hpp"
@@ -22,49 +23,54 @@ class LoggerWorker : public QObject
 public:
     LoggerWorker(
             PongServerView & view,
-            QTcpServer & tcpServer,
-            QVector<QTcpSocket*> & sockets,
-            PlayingArea & playingArea,
             GameState & gameState,
+            PlayingArea & playingArea,
             QVector<PlayerState*> & playersStates,
             QMutex & playersStatesMutex,
-            QVector<SocketWorker*> & playersInterfaces,
-            QVector<QThread*> & playersInterfacesThreads,
+            QVector<SocketWorker*> & socketWorkers,
+            QVector<QThread*> & socketThreads,
             const qint16 & port=6666
             );
 
-    void setNbConnected(const qint32 & nbConnected);
-    qint32 nbConnected()const;
+    ~LoggerWorker();
 
 signals:
-    void newPlayersConnected();
+    void newPlayerConnected();
     void finishedSignal();
-    void quitSignal();
 
 public slots:
     void waitConnections();
     void newConnectionSlot();
-    void quitSlot();
+
+private slots:
+    void _checkExitRequested();
 
 private:
-    short _nbConnected;
     const qint16 _port;
+    QTcpServer _tcpServer;
+    QTimer _timer;
 
     PongServerView & _view;
-    QTcpServer & _tcpServer;
-    QVector<QTcpSocket*> & _sockets;
-
     PlayingArea & _playingArea;
     GameState & _gameState;
     QVector<PlayerState*> & _playersStates;
     QMutex & _playersStatesMutex;
-    QVector<SocketWorker*> & _playersInterfaces;
-    QVector<QThread*> & _playersInterfacesThreads;
+    QVector<SocketWorker*> & _socketWorkers;
+    QVector<QThread*> & _socketThreads;
 
+    static const int _timerInterval;
     static const short _maxPlayers;
     static const short _maxPending;
 
     bool _loggableGameState();
+
+    bool _exit_requested();
+
+    void _setNbPlayers(const qint32 & nbPlayers);
+
+    void _incNbPlayers();
+
+    qint32 _nbPlayers();
 };
 
 #endif

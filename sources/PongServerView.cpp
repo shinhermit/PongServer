@@ -1,7 +1,7 @@
 #include "PongServerView.hpp"
 #include "ui_PongServerView.h"
 
-PongServerView::PongServerView():_ui( new Ui::PonServerView() )
+PongServerView::PongServerView():_ui( new Ui::PongServerView() )
 {
     _ui->setupUi(this);
     _ui->statusText->setPlainText(". Ponserver Ui initialized\n");
@@ -17,7 +17,7 @@ void PongServerView::setStatus(const QString &status)
     _ui->statusText->setPlainText(". " + status);
 }
 
-void PongServerView::appendStatus(const QString &status)
+void PongServerView::appendStatus(QString status)
 {
     _ui->statusText->setPlainText( _ui->statusText->toPlainText() + "\n. " + status);
 }

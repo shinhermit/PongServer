@@ -6,20 +6,18 @@ PongServer::PongServer(const int & maxPlayers,
   : _maxPlayers(maxPlayers),
     _gameState(PongTypes::NOPARTY),
     _playingArea(renderAreaWidth),
-    _gameStateChecker(_view, _playingArea, _playersStates, _playersStatesMutex, _gameState),
-    _playerLogger(_view, _tcpServer, _sockets, _playingArea, _gameState, _playersStates, _playersStatesMutex, _playersInterfaces, _playersInterfacesThreads, port)
+    _gameStateChecker(_view, _gameState, _playingArea, _playersStates, _playersStatesMutex),
+    _playerLogger(_view, _gameState, _playingArea, _playersStates, _playersStatesMutex, _socketWorkers, _socketThreads, port)
 {
     connect( this, SIGNAL(newGameSignal()), this, SLOT(newGameSlot()) );
 
     connect(this, SIGNAL(startService()), &_gameStateChecker, SLOT(waitStartSlot()) );
-    connect( this, SIGNAL(stopService()), &_gameStateChecker, SLOT(quitSlot()) );
     connect( &_gameStateChecker, SIGNAL(finishedSignal()), &_gameStateCheckerThread, SLOT(quit()) );
 
     connect(this, SIGNAL(startService()), &_playerLogger, SLOT(waitConnections()) );
-    connect( this, SIGNAL(stopService()), &_playerLogger, SLOT(quitSlot()) );
     connect( &_playerLogger, SIGNAL(finishedSignal()), &_playerLoggerThread, SLOT(quit()) );
 
-    connect(&_playerLogger, SIGNAL(newPlayersConnected()), this, SLOT(newPlayersConnected()) );
+    connect(&_playerLogger, SIGNAL(newPlayerConnected()), this, SLOT(newPlayerConnected()) );
 
     connect(&_view, SIGNAL(startClickedSignal()), this, SLOT(startRequestedSlot()) );
     connect(&_view, SIGNAL(closeSignal()), this, SLOT(quitSlot()) );
@@ -38,11 +36,8 @@ PongServer::PongServer(const int & maxPlayers,
 
 PongServer::~PongServer()
 {
-    for(int i=0; i < _playersInterfaces.size(); ++i)
-        _playersInterfaces[i]->deleteLater();
-
-    for(int i=0; i < _playersInterfacesThreads.size(); ++i)
-        _playersInterfacesThreads[i]->deleteLater();
+    for(int i=0; i < _playersStates.size(); ++i)
+        _playersStates[i]->deleteLater();
 }
 
 void PongServer::start()
@@ -62,7 +57,7 @@ void PongServer::gameStateErrorSlot(const QString &mess)
     qDebug() << mess << endl;
 }
 
-void PongServer::newPlayersConnected()
+void PongServer::newPlayerConnected()
 {
     qint32 nbPlayers;
 
@@ -98,7 +93,11 @@ void PongServer::quitSlot()
     _view.appendStatus("PongServer::quitSlot: quitSignal received");
     _view.unlock();
 
-    emit stopService();
+    _gameState.lock();
+    _gameState.setExitRequested();
+    _gameState.unlock();
+
+    //attendre la fin des threads
 
     _view.close();
 }
@@ -119,12 +118,13 @@ void PongServer::newGameSlot()
         int i=0;
         while( i < _playersStates.size() )
         {
+            _playersStates[i]->setId(i);
+
             if( _playersStates[i]->state() == PongTypes::DISCONNECTED )
             {
                 _playersStates.erase( _playersStates.begin()+i );
-                _sockets.erase( _sockets.begin()+i );
-                _playersInterfaces.erase( _playersInterfaces.begin()+i );
-                _playersInterfacesThreads.erase( _playersInterfacesThreads.begin()+i );
+                _socketWorkers.erase( _socketWorkers.begin()+i );
+                _socketThreads.erase( _socketThreads.begin()+i );
             }
 
             else
@@ -133,19 +133,12 @@ void PongServer::newGameSlot()
     }
     _playersStatesMutex.unlock();
 
-    if( _playersInterfaces.size() > 1 )
+    if( _socketWorkers.size() > 1 )
     {
         _view.lock();
         _view.enableStartButton();
         _view.unlock();
     }
-
-    //update _myIndex for remaining Players
-    for(int i=0; i < _playersInterfaces.size(); ++i)
-        _playersInterfaces[i]->setId(i);
-
-    //tell LoggerWorker how many players are already present
-    _playerLogger.setNbConnected( _playersInterfaces.size() );
 
     //reset gameState, playersStates
     _reset_gameState();
@@ -165,7 +158,7 @@ void PongServer::_reset_gameState()
     _gameState.lock();
 
     _gameState.setWaitingServer();
-    _gameState.setNbPlayers( _playersInterfaces.size() );
+    _gameState.setNbPlayers( _socketWorkers.size() );
     _gameState.setLoserIndex(-1);
     _gameState.setDownCounter(0);
 
@@ -184,18 +177,4 @@ void PongServer::_reset_playersStates()
 
         _playersStates[i]->unlock();
     }
-}
-
-bool PongServer::_exists_running_interface() const
-{
-    bool running = false;
-
-    int i=0;
-    while( i < _playersInterfacesThreads.size() && !running )
-    {
-        running = _playersInterfacesThreads[i]->isRunning();
-        ++i;
-    }
-
-    return running;
 }

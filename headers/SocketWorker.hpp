@@ -17,22 +17,15 @@ class SocketWorker : public QObject
 {
     Q_OBJECT
 public:
-    SocketWorker(QObject &parent,
-                 qint32 myIndex,
-                 PongServerView &view,
-                 QTcpSocket &socket,
-                 PlayingArea &playingArea,
-                 GameState &gameState,
-                 QVector<PlayerState *> &playersStates
-                 );
+    SocketWorker(
+            PongServerView &view,
+            QTcpSocket &socket,
+            PlayingArea &playingArea,
+            GameState &gameState,
+            PlayerState &playerState
+            );
 
-    SocketWorker(qint32 myIndex,
-                 PongServerView & view,
-                 QTcpSocket & socket,
-                 PlayingArea & playingArea,
-                 GameState & gameState,
-                 QVector<PlayerState*> & playersStates
-                 );
+    ~SocketWorker();
 
     void operator>>(QDataStream & out)const;
 
@@ -41,30 +34,26 @@ public:
     friend QDataStream & operator<<(QDataStream & out, const SocketWorker & sckw);
     friend QDataStream & operator>>(QDataStream & in, SocketWorker & sckw);
 
-    void setId(const qint32 & index);
-    const qint32 & id()const;
-
 signals:
-    void hostDisconnected();
+    void hostDisconnected(); //stop thread
     void finishedSignal();
 
 public slots:
     void beginInteract();
     void socketError( QAbstractSocket::SocketError socketError );
     void disconnected();
-    void quitSlot();
 
 private:
+    QDataStream _socket_stream;
+
     PongServerView & _view;
     QTcpSocket & _socket;
     PlayingArea & _playingArea;
     GameState & _gameState;
-    QVector<PlayerState*> & _playersStates;
-
-    QDataStream _socket_stream;
-    qint32 _myIndex;
+    PlayerState & _playerState;
 
     bool _running_state();
+    bool _exit_requested();
 };
 
 #endif
