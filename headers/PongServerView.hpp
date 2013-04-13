@@ -17,7 +17,7 @@ public:
     ~PongServerView();
 
     void setStatus(const QString & status);
-    void appendStatus(QString status);
+    void appendStatus(const QString &status);
     void enableStartButton();
     void disableStartButton();
 
