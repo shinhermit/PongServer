@@ -7,6 +7,7 @@
 #include <QMutex>
 #include <QDataStream>
 #include <QDebug>
+#include <QErrorMessage>
 
 #include "PlayerState.hpp"
 #include "PlayingArea.hpp"

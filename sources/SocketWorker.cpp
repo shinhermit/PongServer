@@ -14,7 +14,7 @@ SocketWorker::SocketWorker(
 {
     //_socket_stream.setDevice(&_socket);
 
-    connect( &_socket, SIGNAL(readyRead()), this, SLOT(getDataSignal()) );
+    connect( &_socket, SIGNAL(readyRead()), this, SLOT(getDataSlot()) );
     connect( this, SIGNAL(sendDataSignal()), this, SLOT(sendDataSlot()) );
     connect( &_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)) );
     connect( &_socket, SIGNAL(disconnected()), this, SLOT(disconnected()) );
@@ -111,7 +111,12 @@ void SocketWorker::beginInteract()
 void SocketWorker::sendDataSlot()
 {
     if( !_exit_requested() )
+    {
+        //debug
+        emit appendStatusSignal("SocketWorker::sendDataSlot: next step = send into stream");
         (*this) >> _socket_stream;
+        emit appendStatusSignal("SocketWorker::sendDataSlot: data sent");
+    }
 
     else
     {
@@ -126,8 +131,11 @@ void SocketWorker::getDataSlot()
 {
     if( !_exit_requested() )
     {
+        emit appendStatusSignal("SocketWorker::getDataSlot: next step = receive from stream");
         (*this) << _socket_stream;
+        emit appendStatusSignal("SocketWorker::getDataSlot: data received");
 
+        emit appendStatusSignal("SocketWorker::getDataSlot: next step = emit sendDataSignal()");
         emit sendDataSignal();
     }
 
@@ -146,10 +154,10 @@ void SocketWorker::socketError(QAbstractSocket::SocketError socketError)
     _playerState.setState(PongTypes::SOCKET_ERROR);
     _playerState.unlock();
 
-    qDebug() << "SocketWorker::socketError: " << socketError << endl;
+    qDebug() << "SocketWorker::socketError: error code = " << QString::number(socketError) << endl;
 
     //debug
-    emit appendStatusSignal( "SocketWorker::socketError: " + socketError );
+    emit appendStatusSignal( "SocketWorker::socketError: error code = " + QString::number(socketError) );
 }
 
 void SocketWorker::disconnected()
