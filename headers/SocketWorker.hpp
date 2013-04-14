@@ -37,9 +37,12 @@ signals:
     void hostDisconnected(); //stop thread
     void finishedSignal();
     void appendStatusSignal(const QString & status);
+    void sendDataSignal();
 
 public slots:
     void beginInteract();
+    void sendDataSlot();
+    void getDataSlot();
     void socketError( QAbstractSocket::SocketError socketError );
     void disconnected();
 

@@ -6,13 +6,16 @@ SocketWorker::SocketWorker(
         GameState &gameState,
         PlayerState &playerState
         ):
+    _socket_stream(&socket),
     _socket(socket),
     _playingArea(playingArea),
     _gameState(gameState),
     _playerState(playerState)
 {
-    _socket_stream.setDevice(&_socket);
+    //_socket_stream.setDevice(&_socket);
 
+    connect( &_socket, SIGNAL(readyRead()), this, SLOT(getDataSignal()) );
+    connect( this, SIGNAL(sendDataSignal()), this, SLOT(sendDataSlot()) );
     connect( &_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)) );
     connect( &_socket, SIGNAL(disconnected()), this, SLOT(disconnected()) );
 }
@@ -32,9 +35,6 @@ void SocketWorker::operator>>(QDataStream &out) const
 
     _playingArea.lock();
     nbRackets = _playingArea.nbRackets();
-    //Debug
-    qDebug() << "SocketWorker::operator : nbRackets = " << nbRackets << endl;
-    qDebug() << "SocketWorker::operator : _playingArea.nbRackets()= " << _playingArea.nbRackets() << endl;
     _playingArea.unlock();
 
     _gameState.lock();
@@ -90,22 +90,54 @@ QDataStream & operator>>(QDataStream &in, SocketWorker &sckw)
 
 void SocketWorker::beginInteract()
 {
-    //debug
-    emit appendStatusSignal("SocketWorker::beginInteract: Entering interact routine");
 
-    while( _running_state() )
+    if( !_exit_requested() )
     {
-        (*this) >> _socket_stream;
+        //debug
+        emit appendStatusSignal("SocketWorker::beginInteract: Entering interact routine");
 
-        if( !_exit_requested() )
-            (*this) << _socket_stream;
+        emit sendDataSignal();
     }
 
-    //debug
-    emit appendStatusSignal("SocketWorker::beginInteract: Leaving interact routine");
+    else
+    {
+        //debug
+        emit appendStatusSignal("SocketWorker::beginInteract: exit requested, can not enter interact routine");
 
-    if( _exit_requested() )
         emit finishedSignal();
+    }
+}
+
+void SocketWorker::sendDataSlot()
+{
+    if( !_exit_requested() )
+        (*this) >> _socket_stream;
+
+    else
+    {
+        //debug
+        emit appendStatusSignal("SocketWorker::sendDataSlot: exit requested, leaving interact routine");
+
+        emit finishedSignal();
+    }
+}
+
+void SocketWorker::getDataSlot()
+{
+    if( !_exit_requested() )
+    {
+        (*this) << _socket_stream;
+
+        emit sendDataSignal();
+    }
+
+    else
+    {
+        //debug
+        emit appendStatusSignal("SocketWorker::getDataSlot: exit requested, leaving interact routine");
+
+        emit finishedSignal();
+    }
 }
 
 void SocketWorker::socketError(QAbstractSocket::SocketError socketError)
