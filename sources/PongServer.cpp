@@ -7,7 +7,7 @@ PongServer::PongServer(const int & maxPlayers,
     _gameState(PongTypes::NOPARTY),
     _playingArea(maxPlayers, renderAreaWidth),
     _gameStateChecker(_gameState, _playingArea, _playersStates, _playersStatesMutex),
-    _playerLogger(_gameState, _playingArea, _playersStates, _playersStatesMutex, _socketWorkers, _socketThreads, port)
+    _playerLogger(_gameState, _playingArea, _playersStates, _playersStatesMutex, _socketWorkers, port)
 {
     connect( this, SIGNAL(newGameSignal()), this, SLOT(newGameSlot()) );
 
@@ -17,18 +17,13 @@ PongServer::PongServer(const int & maxPlayers,
     connect( &_gameStateCheckerThread, SIGNAL(finished()), this, SLOT(threadTerminated()) );
     connect( &_gameStateChecker, SIGNAL(gameOverSignal()), this, SLOT(newGameSlot()) );
 
-    connect( this, SIGNAL(startService()), &_playerLogger, SLOT(waitConnections()) );
-    connect( &_playerLogger, SIGNAL(finishedSignal()), &_playerLoggerThread, SLOT(quit()) );
-    connect( &_playerLogger, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
-    connect( &_playerLoggerThread, SIGNAL(finished()), this, SLOT(threadTerminated()) );
-
-    connect(&_playerLogger, SIGNAL(newPlayerConnected(SocketWorker*, QThread*)), this, SLOT(newPlayerConnected(SocketWorker*, QThread*)) );
-
     _gameStateChecker.moveToThread(&_gameStateCheckerThread);
-    _playerLogger.moveToThread(&_playerLoggerThread);
-
     _gameStateCheckerThread.start();
-    _playerLoggerThread.start();
+
+    connect( this, SIGNAL(startService()), &_playerLogger, SLOT(waitConnections()) );
+    connect( &_playerLogger, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
+    connect( &_playerLogger, SIGNAL(newPlayerConnected()), this, SLOT(newPlayerConnected()) );
+
 
     connect(&_view, SIGNAL(startClickedSignal()), this, SLOT(startRequestedSlot()) );
     connect(&_view, SIGNAL(exitSignal()), this, SLOT(quitSlot()) );
@@ -60,21 +55,12 @@ void PongServer::gameStateErrorSlot(const QString &mess)
     qDebug() << mess << endl;
 }
 
-void PongServer::newPlayerConnected(SocketWorker *worker, QThread *thread)
+void PongServer::newPlayerConnected()
 {
     qint32 nbPlayers;
 
     //debug
     _view.appendStatus("PongServer::newPlayersConnected : signal received");
-
-    connect( worker, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
-    connect( thread, SIGNAL(started()), worker, SLOT(beginInteract()) );
-    connect( worker, SIGNAL(hostDisconnected()), thread, SLOT(quit()) );
-    connect( worker, SIGNAL(finishedSignal()), thread, SLOT(quit()) );
-    connect( thread, SIGNAL(finished()), this, SLOT(threadTerminated()) );
-
-    //worker->moveToThread(thread);
-    thread->start();
 
     _gameState.lock();
     nbPlayers = _gameState.nbPlayers();
@@ -143,7 +129,6 @@ void PongServer::newGameSlot()
             {
                 _playersStates.erase( _playersStates.begin()+i );
                 _socketWorkers.erase( _socketWorkers.begin()+i );
-                _socketThreads.erase( _socketThreads.begin()+i );
             }
 
             else
@@ -195,18 +180,8 @@ void PongServer::_reset_playersStates()
 bool PongServer::_all_threads_finished()
 {
     bool finished;
-    int i;
 
-    finished = false;
-
-    finished = _playerLoggerThread.isFinished() && _gameStateCheckerThread.isFinished();
-
-    i=0;
-    while( i < _socketThreads.size() && finished)
-    {
-        finished = _socketThreads[i]->isFinished();
-        ++i;
-    }
+    finished = _gameStateCheckerThread.isFinished();
 
     return finished;
 }

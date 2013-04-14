@@ -27,20 +27,20 @@ public:
             QVector<PlayerState*> & playersStates,
             QMutex & playersStatesMutex,
             QVector<SocketWorker*> & socketWorkers,
-            QVector<QThread*> & socketThreads,
             const qint16 & port=6666
             );
 
     ~LoggerWorker();
 
 signals:
-    void newPlayerConnected(SocketWorker * worker, QThread * thread);
-    void finishedSignal();
+    void newPlayerConnected();
     void appendStatusSignal(const QString & status);
+    void startService();
 
 public slots:
     void waitConnections();
     void newConnectionSlot();
+    void appendStatusSlot(const QString & status);
 
 private slots:
     void _checkExitRequested();
@@ -55,7 +55,6 @@ private:
     QVector<PlayerState*> & _playersStates;
     QMutex & _playersStatesMutex;
     QVector<SocketWorker*> & _socketWorkers;
-    QVector<QThread*> & _socketThreads;
 
     static const int _timerInterval;
     static const short _maxPlayers;

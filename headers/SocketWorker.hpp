@@ -35,8 +35,6 @@ public:
     friend QDataStream & operator>>(QDataStream & in, SocketWorker & sckw);
 
 signals:
-    void hostDisconnected(); //stop thread
-    void finishedSignal();
     void appendStatusSignal(const QString & status);
     void sendDataSignal();
 

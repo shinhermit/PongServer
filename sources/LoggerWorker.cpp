@@ -10,7 +10,6 @@ LoggerWorker::LoggerWorker(
         QVector<PlayerState *> &playersStates,
         QMutex &playersStatesMutex,
         QVector<SocketWorker *> &socketWorkers,
-        QVector<QThread *> &socketThreads,
         const qint16 &port
         ):
     _port(port),
@@ -18,8 +17,7 @@ LoggerWorker::LoggerWorker(
     _gameState(gameState),
     _playersStates(playersStates),
     _playersStatesMutex(playersStatesMutex),
-    _socketWorkers(socketWorkers),
-    _socketThreads(socketThreads)
+    _socketWorkers(socketWorkers)
 {
     _tcpServer.setMaxPendingConnections(_maxPending);
     connect( &_tcpServer, SIGNAL(newConnection()), this, SLOT(newConnectionSlot()) );
@@ -54,11 +52,7 @@ void LoggerWorker::waitConnections()
     }
 
     else
-    {
         _tcpServer.close();
-
-        emit finishedSignal();
-    }
 }
 
 void LoggerWorker::newConnectionSlot()
@@ -86,16 +80,13 @@ void LoggerWorker::newConnectionSlot()
         index = _socketWorkers.size() - 1;
         SocketWorker * worker = _socketWorkers[index];
 
-        _socketThreads.push_back( new QThread(this) );
-        index = _socketThreads.size() - 1;
-        QThread * thread = _socketThreads[index];
-
-
-        worker->moveToThread(thread);
+        connect( worker, SIGNAL(appendStatusSignal(QString)), this, SLOT(appendStatusSlot(QString)) );
+        connect( this, SIGNAL(startService()), worker, SLOT(beginInteract()) );
 
         _incNbPlayers();
 
-        emit newPlayerConnected(worker, thread);
+        emit startService();
+        emit newPlayerConnected();
 
         _playersStatesMutex.unlock();
 
@@ -110,10 +101,12 @@ void LoggerWorker::newConnectionSlot()
     }
 
     else if( _exit_requested() )
-    {
         _tcpServer.close();
-        emit finishedSignal();
-    }
+}
+
+void LoggerWorker::appendStatusSlot(const QString &status)
+{
+    emit appendStatusSignal(status);
 }
 
 void LoggerWorker::_checkExitRequested()
@@ -121,12 +114,10 @@ void LoggerWorker::_checkExitRequested()
     _timer.stop();
 
     if( _exit_requested() )
-    {
         _tcpServer.close();
-        emit finishedSignal();
-    }
 
-    _timer.start(_timerInterval);
+    else
+        _timer.start(_timerInterval);
 }
 
 bool LoggerWorker::_loggableGameState()

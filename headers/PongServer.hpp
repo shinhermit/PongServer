@@ -33,7 +33,7 @@ signals:
 public slots:
     void newGameSlot();
     void gameStateErrorSlot(const QString & mess);
-    void newPlayerConnected(SocketWorker*worker, QThread*thread);
+    void newPlayerConnected();
     void startRequestedSlot();
     void quitSlot();
     void threadTerminated();
@@ -55,10 +55,8 @@ private:
     LoggerWorker _playerLogger;
     QVector<SocketWorker*> _socketWorkers;
 
-    //thread objects
+    //thread object
     QThread _gameStateCheckerThread;
-    QThread _playerLoggerThread;
-    QVector<QThread*> _socketThreads;
 
     void _reset_gameState();
     void _reset_playersStates();

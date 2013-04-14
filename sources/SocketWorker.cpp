@@ -103,8 +103,6 @@ void SocketWorker::beginInteract()
     {
         //debug
         emit appendStatusSignal("SocketWorker::beginInteract: exit requested, can not enter interact routine");
-
-        emit finishedSignal();
     }
 }
 
@@ -122,8 +120,6 @@ void SocketWorker::sendDataSlot()
     {
         //debug
         emit appendStatusSignal("SocketWorker::sendDataSlot: exit requested, leaving interact routine");
-
-        emit finishedSignal();
     }
 }
 
@@ -143,8 +139,6 @@ void SocketWorker::getDataSlot()
     {
         //debug
         emit appendStatusSignal("SocketWorker::getDataSlot: exit requested, leaving interact routine");
-
-        emit finishedSignal();
     }
 }
 
@@ -171,7 +165,6 @@ void SocketWorker::disconnected()
 
     qDebug() << "SocketWorker::disconnected: player " << _playerState.id() << " disconnected " << endl;
 
-    emit hostDisconnected();
 
     //debug
     emit appendStatusSignal("SocketWorker::disconnected: signal hostDisconnected emitted");
