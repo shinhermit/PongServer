@@ -33,6 +33,11 @@ void PongServerView::disableStartButton()
     _ui->startButton->setEnabled(false);
 }
 
+void PongServerView::disableQuitButton()
+{
+    _ui->quitButton->setEnabled(false);
+}
+
 
 QString PongServerView::status() const
 {

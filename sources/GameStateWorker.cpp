@@ -263,4 +263,5 @@ void GameStateWorker::_manage_game_over()
     emit appendStatusSignal("GameStateWorker::_manage_game_over: game over state detected");
 
     //maybe some actions will be needed later
+    emit gameOverSignal();
 }

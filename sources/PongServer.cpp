@@ -11,24 +11,30 @@ PongServer::PongServer(const int & maxPlayers,
 {
     connect( this, SIGNAL(newGameSignal()), this, SLOT(newGameSlot()) );
 
-    connect(&_gameStateCheckerThread, SIGNAL(started()), &_gameStateChecker, SLOT(waitStartSlot()) );
+    connect( this, SIGNAL(startService()), &_gameStateChecker, SLOT(waitStartSlot()) );
     connect( &_gameStateChecker, SIGNAL(finishedSignal()), &_gameStateCheckerThread, SLOT(quit()) );
     connect( &_gameStateChecker, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
+    connect( &_gameStateCheckerThread, SIGNAL(finished()), this, SLOT(threadTerminated()) );
+    connect( &_gameStateChecker, SIGNAL(gameOverSignal()), this, SLOT(newGameSlot()) );
 
-    connect(&_playerLoggerThread, SIGNAL(started()), &_playerLogger, SLOT(waitConnections()) );
+    connect( this, SIGNAL(startService()), &_playerLogger, SLOT(waitConnections()) );
     connect( &_playerLogger, SIGNAL(finishedSignal()), &_playerLoggerThread, SLOT(quit()) );
     connect( &_playerLogger, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
+    connect( &_playerLoggerThread, SIGNAL(finished()), this, SLOT(threadTerminated()) );
+
+    connect(&_playerLogger, SIGNAL(newPlayerConnected(SocketWorker*, QThread*)), this, SLOT(newPlayerConnected(SocketWorker*, QThread*)) );
 
     _gameStateChecker.moveToThread(&_gameStateCheckerThread);
     _playerLogger.moveToThread(&_playerLoggerThread);
 
-    connect(&_playerLogger, SIGNAL(newPlayerConnected(SocketWorker*, QThread*)), this, SLOT(newPlayerConnected(SocketWorker*, QThread*)) );
+    _gameStateCheckerThread.start();
+    _playerLoggerThread.start();
 
     connect(&_view, SIGNAL(startClickedSignal()), this, SLOT(startRequestedSlot()) );
     connect(&_view, SIGNAL(exitSignal()), this, SLOT(quitSlot()) );
 
     //debug
-    _view.appendStatus("Server Active; GameState set to NOPARTY");
+    _view.appendStatus("Server Active; GameState set to NOPARTY, checker and logger started");
 }
 
 PongServer::~PongServer()
@@ -61,10 +67,11 @@ void PongServer::newPlayerConnected(SocketWorker *worker, QThread *thread)
     //debug
     _view.appendStatus("PongServer::newPlayersConnected : signal received");
 
-    connect(worker, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
-    connect(thread, SIGNAL(started()), worker, SLOT(beginInteract()));
+    connect( worker, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
+    connect( thread, SIGNAL(started()), worker, SLOT(beginInteract()) );
     connect( worker, SIGNAL(hostDisconnected()), thread, SLOT(quit()) );
     connect( worker, SIGNAL(finishedSignal()), thread, SLOT(quit()) );
+    connect( thread, SIGNAL(finished()), this, SLOT(threadTerminated()) );
 
     worker->moveToThread(thread);
     thread->start();
@@ -91,14 +98,22 @@ void PongServer::quitSlot()
 {
     //debug
     _view.appendStatus("PongServer::quitSlot: quitSignal received");
+    _view.disableStartButton();
 
     _gameState.lock();
     _gameState.setExitRequested();
     _gameState.unlock();
+}
 
-    //attendre la fin des threads
+void PongServer::threadTerminated()
+{
+    _view.appendStatus("a thread has terminated");
 
-    _view.close();
+    if( _all_threads_finished() )
+    {
+        _view.appendStatus("All thread have terminated");
+        _view.disableQuitButton();
+    }
 }
 
 void PongServer::newGameSlot()
@@ -139,11 +154,10 @@ void PongServer::newGameSlot()
     _reset_playersStates();
 
     //start workers
-    _gameStateCheckerThread.start();
-    _playerLoggerThread.start();
+    emit startService();
 
     //debug
-    _view.appendStatus("Server Active; GameState set to NOPARTY; Checker and Logger Threads lunched");
+    _view.appendStatus("Server Active; GameState set to NOPARTY; startService signal sent");
 }
 
 void PongServer::_reset_gameState()
@@ -181,14 +195,11 @@ bool PongServer::_all_threads_finished()
 
     finished = _playerLoggerThread.isFinished() && _gameStateCheckerThread.isFinished();
 
-    if(finished)
+    i=0;
+    while( i < _socketThreads.size() && finished)
     {
-        i=0;
-        while( i < _socketThreads.size() && finished)
-        {
-            finished = _socketThreads[i]->isFinished();
-            ++i;
-        }
+        finished = _socketThreads[i]->isFinished();
+        ++i;
     }
 
     return finished;

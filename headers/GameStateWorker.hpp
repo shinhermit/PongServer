@@ -27,13 +27,15 @@ public:
             GameState & gameState,
             PlayingArea & playingArea,
             QVector<PlayerState*> & playersStates,
-            QMutex & playersStatesMutex);
+            QMutex & playersStatesMutex
+            );
 
 signals:
     void checkInitSignal();
     void checkRunningSignal();
     void finishedSignal();
     void appendStatusSignal(const QString & status);
+    void gameOverSignal();
 
 public slots:
     void waitStartSlot();

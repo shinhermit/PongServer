@@ -28,6 +28,7 @@ public:
 signals:
     void gameStateErrorSignal(const QString & mess);
     void newGameSignal();
+    void startService();
 
 public slots:
     void newGameSlot();
@@ -35,6 +36,7 @@ public slots:
     void newPlayerConnected(SocketWorker*worker, QThread*thread);
     void startRequestedSlot();
     void quitSlot();
+    void threadTerminated();
 
 private:
     short _maxPlayers;

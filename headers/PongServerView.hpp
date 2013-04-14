@@ -21,6 +21,8 @@ public:
     void enableStartButton();
     void disableStartButton();
 
+    void disableQuitButton();
+
     QString status()const;
 
 signals:
