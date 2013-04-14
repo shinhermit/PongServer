@@ -90,7 +90,6 @@ QDataStream & operator>>(QDataStream &in, SocketWorker &sckw)
 
 void SocketWorker::beginInteract()
 {
-
     if( !_exit_requested() )
     {
         //debug

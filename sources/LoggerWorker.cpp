@@ -1,6 +1,5 @@
 #include "LoggerWorker.hpp"
 
-const int LoggerWorker::_timerInterval = 300;
 const short LoggerWorker::_maxPlayers = 6;
 const short LoggerWorker::_maxPending = 12;
 
@@ -21,25 +20,16 @@ LoggerWorker::LoggerWorker(
 {
     _tcpServer.setMaxPendingConnections(_maxPending);
     connect( &_tcpServer, SIGNAL(newConnection()), this, SLOT(newConnectionSlot()) );
-
-    connect( &_timer, SIGNAL(timeout()), this, SLOT(_checkExitRequested()) );
 }
 
 LoggerWorker::~LoggerWorker()
 {
-    if(_timer.isActive())
-        _timer.stop();
-
     if( _tcpServer.isListening() )
         _tcpServer.close();
 }
 
 void LoggerWorker::waitConnections()
 {
-    //we don't want to be interrupted
-    if( _timer.isActive() )
-        _timer.stop();
-
     if( !_exit_requested() )
     {
         if( !_tcpServer.isListening() )
@@ -48,7 +38,6 @@ void LoggerWorker::waitConnections()
         //debug
         emit appendStatusSignal("LoggerWorker::waitConnections: listening");
 
-        _timer.start(_timerInterval);
     }
 
     else
@@ -58,10 +47,6 @@ void LoggerWorker::waitConnections()
 void LoggerWorker::newConnectionSlot()
 {
     int index;
-
-    //we don't want to be interrupted
-    if( _timer.isActive() )
-        _timer.stop();
 
     //debug
     emit appendStatusSignal("LoggerWorker::newConnectionSlot: connection demand");
@@ -96,8 +81,6 @@ void LoggerWorker::newConnectionSlot()
             emit appendStatusSignal("LoggerWorker::newConnectionSlot: Still listenning");
         else
             emit appendStatusSignal("LoggerWorker::newConnectionSlot: no more listening");
-
-        _timer.start(_timerInterval);
     }
 
     else if( _exit_requested() )
@@ -107,17 +90,6 @@ void LoggerWorker::newConnectionSlot()
 void LoggerWorker::appendStatusSlot(const QString &status)
 {
     emit appendStatusSignal(status);
-}
-
-void LoggerWorker::_checkExitRequested()
-{
-    _timer.stop();
-
-    if( _exit_requested() )
-        _tcpServer.close();
-
-    else
-        _timer.start(_timerInterval);
 }
 
 bool LoggerWorker::_loggableGameState()

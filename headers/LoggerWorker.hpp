@@ -42,13 +42,9 @@ public slots:
     void newConnectionSlot();
     void appendStatusSlot(const QString & status);
 
-private slots:
-    void _checkExitRequested();
-
 private:
     const qint16 _port;
     QTcpServer _tcpServer;
-    QTimer _timer;
 
     PlayingArea & _playingArea;
     GameState & _gameState;
@@ -56,7 +52,6 @@ private:
     QMutex & _playersStatesMutex;
     QVector<SocketWorker*> & _socketWorkers;
 
-    static const int _timerInterval;
     static const short _maxPlayers;
     static const short _maxPending;
 
