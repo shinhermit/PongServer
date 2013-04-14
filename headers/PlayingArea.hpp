@@ -24,11 +24,11 @@ private:
 
 public:
     PlayingArea(const qint32 & nbPlayers,
-                const qreal & renderAreaWidth,
+                const qint32 & renderAreaWidth,
                 const QRectF &ballRect);
 
-    PlayingArea(const qint32 & nbPlayers=6,
-                const qreal &renderAreaWidth=600.);
+    PlayingArea(const qint32 & nbPlayers=2,
+                const qint32 &renderAreaWidth=600);
 
     const qreal & centerAngle()const;
     qreal areaWidth()const;
@@ -52,10 +52,10 @@ public:
 
     qreal getWallRotation(const qint32 & wallIndex);
 
-    void reset(const qint32 & nbPlayers,
+    void rebuild(const qint32 & nbPlayers,
                const qreal & renderAreaWidth,
                const QRectF &ballRect);
-    void reset(const qint32 & nbPlayers=6,
+    void rebuild(const qint32 & nbPlayers=0,
                const qreal & renderAreaWidth=600.);
 
     void resetBallPos();
@@ -82,7 +82,7 @@ public:
 
 private:
     qint32 _nbPlayers;
-    qreal _renderAreaWidth;
+    qint32 _renderAreaWidth;
     qreal _centerAngle;
     MathJ::Random _rndGen;
 

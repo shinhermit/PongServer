@@ -105,6 +105,11 @@ void PlayingArea::_generate_area()
     {
         _generate_area(_nbPlayers);
     }
+
+    //debug
+    qDebug() << "_nbPlayers" << _nbPlayers << endl;
+    qDebug() << "_nbRackets: " << _rackets.size() << endl;
+    qDebug() << "nbRackets(): " << nbRackets() << endl;
 }
 
 void PlayingArea::_set_ball_random_direction()
@@ -123,7 +128,7 @@ void PlayingArea::_init_ball(const QRectF & ballRect)
 }
 
 PlayingArea::PlayingArea(const qint32 & nbPlayers,
-                         const qreal & renderAreaWidth,
+                         const qint32 & renderAreaWidth,
                          const QRectF & ballRect)
     :_nbPlayers(nbPlayers),
       _renderAreaWidth(renderAreaWidth),
@@ -137,7 +142,7 @@ PlayingArea::PlayingArea(const qint32 & nbPlayers,
 }
 
 PlayingArea::PlayingArea(const qint32 & nbPlayers,
-                         const qreal & renderAreaWidth)
+                         const qint32 & renderAreaWidth)
     :_nbPlayers(nbPlayers),
       _renderAreaWidth(renderAreaWidth),
       _centerAngle(360/nbPlayers),
@@ -229,7 +234,7 @@ qreal PlayingArea::getWallRotation(const qint32 & wallIndex)
     return _walls[wallIndex]->rotation();
 }
 
-void PlayingArea::reset(const qint32 &nbPlayers,
+void PlayingArea::rebuild(const qint32 &nbPlayers,
                         const qreal &renderAreaWidth,
                         const QRectF &ballRect)
 {
@@ -241,10 +246,10 @@ void PlayingArea::reset(const qint32 &nbPlayers,
     _generate_area();
 }
 
-void PlayingArea::reset(const qint32 &nbPlayers,
+void PlayingArea::rebuild(const qint32 &nbPlayers,
                         const qreal &renderAreaWidth)
 {
-    reset(nbPlayers, renderAreaWidth, QRectF( -_ballRadius, -_ballRadius, 2*_ballRadius, 2*_ballRadius ) );
+    rebuild(nbPlayers, renderAreaWidth, QRectF( -_ballRadius, -_ballRadius, 2*_ballRadius, 2*_ballRadius ) );
 }
 
 void PlayingArea::resetBallPos()

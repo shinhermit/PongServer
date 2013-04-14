@@ -6,7 +6,7 @@
 #include <QTcpSocket>
 #include <QMutex>
 #include <QDataStream>
-#include<QDebug>
+#include <QDebug>
 
 #include "PlayerState.hpp"
 #include "PlayingArea.hpp"

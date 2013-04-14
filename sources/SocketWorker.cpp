@@ -32,6 +32,9 @@ void SocketWorker::operator>>(QDataStream &out) const
 
     _playingArea.lock();
     nbRackets = _playingArea.nbRackets();
+    //Debug
+    qDebug() << "SocketWorker::operator : nbRackets = " << nbRackets << endl;
+    qDebug() << "SocketWorker::operator : _playingArea.nbRackets()= " << _playingArea.nbRackets() << endl;
     _playingArea.unlock();
 
     _gameState.lock();
@@ -44,7 +47,7 @@ void SocketWorker::operator>>(QDataStream &out) const
     _gameState.unlock();
 
     out << _playerState.id() << nbRackets << nbPlayers << loserIndex << gameState << downCounter;
-    for(int playerIndex=0; playerIndex<nbRackets; ++playerIndex)
+    for(int playerIndex=0; playerIndex<nbPlayers; ++playerIndex)
     {
         _playingArea.lock();
         QGraphicsLineItem & racket = *_playingArea.racket(playerIndex);

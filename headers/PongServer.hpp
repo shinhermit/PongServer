@@ -18,7 +18,7 @@ class PongServer : public QObject
     Q_OBJECT
 public:
     PongServer(const int & maxPlayers=6,
-               const int & renderAreaWidth=256,
+               const int & renderAreaWidth=600,
                const qint16 & port=6666);
 
     ~PongServer();

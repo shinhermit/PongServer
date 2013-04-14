@@ -5,7 +5,7 @@ PongServer::PongServer(const int & maxPlayers,
                        const qint16 & port):
     _maxPlayers(maxPlayers),
     _gameState(PongTypes::NOPARTY),
-    _playingArea(renderAreaWidth),
+    _playingArea(maxPlayers, renderAreaWidth),
     _gameStateChecker(_gameState, _playingArea, _playersStates, _playersStatesMutex),
     _playerLogger(_gameState, _playingArea, _playersStates, _playersStatesMutex, _socketWorkers, _socketThreads, port)
 {
@@ -73,7 +73,7 @@ void PongServer::newPlayerConnected(SocketWorker *worker, QThread *thread)
     connect( worker, SIGNAL(finishedSignal()), thread, SLOT(quit()) );
     connect( thread, SIGNAL(finished()), this, SLOT(threadTerminated()) );
 
-    worker->moveToThread(thread);
+    //worker->moveToThread(thread);
     thread->start();
 
     _gameState.lock();
@@ -86,8 +86,14 @@ void PongServer::newPlayerConnected(SocketWorker *worker, QThread *thread)
 
 void PongServer::startRequestedSlot()
 {
+
+    _playingArea.lock();
     _gameState.lock();
+
+    _playingArea.rebuild( _gameState.nbPlayers() );
     _gameState.setStartRequested();
+
+    _playingArea.unlock();
     _gameState.unlock();
 
     //debug

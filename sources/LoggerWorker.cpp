@@ -72,6 +72,9 @@ void LoggerWorker::newConnectionSlot()
     //debug
     emit appendStatusSignal("LoggerWorker::newConnectionSlot: connection demand");
 
+    if( !_loggableGameState() )
+        emit appendStatusSignal("LoggerWorker::newConnectionSlot: unloggable gameState");
+
     if( _nbPlayers() <= _maxPlayers && _loggableGameState() )
     {
         _playersStatesMutex.lock();
@@ -88,6 +91,8 @@ void LoggerWorker::newConnectionSlot()
         QThread * thread = _socketThreads[index];
 
 
+        worker->moveToThread(thread);
+
         _incNbPlayers();
 
         emit newPlayerConnected(worker, thread);
@@ -96,6 +101,10 @@ void LoggerWorker::newConnectionSlot()
 
         //debug
         emit appendStatusSignal("LoggerWorker::newConnectionSlot: connection accepted");
+        if( _tcpServer.isListening() )
+            emit appendStatusSignal("LoggerWorker::newConnectionSlot: Still listenning");
+        else
+            emit appendStatusSignal("LoggerWorker::newConnectionSlot: no more listening");
 
         _timer.start(_timerInterval);
     }
