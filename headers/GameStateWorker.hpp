@@ -24,15 +24,16 @@ class GameStateWorker : public QObject
 
 public:
     GameStateWorker(
-            GameState & gameState,
-            PlayingArea & playingArea,
-            QVector<PlayerState*> & playersStates,
-            QMutex & playersStatesMutex
+            GameState * gameState,
+            PlayingArea * playingArea,
+            QVector<PlayerState*> * playersStates,
+            QMutex * playersStatesMutex
             );
 
 signals:
     void checkInitSignal();
     void checkRunningSignal();
+    void beginMovingBallSignal();
     void finishedSignal();
     void appendStatusSignal(const QString & status);
     void gameOverSignal();
@@ -43,16 +44,16 @@ public slots:
     void checkRunningSlot();
 
 private slots:
-    void _countDownSlot();
+    void _countDownSlot();    
 
 private:
     QTimer _timer;
     qint32 _downCounter;
 
-    PlayingArea & _playingArea;
-    QVector<PlayerState*> & _playersStates;
-    QMutex & _playersStatesMutex;
-    GameState & _gameState;
+    PlayingArea * _playingArea;
+    QVector<PlayerState*> * _playersStates;
+    QMutex * _playersStatesMutex;
+    GameState * _gameState;
 
     bool _exit_requested();
 
@@ -71,8 +72,6 @@ private:
     bool _game_over();
 
     void _manage_game_over();
-
-    void _move_ball();
 };
 
 /*!

@@ -6,7 +6,8 @@ PongServer::PongServer(const int & maxPlayers,
     _maxPlayers(maxPlayers),
     _gameState(PongTypes::NOPARTY),
     _playingArea(maxPlayers, renderAreaWidth),
-    _gameStateChecker(_gameState, _playingArea, _playersStates, _playersStatesMutex),
+    _gameStateChecker(&_gameState, &_playingArea, &_playersStates, &_playersStatesMutex),
+    _ballMover(&_gameState, &_playingArea),
     _playerLogger(_gameState, _playingArea, _playersStates, _playersStatesMutex, _socketWorkers, port)
 {
     connect( this, SIGNAL(newGameSignal()), this, SLOT(newGameSlot()) );
@@ -19,6 +20,13 @@ PongServer::PongServer(const int & maxPlayers,
 
     _gameStateChecker.moveToThread(&_gameStateCheckerThread);
     _gameStateCheckerThread.start();
+
+    connect( &_gameStateChecker, SIGNAL(beginMovingBallSignal()), &_ballMover, SLOT(beginMovingBall()) );
+    connect( &_ballMover, SIGNAL(finishedSignal()), &_ballMoverThread, SLOT(quit()) );
+    connect( &_ballMoverThread, SIGNAL(finished()), this, SLOT(threadTerminated()) );
+
+    _ballMover.moveToThread(&_ballMoverThread);
+    _ballMoverThread.start();
 
     connect( this, SIGNAL(startService()), &_playerLogger, SLOT(waitConnections()) );
     connect( &_playerLogger, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
@@ -48,9 +56,7 @@ void PongServer::start()
 void PongServer::gameStateErrorSlot(const QString &mess)
 {
     //when not enough players (only 1)
-    _gameState.lock();
     _gameState.setStateError();
-    _gameState.unlock();
 
     qDebug() << mess << endl;
 }
@@ -62,9 +68,7 @@ void PongServer::newPlayerConnected()
     //debug
     _view.appendStatus("PongServer::newPlayersConnected : signal received");
 
-    _gameState.lock();
     nbPlayers = _gameState.nbPlayers();
-    _gameState.unlock();
 
     if(nbPlayers > 1)
         _view.enableStartButton();
@@ -73,14 +77,8 @@ void PongServer::newPlayerConnected()
 void PongServer::startRequestedSlot()
 {
 
-    _playingArea.lock();
-    _gameState.lock();
-
     _playingArea.rebuild( _gameState.nbPlayers() );
     _gameState.setStartRequested();
-
-    _playingArea.unlock();
-    _gameState.unlock();
 
     //debug
     _view.appendStatus("PongServer::startRequestedSlot: gameState set to START_REQUESTED");
@@ -92,9 +90,7 @@ void PongServer::quitSlot()
     _view.appendStatus("PongServer::quitSlot: quitSignal received");
     _view.disableStartButton();
 
-    _gameState.lock();
     _gameState.setExitRequested();
-    _gameState.unlock();
 }
 
 void PongServer::threadTerminated()
@@ -117,7 +113,6 @@ void PongServer::newGameSlot()
 
     //delete workers and thread for disconnected players
 
-    _playersStatesMutex.lock();
     if(_playersStates.size() > 0)
     {
         int i=0;
@@ -135,7 +130,6 @@ void PongServer::newGameSlot()
                 ++i;
         }
     }
-    _playersStatesMutex.unlock();
 
     if( _socketWorkers.size() > 1 )
         _view.enableStartButton();
@@ -153,27 +147,19 @@ void PongServer::newGameSlot()
 
 void PongServer::_reset_gameState()
 {
-    _gameState.lock();
-
     _gameState.setWaitingServer();
     _gameState.setNbPlayers( _socketWorkers.size() );
     _gameState.setLoserIndex(-1);
     _gameState.setDownCounter(0);
-
-    _gameState.unlock();
 }
 
 void PongServer::_reset_playersStates()
 {
     for(int i=0; i < _playersStates.size(); ++i)
     {
-        _playersStates[i]->lock();
-
         _playersStates[i]->setState(PongTypes::ACCEPTED);
         _playersStates[i]->setCredit( PlayerState::DefaultCredit() );
         _playersStates[i]->setdxRacket(0);
-
-        _playersStates[i]->unlock();
     }
 }
 

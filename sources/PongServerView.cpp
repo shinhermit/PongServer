@@ -15,12 +15,12 @@ PongServerView::~PongServerView()
 
 void PongServerView::setStatus(const QString &status)
 {
-    _ui->statusText->setPlainText(". " + status);
+    _ui->statusText->setPlainText(". " + status + "\n");
 }
 
 void PongServerView::appendStatus(const QString & status)
 {
-    _ui->statusText->setPlainText( _ui->statusText->toPlainText() + "\n. " + status);
+    _ui->statusText->setPlainText( ". " + status + "\n" + _ui->statusText->toPlainText() );
 }
 
 void PongServerView::enableStartButton()

@@ -8,133 +8,16 @@ const qreal PlayingArea::_racketRatio = 1./6;
 const qreal PlayingArea::_racketToWallSpace = 20;
 const qreal PlayingArea::_penWidth = 5;
 const qreal PlayingArea::_ballRadius = 5;
-const qreal PlayingArea::_ballTranslateQuantum = 30;
-
-void PlayingArea::_clear_scene()
-{
-    for(qint32 i=0; i<_walls.size(); ++i)
-    {
-        _scene->removeItem(_walls[i]);
-    }
-
-    for(qint32 i=0; i<_rackets.size(); ++i)
-    {
-        _scene->removeItem(_rackets[i]);
-    }
-
-    for(qint32 i=0; i<_cages.size(); ++i)
-    {
-        _scene->removeItem(_cages[i]);
-    }
-
-    _walls.clear();
-    _rackets.clear();
-    _cages.clear();
-}
-
-void PlayingArea::_generate_area(const qint32 & nbPlayers)
-{
-    qint32 j;
-    qreal dx, dy;
-    qreal radius = _renderAreaWidth / 2;
-    qreal alpha = 360 / nbPlayers;
-    qreal beta = (180 - alpha) / 2;
-
-    qreal sideLength = radius * ( ::sin(Trigo::DegreeToRadian(alpha)) / ::sin(Trigo::DegreeToRadian(beta)) );
-    qreal wallLength = sideLength * _wallRatio;
-    qreal racketLength = sideLength * _racketRatio;
-    qreal cageLength = sideLength * _cageRatio;
-    qreal altitude = radius * ::cos( Trigo::DegreeToRadian(alpha/2) );
-
-    j = 0;
-    for(qint32 i=0; i < nbPlayers; ++i)
-    {
-        _walls.push_back( new QGraphicsLineItem(0.,altitude, -wallLength,altitude) );
-        _walls.push_back( new QGraphicsLineItem(0.,altitude, -wallLength,altitude) );
-        _rackets.push_back( new QGraphicsLineItem(racketLength/2,altitude, -racketLength/2,altitude) );
-        _cages.push_back( new QGraphicsLineItem(0.,altitude, -cageLength,altitude) );
-
-        dx = sideLength / 2;
-        dy = 0;
-        _scene->addItem(_walls[j]);
-        _walls[j]->moveBy(dx, dy);
-        _walls[j]->setPen(QPen(Qt::blue, _penWidth, Qt::SolidLine));
-        _walls[j]->setTransformOriginPoint(_walls[j]->mapFromScene(0,0));
-        _walls[j]->setRotation(_walls[j]->rotation() + i*alpha);
-        ++j;
-
-        dx -= wallLength;
-        _scene->addItem(_cages[i]);
-        _cages[i]->moveBy(dx, dy);
-        _cages[i]->setTransformOriginPoint(_cages[i]->mapFromScene(0,0));
-        _cages[i]->setRotation(_cages[i]->rotation() + i*alpha);
-
-        dy = -_racketToWallSpace;
-        _scene->addItem(_rackets[i]);
-        _rackets[i]->moveBy(0, dy);
-        _rackets[i]->setPen( QPen(Qt::darkRed, _penWidth, Qt::SolidLine) );
-        _rackets[i]->setTransformOriginPoint(_rackets[i]->mapFromScene(0,0));
-        _rackets[i]->setRotation(_rackets[i]->rotation() + i*alpha);
-
-        dy = 0;
-        dx -= cageLength;
-        _scene->addItem(_walls[j]);
-        _walls[j]->moveBy(dx, dy);
-        _walls[j]->setPen(QPen(Qt::blue, _penWidth, Qt::SolidLine));
-        _walls[j]->setTransformOriginPoint(_walls[j]->mapFromScene(0,0));
-        _walls[j]->setRotation(_walls[j]->rotation() + i*alpha);
-
-        ++j;
-    }
-}
-
-void PlayingArea::_generate_area()
-{
-    if(_nbPlayers == 2)
-    {
-        _generate_area(4);
-
-        removeRacket(3);
-        removeCage(3);
-
-        removeCage(1);
-        removeRacket(1);
-    }
-
-    else
-    {
-        _generate_area(_nbPlayers);
-    }
-
-    //debug
-    qDebug() << "_nbPlayers" << _nbPlayers << endl;
-    qDebug() << "_nbRackets: " << _rackets.size() << endl;
-    qDebug() << "nbRackets(): " << nbRackets() << endl;
-}
-
-void PlayingArea::_set_ball_random_direction()
-{
-    qreal alpha = _rndGen.randomIntbeetween(0, 360);
-
-    _ballDirection.setAngle(_ballDirection.angle()+alpha);
-}
-
-void PlayingArea::_init_ball(const QRectF & ballRect)
-{
-    _ball = new QGraphicsEllipseItem(ballRect);
-    _scene->addItem(_ball);
-    _ball->setBrush( Qt::red );
-    _set_ball_random_direction();
-}
+const qreal PlayingArea::_ballTranslateQuantum = 1;
 
 PlayingArea::PlayingArea(const qint32 & nbPlayers,
                          const qint32 & renderAreaWidth,
-                         const QRectF & ballRect)
-    :_nbPlayers(nbPlayers),
-      _renderAreaWidth(renderAreaWidth),
-      _centerAngle(360/nbPlayers),
-      _scene(new QGraphicsScene( QRectF( -renderAreaWidth/2, -renderAreaWidth/2, renderAreaWidth, renderAreaWidth ) ) ),
-      _ballDirection(0,0, _ballTranslateQuantum, 0)
+                         const QRectF & ballRect):
+    _nbPlayers(nbPlayers),
+    _renderAreaWidth(renderAreaWidth),
+    _centerAngle(360/nbPlayers),
+    _scene(new QGraphicsScene( QRectF( -renderAreaWidth/2, -renderAreaWidth/2, renderAreaWidth, renderAreaWidth ) ) ),
+    _ballDirection(0,0, _ballTranslateQuantum, 0)
 {
     _init_ball(ballRect);
 
@@ -386,4 +269,116 @@ void PlayingArea::removeWall(const qint32 & wallIndex)
         _generate_area();
     }
 
+}
+
+void PlayingArea::_clear_scene()
+{
+    for(qint32 i=0; i<_walls.size(); ++i)
+    {
+        _scene->removeItem(_walls[i]);
+    }
+
+    for(qint32 i=0; i<_rackets.size(); ++i)
+    {
+        _scene->removeItem(_rackets[i]);
+    }
+
+    for(qint32 i=0; i<_cages.size(); ++i)
+    {
+        _scene->removeItem(_cages[i]);
+    }
+
+    _walls.clear();
+    _rackets.clear();
+    _cages.clear();
+}
+
+void PlayingArea::_generate_area(const qint32 & nbPlayers)
+{
+    qint32 j;
+    qreal dx, dy;
+    qreal radius = _renderAreaWidth / 2;
+    qreal alpha = 360 / nbPlayers;
+    qreal beta = (180 - alpha) / 2;
+
+    qreal sideLength = radius * ( ::sin(Trigo::DegreeToRadian(alpha)) / ::sin(Trigo::DegreeToRadian(beta)) );
+    qreal wallLength = sideLength * _wallRatio;
+    qreal racketLength = sideLength * _racketRatio;
+    qreal cageLength = sideLength * _cageRatio;
+    qreal altitude = radius * ::cos( Trigo::DegreeToRadian(alpha/2) );
+
+    j = 0;
+    for(qint32 i=0; i < nbPlayers; ++i)
+    {
+        _walls.push_back( new QGraphicsLineItem(0.,altitude, -wallLength,altitude) );
+        _walls.push_back( new QGraphicsLineItem(0.,altitude, -wallLength,altitude) );
+        _rackets.push_back( new QGraphicsLineItem(racketLength/2,altitude, -racketLength/2,altitude) );
+        _cages.push_back( new QGraphicsLineItem(0.,altitude, -cageLength,altitude) );
+
+        dx = sideLength / 2;
+        dy = 0;
+        _scene->addItem(_walls[j]);
+        _walls[j]->moveBy(dx, dy);
+        _walls[j]->setPen(QPen(Qt::blue, _penWidth, Qt::SolidLine));
+        _walls[j]->setTransformOriginPoint(_walls[j]->mapFromScene(0,0));
+        _walls[j]->setRotation(_walls[j]->rotation() + i*alpha);
+        ++j;
+
+        dx -= wallLength;
+        _scene->addItem(_cages[i]);
+        _cages[i]->moveBy(dx, dy);
+        _cages[i]->setTransformOriginPoint(_cages[i]->mapFromScene(0,0));
+        _cages[i]->setRotation(_cages[i]->rotation() + i*alpha);
+
+        dy = -_racketToWallSpace;
+        _scene->addItem(_rackets[i]);
+        _rackets[i]->moveBy(0, dy);
+        _rackets[i]->setPen( QPen(Qt::darkRed, _penWidth, Qt::SolidLine) );
+        _rackets[i]->setTransformOriginPoint(_rackets[i]->mapFromScene(0,0));
+        _rackets[i]->setRotation(_rackets[i]->rotation() + i*alpha);
+
+        dy = 0;
+        dx -= cageLength;
+        _scene->addItem(_walls[j]);
+        _walls[j]->moveBy(dx, dy);
+        _walls[j]->setPen(QPen(Qt::blue, _penWidth, Qt::SolidLine));
+        _walls[j]->setTransformOriginPoint(_walls[j]->mapFromScene(0,0));
+        _walls[j]->setRotation(_walls[j]->rotation() + i*alpha);
+
+        ++j;
+    }
+}
+
+void PlayingArea::_generate_area()
+{
+    if(_nbPlayers == 2)
+    {
+        _generate_area(4);
+
+        removeRacket(3);
+        removeCage(3);
+
+        removeCage(1);
+        removeRacket(1);
+    }
+
+    else
+    {
+        _generate_area(_nbPlayers);
+    }
+}
+
+void PlayingArea::_set_ball_random_direction()
+{
+    qreal alpha = _rndGen.randomIntbeetween(0, 360);
+
+    _ballDirection.setAngle(_ballDirection.angle()+alpha);
+}
+
+void PlayingArea::_init_ball(const QRectF & ballRect)
+{
+    _ball = new QGraphicsEllipseItem(ballRect);
+    _scene->addItem(_ball);
+    _ball->setBrush( Qt::red );
+    _set_ball_random_direction();
 }

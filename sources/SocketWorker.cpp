@@ -31,30 +31,24 @@ void SocketWorker::operator>>(QDataStream &out) const
     QLineF racketLine;
     QPointF p1_racket, p2_racket;
 
-    _playingArea.lock();
     nbRackets = _playingArea.nbRackets();
-    _playingArea.unlock();
 
-    _gameState.lock();
     loserIndex = _gameState.loserIndex();
     gameState = _gameState.state();
     nbPlayers = _gameState.nbPlayers();
 
     if( gameState == PongTypes::INITIALIZING )
         downCounter = _gameState.downCounter();
-    _gameState.unlock();
 
     out << _playingArea.ballPos() << _playerState.id() << nbRackets << nbPlayers << loserIndex << gameState << downCounter;
     for(qint32 playerIndex=0; playerIndex<nbPlayers; ++playerIndex)
     {
-        _playingArea.lock();
         QGraphicsLineItem & racket = *_playingArea.racket(playerIndex);
 
         racketLine = racket.line();
 
         p1_racket = racket.mapToScene(racketLine.p1());
         p2_racket = racket.mapToScene(racketLine.p2());
-        _playingArea.unlock();
 
         out << playerIndex << p1_racket << p2_racket;
     }
@@ -67,9 +61,7 @@ void SocketWorker::operator<<(QDataStream & in)
 
     in >> dxRacket;
 
-    _playerState.lock();
     _playerState.setdxRacket(dxRacket);
-    _playerState.unlock();
 }
 
 QDataStream & operator<<(QDataStream &out, const SocketWorker &sckw)
@@ -109,7 +101,6 @@ void SocketWorker::sendDataSlot()
 
     if( !_exit_requested() )
     {
-        //debug
         (*this) >> _streamer;
     }
 
@@ -140,9 +131,7 @@ void SocketWorker::getDataSlot()
 
 void SocketWorker::socketError(QAbstractSocket::SocketError socketError)
 {
-    _playerState.lock();
     _playerState.setState(PongTypes::SOCKET_ERROR);
-    _playerState.unlock();
 
     qDebug() << "SocketWorker::socketError: error code = " << QString::number(socketError) << endl;
 
@@ -155,9 +144,7 @@ void SocketWorker::disconnected()
     //debug
     emit appendStatusSignal("SocketWorker::disconnected: players "+QString::number(_playerState.id())+" disconnected");
 
-    _playerState.lock();
     _playerState.setState(PongTypes::DISCONNECTED);
-    _playerState.unlock();
 
     //debug
     emit appendStatusSignal("SocketWorker::disconnected: signal hostDisconnected emitted");
@@ -168,13 +155,9 @@ bool SocketWorker::_running_state()
     PongTypes::E_GameState gameState;
     PongTypes::E_PlayerState playerState;
 
-    _gameState.lock();
     gameState = _gameState.state();
-    _gameState.unlock();
 
-    _playerState.lock();
     playerState = _playerState.state();
-    _playerState.unlock();
 
     return (gameState != PongTypes::GAMEOVER
             &&
@@ -189,9 +172,7 @@ bool SocketWorker::_exit_requested()
 {
     bool requested;
 
-    _gameState.lock();
     requested = ( _gameState.state() == PongTypes::EXIT_REQUESTED );
-    _gameState.unlock();
 
     return requested;
 }

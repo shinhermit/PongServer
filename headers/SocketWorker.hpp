@@ -37,6 +37,7 @@ public:
 signals:
     void appendStatusSignal(const QString & status);
     void sendDataSignal();
+    void finishedSignal();
 
 public slots:
     void beginInteract();

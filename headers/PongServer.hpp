@@ -12,6 +12,7 @@
 #include "PlayingArea.hpp"
 #include "PlayerState.hpp"
 #include "PongServerView.hpp"
+#include "BallMover.hpp"
 
 class PongServer : public QObject
 {
@@ -52,11 +53,13 @@ private:
 
     //worker classes for threads
     GameStateWorker _gameStateChecker;
+    BallMover _ballMover;
     LoggerWorker _playerLogger;
     QVector<SocketWorker*> _socketWorkers;
 
     //thread object
     QThread _gameStateCheckerThread;
+    QThread _ballMoverThread;
 
     void _reset_gameState();
     void _reset_playersStates();

@@ -56,7 +56,6 @@ void LoggerWorker::newConnectionSlot()
 
     if( _nbPlayers() <= _maxPlayers && _loggableGameState() )
     {
-        _playersStatesMutex.lock();
         index = _playersStates.size();
         _playersStates.push_back( new PlayerState(index, PongTypes::ACCEPTED, this) );
 
@@ -66,14 +65,12 @@ void LoggerWorker::newConnectionSlot()
         SocketWorker * worker = _socketWorkers[index];
 
         connect( worker, SIGNAL(appendStatusSignal(QString)), this, SLOT(appendStatusSlot(QString)) );
-        connect( this, SIGNAL(startService()), worker, SLOT(beginInteract()) );
 
         _incNbPlayers();
 
-        emit startService();
-        emit newPlayerConnected();
+        worker->beginInteract();
 
-        _playersStatesMutex.unlock();
+        emit newPlayerConnected();
 
         //debug
         emit appendStatusSignal("LoggerWorker::newConnectionSlot: connection accepted");
@@ -96,7 +93,6 @@ bool LoggerWorker::_loggableGameState()
 {
     bool loggable;
 
-    _gameState.lock();
     loggable =
             (_gameState.state() != PongTypes::INITIALIZING
             &&
@@ -105,7 +101,6 @@ bool LoggerWorker::_loggableGameState()
             _gameState.state() != PongTypes::PAUSED
             &&
             _gameState.state() != PongTypes::EXIT_REQUESTED);
-    _gameState.unlock();
 
     return loggable;
 }
@@ -114,25 +109,19 @@ bool LoggerWorker::_exit_requested()
 {
     bool requested;
 
-    _gameState.lock();
     requested = ( _gameState.state() == PongTypes::EXIT_REQUESTED );
-    _gameState.unlock();
 
     return requested;
 }
 
 void LoggerWorker::_setNbPlayers(const qint32 &nbPlayers)
 {
-    _gameState.lock();
     _gameState.setNbPlayers(nbPlayers);
-    _gameState.unlock();
 }
 
 void LoggerWorker::_incNbPlayers()
 {
-    _gameState.lock();
     _gameState.setNbPlayers( _gameState.nbPlayers() + 1 );
-    _gameState.unlock();
 
 }
 
@@ -140,9 +129,7 @@ qint32 LoggerWorker::_nbPlayers()
 {
     qint32 nbPlayers;
 
-    _gameState.lock();
     nbPlayers = _gameState.nbPlayers();
-    _gameState.unlock();
 
     return nbPlayers;
 }

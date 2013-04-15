@@ -35,7 +35,6 @@ public:
 signals:
     void newPlayerConnected();
     void appendStatusSignal(const QString & status);
-    void startService();
 
 public slots:
     void waitConnections();
