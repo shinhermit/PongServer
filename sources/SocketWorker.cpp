@@ -110,9 +110,7 @@ void SocketWorker::sendDataSlot()
     if( !_exit_requested() )
     {
         //debug
-        emit appendStatusSignal("SocketWorker::sendDataSlot: next step = send into stream");
         (*this) >> _streamer;
-        emit appendStatusSignal("SocketWorker::sendDataSlot: data sent");
     }
 
     else
@@ -128,11 +126,8 @@ void SocketWorker::getDataSlot()
 
     if( !_exit_requested() )
     {
-        emit appendStatusSignal("SocketWorker::getDataSlot: next step = receive from stream");
         (*this) << _streamer;
-        emit appendStatusSignal("SocketWorker::getDataSlot: data received");
 
-        emit appendStatusSignal("SocketWorker::getDataSlot: next step = emit sendDataSignal()");
         emit sendDataSignal();
     }
 
@@ -158,14 +153,11 @@ void SocketWorker::socketError(QAbstractSocket::SocketError socketError)
 void SocketWorker::disconnected()
 {
     //debug
-    emit appendStatusSignal("SocketWorker::disconnected: players disconnected");
+    emit appendStatusSignal("SocketWorker::disconnected: players "+QString::number(_playerState.id())+" disconnected");
 
     _playerState.lock();
     _playerState.setState(PongTypes::DISCONNECTED);
     _playerState.unlock();
-
-    qDebug() << "SocketWorker::disconnected: player " << _playerState.id() << " disconnected " << endl;
-
 
     //debug
     emit appendStatusSignal("SocketWorker::disconnected: signal hostDisconnected emitted");
