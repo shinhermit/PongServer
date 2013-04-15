@@ -6,6 +6,7 @@ SocketWorker::SocketWorker(
         GameState &gameState,
         PlayerState &playerState
         ):
+    _streamer(&socket),
     _socket(socket),
     _playingArea(playingArea),
     _gameState(gameState),
@@ -104,13 +105,13 @@ void SocketWorker::beginInteract()
 
 void SocketWorker::sendDataSlot()
 {
-    QDataStream stream(&_socket);
+    _streamer.resetStatus();
 
     if( !_exit_requested() )
     {
         //debug
         emit appendStatusSignal("SocketWorker::sendDataSlot: next step = send into stream");
-        (*this) >> stream;
+        (*this) >> _streamer;
         emit appendStatusSignal("SocketWorker::sendDataSlot: data sent");
     }
 
@@ -123,12 +124,12 @@ void SocketWorker::sendDataSlot()
 
 void SocketWorker::getDataSlot()
 {
-    QDataStream stream(&_socket);
+    _streamer.resetStatus();
 
     if( !_exit_requested() )
     {
         emit appendStatusSignal("SocketWorker::getDataSlot: next step = receive from stream");
-        (*this) << stream;
+        (*this) << _streamer;
         emit appendStatusSignal("SocketWorker::getDataSlot: data received");
 
         emit appendStatusSignal("SocketWorker::getDataSlot: next step = emit sendDataSignal()");

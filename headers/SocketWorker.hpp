@@ -46,6 +46,8 @@ public slots:
     void disconnected();
 
 private:
+    QDataStream _streamer;
+
     QTcpSocket & _socket;
     PlayingArea & _playingArea;
     GameState & _gameState;
