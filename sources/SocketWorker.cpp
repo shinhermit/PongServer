@@ -44,8 +44,8 @@ void SocketWorker::operator>>(QDataStream &out) const
         downCounter = _gameState.downCounter();
     _gameState.unlock();
 
-    out << _playerState.id() << nbRackets << nbPlayers << loserIndex << gameState << downCounter;
-    for(int playerIndex=0; playerIndex<nbPlayers; ++playerIndex)
+    out << _playingArea.ballPos() << _playerState.id() << nbRackets << nbPlayers << loserIndex << gameState << downCounter;
+    for(qint32 playerIndex=0; playerIndex<nbPlayers; ++playerIndex)
     {
         _playingArea.lock();
         QGraphicsLineItem & racket = *_playingArea.racket(playerIndex);

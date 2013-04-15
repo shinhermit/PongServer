@@ -8,6 +8,7 @@
 #include <QGraphicsLineItem>
 #include <QGraphicsRectItem>
 #include <QDebug>
+#include <QPointF>
 
 #include "Trigo.hpp"
 #include "Random.hpp"
@@ -41,6 +42,7 @@ public:
     qint32 nbCages()const;
     qint32 nbRackets()const;
     qint32 nbWalls()const;
+    QPointF ballPos()const;
 
     qint32 cageIndex(QGraphicsItem *item)const;
     qint32 racketIndex(QGraphicsItem * item)const;

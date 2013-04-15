@@ -199,6 +199,16 @@ qint32 PlayingArea::nbWalls()const
     return _walls.size();
 }
 
+QPointF PlayingArea::ballPos() const
+{
+    QPointF relPos, absPos;
+
+    relPos = _ball->pos();
+    absPos = _ball->mapToScene( relPos );
+
+    return absPos;
+}
+
 qint32 PlayingArea::cageIndex(QGraphicsItem *item)const
 {
     return _cages.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item));
