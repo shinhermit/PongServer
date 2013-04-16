@@ -7,6 +7,7 @@ int main(int argc, char ** argv)
 
     PongServer server;
     server.start();
+    server.showPlayingArea();
 
     return app.exec();
 }

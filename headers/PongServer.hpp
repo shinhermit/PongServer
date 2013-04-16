@@ -2,6 +2,8 @@
 #define _PongServer
 
 #include <QWidget>
+#include <QGraphicsView>
+#include <QTimer>
 #include <QThread>
 #include <QVector>
 #include <QMutex>
@@ -26,6 +28,8 @@ public:
 
     void start();
 
+    void showPlayingArea();
+
 signals:
     void gameStateErrorSignal(const QString & mess);
     void newGameSignal();
@@ -42,6 +46,7 @@ public slots:
 private:
     short _maxPlayers;
     PongServerView _view;
+    QGraphicsView _areaView;
 
     //shared memories
     GameState _gameState; //shared memory

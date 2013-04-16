@@ -53,6 +53,12 @@ void PongServer::start()
     emit newGameSignal();
 }
 
+void PongServer::showPlayingArea()
+{
+    _areaView.setScene( _playingArea.scene() );
+    _areaView.show();
+}
+
 void PongServer::gameStateErrorSlot(const QString &mess)
 {
     //when not enough players (only 1)
