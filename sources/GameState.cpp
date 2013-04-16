@@ -4,8 +4,29 @@ GameState::GameState(const PongTypes::E_GameState & initialState):
     _state(initialState),
     _loserIndex(-1),
     _downCounter(0),
-    _nbPlayers(0)
+    _nbPlayers(0),
+    _upToDate(false)
 {}
+
+GameState::GameState(const GameState & source):
+    QObject(),
+    _state(source._state),
+    _loserIndex(source._loserIndex),
+    _downCounter(source._downCounter),
+    _nbPlayers(source._nbPlayers),
+    _upToDate(source._upToDate)
+{}
+
+GameState &GameState::operator =(const GameState & source)
+{
+    _state = source._state;
+    _loserIndex = source._loserIndex;
+    _downCounter = source._downCounter;
+    _nbPlayers = source._nbPlayers;
+    _upToDate = source._upToDate;
+
+    return *this;
+}
 
 
 void GameState::setGameOver(const qint32 &cageIndex)
@@ -73,6 +94,35 @@ void GameState::setNbPlayers(const qint32 &nbPlayers) throw(std::invalid_argumen
         throw std::invalid_argument("GameState::setNbPlayers: invalid negative value");
 
     _nbPlayers = nbPlayers;
+}
+
+void GameState::askShareState()
+{
+    _upToDate = false;
+    emit shareStateDemand();
+}
+
+bool GameState::upToDate() const
+{
+    return _upToDate;
+}
+
+void GameState::setState(PongTypes::E_GameState state,
+                         qint32 loserIndex,
+                         qint32 downCounter,
+                         qint32 nbPlayers)
+{
+    _upToDate = true;
+
+    _state = state;
+    _loserIndex = loserIndex;
+    _downCounter = downCounter;
+    _nbPlayers = nbPlayers;
+}
+
+void GameState::shareState()
+{
+    emit setStateDemand(_state, _loserIndex, _downCounter, _nbPlayers);
 }
 
 const PongTypes::E_GameState &GameState::state() const

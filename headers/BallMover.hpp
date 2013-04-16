@@ -17,7 +17,7 @@ public:
     BallMover(
             GameState * gameState,
             PlayingArea *playingArea,
-            const int & period=100
+            const int & period=500
             );
 
     ~BallMover();

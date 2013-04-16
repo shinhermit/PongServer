@@ -17,7 +17,8 @@ PlayingArea::PlayingArea(const qint32 & nbPlayers,
     _renderAreaWidth(renderAreaWidth),
     _centerAngle(360/nbPlayers),
     _scene(new QGraphicsScene( QRectF( -renderAreaWidth/2, -renderAreaWidth/2, renderAreaWidth, renderAreaWidth ) ) ),
-    _ballDirection(0,0, _ballTranslateQuantum, 0)
+    _ballDirection(0,0, _ballTranslateQuantum, 0),
+    _upToDate(false)
 {
     _init_ball(ballRect);
 
@@ -25,16 +26,46 @@ PlayingArea::PlayingArea(const qint32 & nbPlayers,
 }
 
 PlayingArea::PlayingArea(const qint32 & nbPlayers,
-                         const qint32 & renderAreaWidth)
-    :_nbPlayers(nbPlayers),
-      _renderAreaWidth(renderAreaWidth),
-      _centerAngle(360/nbPlayers),
-      _scene(new QGraphicsScene( QRectF( -renderAreaWidth/2, -renderAreaWidth/2, renderAreaWidth, renderAreaWidth) ) ),
-      _ballDirection(0,0, _ballTranslateQuantum, 0)
+                         const qint32 & renderAreaWidth):
+    _nbPlayers(nbPlayers),
+    _renderAreaWidth(renderAreaWidth),
+    _centerAngle(360/nbPlayers),
+    _scene(new QGraphicsScene( QRectF( -renderAreaWidth/2, -renderAreaWidth/2, renderAreaWidth, renderAreaWidth) ) ),
+    _ballDirection(0,0, _ballTranslateQuantum, 0),
+    _upToDate(false)
 {
     _init_ball( QRectF( -_ballRadius, -_ballRadius, 2*_ballRadius, 2*_ballRadius ) );
 
     _generate_area();
+}
+
+PlayingArea::PlayingArea(const PlayingArea &source):
+    QObject(),
+    _nbPlayers(source._nbPlayers),
+    _renderAreaWidth(source._renderAreaWidth),
+    _centerAngle(360/source._nbPlayers),
+    _scene(new QGraphicsScene( QRectF( -_renderAreaWidth/2, -_renderAreaWidth/2, _renderAreaWidth, _renderAreaWidth) ) ),
+    _ballDirection(0,0, _ballTranslateQuantum, 0),
+    _upToDate(source._upToDate)
+{
+    _ballDirection.setPoints( source._ballDirection.p1(), source._ballDirection.p1() );
+}
+
+PlayingArea &PlayingArea::operator =(const PlayingArea &source)
+{
+    _nbPlayers = source._nbPlayers;
+    _renderAreaWidth = source._renderAreaWidth;
+    _centerAngle = 360/source._nbPlayers;
+    _scene = new QGraphicsScene( QRectF( -_renderAreaWidth/2, -_renderAreaWidth/2, _renderAreaWidth, _renderAreaWidth) );
+    _upToDate = source._upToDate;
+    _ballDirection.setPoints( source._ballDirection.p1(), source._ballDirection.p1() );
+
+    return *this;
+}
+
+PlayingArea::~PlayingArea()
+{
+    _scene->deleteLater();
 }
 
 const qreal &PlayingArea::centerAngle() const
@@ -269,6 +300,54 @@ void PlayingArea::removeWall(const qint32 & wallIndex)
         _generate_area();
     }
 
+}
+
+void PlayingArea::askShareState()
+{
+    _upToDate = false;
+
+    emit shareStateDemand();
+}
+
+bool PlayingArea::upToDate() const
+{
+    return _upToDate;
+}
+
+void PlayingArea::setState(qint32 nbPlayers,
+                           qint32 renderAreaWidth,
+                           QPointF ballPos,
+                           QLineF ballDir,
+                           QVector<QLineF> rackPos)
+{
+    _upToDate = true;
+
+    _nbPlayers = nbPlayers;
+    _renderAreaWidth = renderAreaWidth;
+
+    _generate_area();
+
+    _ball->setPos( _ball->mapFromScene(ballPos) );
+    _ballDirection.setPoints( ballDir.p1(), ballDir.p2() );
+
+    for(int i=0; i < _rackets.size() && i < rackPos.size(); ++i)
+        _rackets[i]->setLine(rackPos[i]);
+}
+
+void PlayingArea::shareState()
+{
+    QVector<QLineF> rackPos;
+    QPointF p1, p2, ballPos;
+
+    ballPos = _ball->mapToScene( _ball->pos() );
+    for(int i=0; i < _rackets.size(); ++i)
+    {
+        p1 = _rackets[i]->mapToScene( _rackets[i]->line().p1() );
+        p2 = _rackets[i]->mapToScene( _rackets[i]->line().p2() );
+        rackPos.push_back( QLineF(p1,p2) );
+    }
+
+    emit setStateDemand(_nbPlayers, _renderAreaWidth, ballPos, _ballDirection, rackPos);
 }
 
 void PlayingArea::_clear_scene()

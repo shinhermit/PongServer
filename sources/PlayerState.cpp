@@ -14,6 +14,35 @@ PlayerState::PlayerState(
     _state(state)
 {}
 
+PlayerState::PlayerState(const PlayerState & source):
+    QObject( source.parent() ),
+    _myIndex(source._myIndex),
+    _dxRacket(source._dxRacket),
+    _credit(source._credit),
+    _state(source._state)
+{}
+
+PlayerState &PlayerState::operator =(const PlayerState &source)
+{
+    _myIndex = source._myIndex;
+    _dxRacket = source._dxRacket;
+    _credit = source._credit;
+    _state = source._state;
+
+    return *this;
+}
+
+bool PlayerState::operator ==(const PlayerState & source) const
+{
+    return (_myIndex == source._myIndex
+            &&
+            _dxRacket == source._dxRacket
+            &&
+            _credit == source._credit
+            &&
+            _state == source._state);
+}
+
 void PlayerState::setId(const qint32 & id)
 {
     _myIndex = id;

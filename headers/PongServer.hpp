@@ -11,7 +11,7 @@
 
 #include "Workers.hpp"
 #include "GameState.hpp"
-#include "PlayingArea.hpp"
+#include "PlayersStatesHolder.hpp"
 #include "PlayerState.hpp"
 #include "PongServerView.hpp"
 #include "BallMover.hpp"
@@ -51,7 +51,7 @@ private:
     //shared memories
     GameState _gameState; //shared memory
     PlayingArea _playingArea; //shared memory
-    QVector<PlayerState*> _playersStates; //shared memory
+    PlayersStatesHolder _playersStates; //shared memory
 
     //Mutex for shared memory
     QMutex _playersStatesMutex;

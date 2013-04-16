@@ -1,19 +1,24 @@
 #include "GameStateWorker.hpp"
 
 GameStateWorker::GameStateWorker(
-        GameState *gameState,
-        PlayingArea *playingArea,
-        QVector<PlayerState *> *playersStates,
-        QMutex *playersStatesMutex
+        GameState * globalGameState,
+        PlayingArea * globalPlayingArea,
+        PlayersStatesHolder * globalPlayersStates
         ):
-    _downCounter(-1),
-    _playingArea(playingArea),
-    _playersStates(playersStates),
-    _playersStatesMutex(playersStatesMutex),
-    _gameState(gameState)
+    _downCounter(-1)
 {
     connect( this, SIGNAL(checkInitSignal()), this, SLOT(checkInitSlot()) );
     connect( this, SIGNAL(checkRunningSignal()), this, SLOT(checkRunningSlot()) );
+
+    //GameState synchronization
+    connect( globalGameState, SIGNAL(setStateDemand(PongTypes::E_GameState,qint32,qint32,qint32)), &_gameState, SLOT(setState(PongTypes::E_GameState,qint32,qint32,qint32)) );
+    connect( &_gameState, SIGNAL(setStateDemand(PongTypes::E_GameState,qint32,qint32,qint32)), globalGameState, SLOT(setState(PongTypes::E_GameState,qint32,qint32,qint32)) );
+    connect( &_gameState, SIGNAL(shareStateDemand()), globalGameState, SLOT(shareState()) );
+
+    //PlayingArea synchronization
+    connect( globalPlayingArea, SIGNAL(setStateDemand(qint32,qint32,QPointF,QLineF,QVector<QLineF>)), &_playingArea, SLOT(setState(qint32,qint32,QPointF,QLineF,QVector<QLineF>)) );
+    connect( &_playingArea, SIGNAL(setStateDemand(qint32,qint32,QPointF,QLineF,QVector<QLineF>)), globalPlayingArea, SLOT(setState(qint32,qint32,QPointF,QLineF,QVector<QLineF>)) );
+    connect( &_playingArea, SIGNAL(shareStateDemand()), globalPlayingArea, SLOT(shareState()) );
 }
 
 void GameStateWorker::waitStartSlot()
@@ -23,20 +28,19 @@ void GameStateWorker::waitStartSlot()
     //debug
     emit appendStatusSignal("GameStateWorker::waitStartSlot: Entering waitStart routine");
 
-    _gameState->setWaitingServer();
+    _gameState.setWaitingServer();
+    _gameState.shareState();
 
-    state = _gameState->state();
+    _gameState.askShareState();
 
-    while(state != PongTypes::START_REQUESTED && state != PongTypes::EXIT_REQUESTED)
-    {
-        state = _gameState->state();
-    }
+    while(_gameState.state() != PongTypes::START_REQUESTED && _gameState.state() != PongTypes::EXIT_REQUESTED)
+        _gameState.askShareState();
 
     //debug
     emit appendStatusSignal("GameStateWorker::waitStartSlot: getting out of waitStart routine");
     emit appendStatusSignal("GameStateWorker::waitStartSlot: emitting checkInitSignal");
 
-    if(state != PongTypes::EXIT_REQUESTED)
+    if(_gameState.state()!= PongTypes::EXIT_REQUESTED)
         emit checkInitSignal();
     else
         emit finishedSignal();
@@ -44,7 +48,8 @@ void GameStateWorker::waitStartSlot()
 
 void GameStateWorker::checkInitSlot()
 {
-    _gameState->setInitializing();
+    _gameState.setInitializing();
+    _gameState.shareState();
 
     _downCounter = 4;
 
@@ -67,7 +72,8 @@ void GameStateWorker::checkRunningSlot()
     //debug
     emit appendStatusSignal("GameStateWorker::checkRunningSlot: entering checkRunning routine");
 
-    _gameState->setRunning();
+    _gameState.setRunning();
+    _gameState.shareState();
 
     emit beginMovingBallSignal();
 
@@ -93,7 +99,8 @@ void GameStateWorker::_countDownSlot()
     {
         -- _downCounter;
 
-        _gameState->setDownCounter(_downCounter);
+        _gameState.setDownCounter(_downCounter);
+        _gameState.shareState();
     }
 
     else
@@ -109,11 +116,9 @@ void GameStateWorker::_countDownSlot()
 
 bool GameStateWorker::_exit_requested()
 {
-    bool requested;
+    _gameState.askShareState();
 
-    requested  = ( _gameState->state() == PongTypes::EXIT_REQUESTED );
-
-    return requested;
+    return ( _gameState.state() == PongTypes::EXIT_REQUESTED );
 }
 
 void GameStateWorker::_update_rackets()
@@ -128,7 +133,8 @@ void GameStateWorker::_update_rackets()
 
     for(int i=0; i < dx.size(); ++i)
     {
-        _playingArea->moveRacket( i, dx[i] );
+        _playingArea.moveRacket( i, dx[i] );
+        _playingArea.shareState();
     }
 }
 
@@ -136,26 +142,27 @@ void GameStateWorker::_check_collisions()
 {
     int pos;
 
-    QList<QGraphicsItem*> colliders = _playingArea->getBallColliders();
+    _playingArea.askShareState();
+    QList<QGraphicsItem*> colliders = _playingArea.getBallColliders();
 
     if( !colliders.empty() )
     {
         QGraphicsItem * collided = colliders.at(0);
 
 
-        if( ( pos = _playingArea->cageIndex(collided) ) !=  -1)
+        if( ( pos = _playingArea.cageIndex(collided) ) !=  -1)
         {
             _manage_goal(pos);
         }
 
-        else if( ( pos = _playingArea->racketIndex(collided) ) != -1)
+        else if( ( pos = _playingArea.racketIndex(collided) ) != -1)
         {
             _manage_racket_collision(pos);
         }
 
         else
         {
-            pos = _playingArea->wallIndex(collided);
+            pos = _playingArea.wallIndex(collided);
 
             _manage_wall_collision(pos);
         }
@@ -177,22 +184,29 @@ void GameStateWorker::_manage_goal(const int & cageIndex)
             _discard_player(cageIndex);
 
         else
-            _gameState->setGameOver(cageIndex);
+        {
+            _gameState.setGameOver(cageIndex);
+            _gameState.shareState();
+        }
     }
 
     //bring in a new ball
     if( !_game_over() )
-        _playingArea->resetBallPos();
+    {
+        _playingArea.resetBallPos();
+        _playingArea.shareState();
+    }
 }
 
 void GameStateWorker::_discard_player(const int & racketIndex)
 {
     //remove cage and racket
-    _playingArea->removeCage(racketIndex);
-    _playingArea->removeRacket(racketIndex);
+    _playingArea.removeCage(racketIndex);
+    _playingArea.removeRacket(racketIndex);
+    _playingArea.shareState();
 
     //set playerState to discarded
-    _playersStates->at(racketIndex)->setState(PongTypes::DISCARDED);
+    _playersStates.at(racketIndex)->setState(PongTypes::DISCARDED);
 
     //debug
     emit appendStatusSignal("GameStateWorker::_discard_player: player "+QString::number(racketIndex)+"  discarded");
@@ -200,7 +214,8 @@ void GameStateWorker::_discard_player(const int & racketIndex)
 
 void GameStateWorker::_manage_wall_collision(const int & wallIndex)
 {
-    _playingArea->mirrorBallDirection( _playingArea->wall(wallIndex) );
+    _playingArea.mirrorBallDirection( _playingArea.wall(wallIndex) );
+    _playingArea.shareState();
 }
 
 void GameStateWorker::_manage_racket_collision(const int & racketIndex)
@@ -212,7 +227,9 @@ void GameStateWorker::_manage_racket_collision(const int & racketIndex)
 
 bool GameStateWorker::_game_over()
 {
-    return _gameState->state() == PongTypes::GAMEOVER;
+    _gameState.askShareState();
+
+    return ( _gameState.state() == PongTypes::GAMEOVER );
 }
 
 void GameStateWorker::_manage_game_over()
