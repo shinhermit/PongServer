@@ -72,7 +72,6 @@ void SocketWorker::operator<<(QDataStream & in)
     in >> dxRacket;
 
     lockPlayersStates();
-    qDebug() << "dx: " << dxRacket << endl;
     PongShared::playersStates[_playerIndex].setdxRacket(dxRacket);
     unlockPlayersStates();
 }

@@ -8,7 +8,7 @@ const qreal PlayingArea::_racketRatio = 1./6;
 const qreal PlayingArea::_racketToWallSpace = 20;
 const qreal PlayingArea::_penWidth = 5;
 const qreal PlayingArea::_ballRadius = 5;
-const qreal PlayingArea::_ballTranslateQuantum = 30;
+const qreal PlayingArea::_ballTranslateQuantum = 1;
 
 PlayingArea::PlayingArea(const qint32 & nbPlayers,
                          const qint32 & renderAreaWidth,
@@ -190,7 +190,7 @@ void PlayingArea::moveBall()
 
 QList<QGraphicsItem*> PlayingArea::getBallColliders()const
 {
-    return _ball->collidingItems();
+    return _scene->collidingItems(_ball);
 }
 
 void PlayingArea::moveRacket(const qint32 & racketIndex,
@@ -375,11 +375,6 @@ void PlayingArea::_generate_area()
     {
         _generate_area(_nbPlayers);
     }
-
-    //debug
-    qDebug() << "_nbPlayers" << _nbPlayers << endl;
-    qDebug() << "_nbRackets: " << _rackets.size() << endl;
-    qDebug() << "nbRackets(): " << nbRackets() << endl;
 }
 
 void PlayingArea::_set_ball_random_direction()

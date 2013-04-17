@@ -31,6 +31,7 @@ signals:
     void startService();
     void stopService();
 
+
 public slots:
     void newGameSlot();
     void gameStateErrorSlot(const QString & mess);
@@ -43,7 +44,7 @@ public slots:
 
 private:
     PongServerView _view;
-    QGraphicsScene * _scene;
+    QGraphicsScene _scene;
     QGraphicsView _areaView;
 
 

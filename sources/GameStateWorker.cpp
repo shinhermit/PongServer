@@ -143,7 +143,7 @@ void GameStateWorker::_update_rackets()
     lockPlayingArea();
     for(int i=0; i < PongShared::playingArea.nbRackets() && i < dx.size(); ++i)
         PongShared::playingArea.moveRacket( i, dx[i] );
-    unlockPlayersStates();
+    unlockPlayingArea();
 }
 
 void GameStateWorker::_check_collisions()

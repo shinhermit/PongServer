@@ -2,11 +2,11 @@
 
 PongServer::PongServer(const qint16 & port,
                        const qint32 &renderAreaWidth):
-    _scene(new QGraphicsScene( QRectF( -renderAreaWidth/2, -renderAreaWidth/2, renderAreaWidth, renderAreaWidth) ) ),
+    _scene( QRectF( -renderAreaWidth/2, -renderAreaWidth/2, renderAreaWidth, renderAreaWidth) ),
     _playerLogger(port)
 {
     PongShared::gameState.setNoParty();
-    PongShared::playingArea.setScene(_scene);
+    PongShared::playingArea.setScene(&_scene);
     PongShared::playingArea.build();
 
     connect( this, SIGNAL(newGameSignal()), this, SLOT(newGameSlot()) );
@@ -52,7 +52,7 @@ void PongServer::start()
 
 void PongServer::showScene()
 {
-    _areaView.setScene(_scene);
+    _areaView.setScene(&_scene);
     _areaView.show();
 }
 
