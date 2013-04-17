@@ -3,6 +3,6 @@
 
 #include "GameStateWorker.hpp"
 #include "LoggerWorker.hpp"
-#include "SocketWorker.hpp"
+#include "BallMover.hpp"
 
 #endif

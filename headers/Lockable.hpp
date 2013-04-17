@@ -6,9 +6,9 @@
 class Lockable
 {
 public:
-    void lock();
-    bool tryLock();
-    void unlock();
+    static void lock();
+    static bool tryLock();
+    static void unlock();
 
     static void lock2(Lockable & locker1, Lockable & locker2);
     static void lock3(Lockable & locker1, Lockable & locker2, Lockable & locker3);
@@ -17,7 +17,7 @@ public:
     static void unlock3(Lockable & locker1, Lockable & locker2, Lockable & locker3);
 
 private:
-    QMutex _locker;
+    static QMutex _locker;
 };
 
 #endif // LOCKABLE_HPP

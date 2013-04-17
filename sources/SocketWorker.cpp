@@ -1,57 +1,67 @@
 #include "SocketWorker.hpp"
 
-SocketWorker::SocketWorker(
-        QTcpSocket &socket,
-        PlayingArea &playingArea,
-        GameState &gameState,
-        PlayerState &playerState
-        ):
-    _streamer(&socket),
-    _socket(socket),
-    _playingArea(playingArea),
-    _gameState(gameState),
-    _playerState(playerState)
+SocketWorker::SocketWorker(QTcpSocket * socket,
+                           const qint32 & playerIndex,
+                           QObject *parent):
+    QObject(parent),
+    _playerIndex(playerIndex),
+    _streamer(socket),
+    _socket(socket)
 {
-    connect( &_socket, SIGNAL(readyRead()), this, SLOT(getDataSlot()) );
+    connect( _socket, SIGNAL(readyRead()), this, SLOT(getDataSlot()) );
     connect( this, SIGNAL(sendDataSignal()), this, SLOT(sendDataSlot()) );
-    connect( &_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)) );
-    connect( &_socket, SIGNAL(disconnected()), this, SLOT(disconnected()) );
+    connect( _socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)) );
+    connect( _socket, SIGNAL(disconnected()), this, SLOT(disconnected()) );
 }
 
 
 SocketWorker::~SocketWorker()
 {
-    if( _socket.isOpen() )
-        _socket.close();
+    if( _socket->isOpen() )
+        _socket->close();
+
+    _socket->deleteLater();
 }
 
-void SocketWorker::operator>>(QDataStream &out) const
+void SocketWorker::operator>>(QDataStream &out)
 {
     qint32 nbRackets, nbPlayers, loserIndex, gameState, downCounter=-1;
     QLineF racketLine;
-    QPointF p1_racket, p2_racket;
+    QPointF p1_racket, p2_racket, ballPos;
 
-    nbRackets = _playingArea.nbRackets();
+    lockPlayingArea();
+    nbRackets = PongShared::playingArea.nbRackets();
+    ballPos = PongShared::playingArea.ballPos();
+    unlockPlayingArea();
 
-    loserIndex = _gameState.loserIndex();
-    gameState = _gameState.state();
-    nbPlayers = _gameState.nbPlayers();
+    lockGameState();
+    loserIndex = PongShared::gameState.loserIndex();
+    gameState = PongShared::gameState.state();
+    nbPlayers = PongShared::gameState.nbPlayers();
 
     if( gameState == PongTypes::INITIALIZING )
-        downCounter = _gameState.downCounter();
+        downCounter = PongShared::gameState.downCounter();
+    unlockGameState();
 
-    out << _playingArea.ballPos() << _playerState.id() << nbRackets << nbPlayers << loserIndex << gameState << downCounter;
-    for(qint32 playerIndex=0; playerIndex<nbPlayers; ++playerIndex)
+    out << ballPos << _playerIndex << nbRackets-1 << nbPlayers << loserIndex << gameState << downCounter;
+    lockPlayingArea();
+    for(qint32 playerIndex=0;
+        playerIndex<nbPlayers && playerIndex < nbRackets;
+        ++playerIndex)
     {
-        QGraphicsLineItem & racket = *_playingArea.racket(playerIndex);
+        if(playerIndex != _playerIndex)
+        {
+            QGraphicsLineItem & racket = * PongShared::playingArea.racket(playerIndex);
 
-        racketLine = racket.line();
+            racketLine = racket.line();
 
-        p1_racket = racket.mapToScene(racketLine.p1());
-        p2_racket = racket.mapToScene(racketLine.p2());
+            p1_racket = racket.mapToScene(racketLine.p1());
+            p2_racket = racket.mapToScene(racketLine.p2());
 
-        out << playerIndex << p1_racket << p2_racket;
+            out << playerIndex << p1_racket << p2_racket;
+        }
     }
+    unlockPlayingArea();
 
 }
 
@@ -61,10 +71,13 @@ void SocketWorker::operator<<(QDataStream & in)
 
     in >> dxRacket;
 
-    _playerState.setdxRacket(dxRacket);
+    lockPlayersStates();
+    qDebug() << "dx: " << dxRacket << endl;
+    PongShared::playersStates[_playerIndex].setdxRacket(dxRacket);
+    unlockPlayersStates();
 }
 
-QDataStream & operator<<(QDataStream &out, const SocketWorker &sckw)
+QDataStream & operator<<(QDataStream &out, SocketWorker &sckw)
 {
     sckw>>out;
 
@@ -101,6 +114,7 @@ void SocketWorker::sendDataSlot()
 
     if( !_exit_requested() )
     {
+        //debug
         (*this) >> _streamer;
     }
 
@@ -131,7 +145,9 @@ void SocketWorker::getDataSlot()
 
 void SocketWorker::socketError(QAbstractSocket::SocketError socketError)
 {
-    _playerState.setState(PongTypes::SOCKET_ERROR);
+    lockPlayersStates();
+    PongShared::playersStates[_playerIndex].setState(PongTypes::SOCKET_ERROR);
+    unlockPlayersStates();
 
     qDebug() << "SocketWorker::socketError: error code = " << QString::number(socketError) << endl;
 
@@ -142,12 +158,14 @@ void SocketWorker::socketError(QAbstractSocket::SocketError socketError)
 void SocketWorker::disconnected()
 {
     //debug
-    emit appendStatusSignal("SocketWorker::disconnected: players "+QString::number(_playerState.id())+" disconnected");
+    emit appendStatusSignal("SocketWorker::disconnected: players "+QString::number(_playerIndex)+" disconnected");
 
-    _playerState.setState(PongTypes::DISCONNECTED);
+    lockPlayersStates();
+    PongShared::playersStates[_playerIndex].setState(PongTypes::DISCONNECTED);
+    unlockPlayersStates();
 
-    //debug
-    emit appendStatusSignal("SocketWorker::disconnected: signal hostDisconnected emitted");
+    if( _socket->isOpen() )
+        _socket->close();
 }
 
 bool SocketWorker::_running_state()
@@ -155,9 +173,13 @@ bool SocketWorker::_running_state()
     PongTypes::E_GameState gameState;
     PongTypes::E_PlayerState playerState;
 
-    gameState = _gameState.state();
+    lockGameState();
+    gameState = PongShared::gameState.state();
+    unlockGameState();
 
-    playerState = _playerState.state();
+    lockPlayersStates();
+    playerState = PongShared::playersStates[_playerIndex].state();
+    unlockPlayersStates();
 
     return (gameState != PongTypes::GAMEOVER
             &&
@@ -172,7 +194,9 @@ bool SocketWorker::_exit_requested()
 {
     bool requested;
 
-    requested = ( _gameState.state() == PongTypes::EXIT_REQUESTED );
+    lockGameState();
+    requested = ( PongShared::gameState.state() == PongTypes::EXIT_REQUESTED );
+    unlockGameState();
 
     return requested;
 }

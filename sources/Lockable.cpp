@@ -1,5 +1,7 @@
 #include <Lockable.hpp>
 
+QMutex Lockable::_locker;
+
 void Lockable::lock()
 {
     _locker.lock();
@@ -72,6 +74,4 @@ void Lockable::unlock3(Lockable &locker1, Lockable &locker2, Lockable &locker3)
     locker2.unlock();
     locker3.unlock();
 }
-
-
 

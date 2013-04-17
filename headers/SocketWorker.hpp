@@ -9,35 +9,30 @@
 #include <QDebug>
 #include <QErrorMessage>
 
-#include "PlayerState.hpp"
-#include "PlayingArea.hpp"
-#include "GameState.hpp"
+#include "Concurrent.hpp"
+#include "PongShared.hpp"
 #include "PongServerView.hpp"
 
-class SocketWorker : public QObject
+class SocketWorker : public QObject, public Concurrent
 {
     Q_OBJECT
 public:
-    SocketWorker(
-            QTcpSocket &socket,
-            PlayingArea &playingArea,
-            GameState &gameState,
-            PlayerState &playerState
-            );
+    SocketWorker(QTcpSocket * socket,
+                 const qint32 & playerIndex,
+                 QObject * parent=0);
 
     ~SocketWorker();
 
-    void operator>>(QDataStream & out)const;
+    void operator>>(QDataStream & out);
 
     void operator<<(QDataStream & in);
 
-    friend QDataStream & operator<<(QDataStream & out, const SocketWorker & sckw);
+    friend QDataStream & operator<<(QDataStream & out, SocketWorker & sckw);
     friend QDataStream & operator>>(QDataStream & in, SocketWorker & sckw);
 
 signals:
     void appendStatusSignal(const QString & status);
     void sendDataSignal();
-    void finishedSignal();
 
 public slots:
     void beginInteract();
@@ -47,12 +42,10 @@ public slots:
     void disconnected();
 
 private:
+    qint32 _playerIndex;
     QDataStream _streamer;
 
-    QTcpSocket & _socket;
-    PlayingArea & _playingArea;
-    GameState & _gameState;
-    PlayerState & _playerState;
+    QTcpSocket * _socket;
 
     bool _running_state();
     bool _exit_requested();

@@ -14,22 +14,20 @@
 #include "Random.hpp"
 #include "Lockable.hpp"
 
-class PlayingArea : public QObject
+class PlayingArea : public Lockable
 {
-    Q_OBJECT
 public:
     PlayingArea(const qint32 & nbPlayers,
                 const qint32 & renderAreaWidth,
-                const QRectF &ballRect);
+                const QRectF &ballRect,
+                QGraphicsScene * scene=0);
 
-    PlayingArea(const qint32 & nbPlayers=2,
-                const qint32 &renderAreaWidth=600);
+    PlayingArea(const qint32 & nbPlayers=6,
+                const qint32 &renderAreaWidth=600,
+                QGraphicsScene * scene=0);
 
-    PlayingArea(const PlayingArea & source);
-
-    PlayingArea & operator=(const PlayingArea & source);
-
-    ~PlayingArea();
+    void setScene(QGraphicsScene * scene);
+    void build();
 
     const qreal & centerAngle()const;
     qreal areaWidth()const;
@@ -82,34 +80,6 @@ public:
     void removeRacket(const qint32 & racketIndex);
     void removeWall(const qint32 & wallIndex);
 
-
-//synchronization
-
-    void askShareState();
-    bool upToDate()const;
-
-public slots:
-    void setState(
-            qint32 nbPlayers,
-            qint32 renderAreaWidth,
-            QPointF ballPos,
-            QLineF ballDir,
-            QVector<QLineF> rackPos
-            );
-
-    void shareState();
-
-signals:
-    void setStateDemand(
-            qint32 nbPlayers,
-            qint32 renderAreaWidth,
-            QPointF ballPos,
-            QLineF ballDir,
-            QVector<QLineF> rackPos
-            );
-
-    void shareStateDemand();
-
 private:
     qint32 _nbPlayers;
     qint32 _renderAreaWidth;
@@ -122,8 +92,6 @@ private:
     QVector<QGraphicsLineItem*> _cages;
     QVector<QGraphicsLineItem*> _rackets;
     QVector<QGraphicsLineItem*> _walls;
-
-    bool _upToDate;
 
     static const qreal _wallRatio;
     static const qreal _cageRatio;
@@ -138,6 +106,7 @@ private:
     void _generate_area();
     void _set_ball_random_direction();
     void _init_ball(const QRectF &ballRect);
+
 };
 
 #endif

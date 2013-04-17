@@ -11,30 +11,25 @@
 #include <QTcpSocket>
 #include <QTimer>
 
-#include "PlayerState.hpp"
-#include "GameState.hpp"
-#include "PlayingArea.hpp"
+#include "PongShared.hpp"
+#include "Concurrent.hpp"
 #include "SocketWorker.hpp"
 #include "PongServerView.hpp"
 
-class LoggerWorker : public QObject
+class LoggerWorker : public QObject, public Concurrent
 {
     Q_OBJECT
 public:
-    LoggerWorker(
-            GameState & gameState,
-            PlayingArea & playingArea,
-            QVector<PlayerState*> & playersStates,
-            QMutex & playersStatesMutex,
-            QVector<SocketWorker*> & socketWorkers,
-            const qint16 & port=6666
-            );
+    LoggerWorker(const qint16 & port=6666);
 
     ~LoggerWorker();
+
+    void setlisteningPort(const qint16 & port);
 
 signals:
     void newPlayerConnected();
     void appendStatusSignal(const QString & status);
+    void startService();
 
 public slots:
     void waitConnections();
@@ -42,16 +37,9 @@ public slots:
     void appendStatusSlot(const QString & status);
 
 private:
-    const qint16 _port;
+    qint16 _port;
     QTcpServer _tcpServer;
 
-    PlayingArea & _playingArea;
-    GameState & _gameState;
-    QVector<PlayerState*> & _playersStates;
-    QMutex & _playersStatesMutex;
-    QVector<SocketWorker*> & _socketWorkers;
-
-    static const short _maxPlayers;
     static const short _maxPending;
 
     bool _loggableGameState();

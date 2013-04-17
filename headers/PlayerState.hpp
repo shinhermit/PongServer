@@ -7,8 +7,9 @@
 #include <QLineF>
 
 #include "PongTypes.hpp"
+#include "Lockable.hpp"
 
-class PlayerState : public QObject
+class PlayerState : public QObject, public Lockable
 {
     Q_OBJECT
 public:
@@ -22,7 +23,7 @@ public:
 
     PlayerState & operator=(const PlayerState & source);
 
-    bool operator==(const PlayerState & source)const;
+    bool operator==(const PlayerState & ref)const;
 
     void setId(const qint32 & id);
     void setCredit(const qint32 &credit);

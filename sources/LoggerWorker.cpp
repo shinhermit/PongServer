@@ -1,22 +1,9 @@
 #include "LoggerWorker.hpp"
 
-const short LoggerWorker::_maxPlayers = 6;
 const short LoggerWorker::_maxPending = 12;
 
-LoggerWorker::LoggerWorker(
-        GameState &gameState,
-        PlayingArea &playingArea,
-        QVector<PlayerState *> &playersStates,
-        QMutex &playersStatesMutex,
-        QVector<SocketWorker *> &socketWorkers,
-        const qint16 &port
-        ):
-    _port(port),
-    _playingArea(playingArea),
-    _gameState(gameState),
-    _playersStates(playersStates),
-    _playersStatesMutex(playersStatesMutex),
-    _socketWorkers(socketWorkers)
+LoggerWorker::LoggerWorker(const qint16 &port):
+    _port(port)
 {
     _tcpServer.setMaxPendingConnections(_maxPending);
     connect( &_tcpServer, SIGNAL(newConnection()), this, SLOT(newConnectionSlot()) );
@@ -26,6 +13,11 @@ LoggerWorker::~LoggerWorker()
 {
     if( _tcpServer.isListening() )
         _tcpServer.close();
+}
+
+void LoggerWorker::setlisteningPort(const qint16 &port)
+{
+    _port = port;
 }
 
 void LoggerWorker::waitConnections()
@@ -54,23 +46,26 @@ void LoggerWorker::newConnectionSlot()
     if( !_loggableGameState() )
         emit appendStatusSignal("LoggerWorker::newConnectionSlot: unloggable gameState");
 
-    if( _nbPlayers() <= _maxPlayers && _loggableGameState() )
+    if( _nbPlayers() <= PongShared::maxPlayers && _loggableGameState() )
     {
-        index = _playersStates.size();
-        _playersStates.push_back( new PlayerState(index, PongTypes::ACCEPTED, this) );
+        lockPlayersStates();
 
-        QTcpSocket & socket = *_tcpServer.nextPendingConnection();
-        _socketWorkers.push_back( new SocketWorker(socket, _playingArea, _gameState, *_playersStates[index]) );
-        index = _socketWorkers.size() - 1;
-        SocketWorker * worker = _socketWorkers[index];
+        index = PongShared::playersStates.size();
+        PongShared::playersStates.push_back( PlayerState(index, PongTypes::ACCEPTED, this) );
 
+        QTcpSocket * socket = _tcpServer.nextPendingConnection();
+        SocketWorker * worker = new SocketWorker(socket, index, this);
+
+        connect( socket, SIGNAL(disconnected()), worker, SLOT(deleteLater()) );
         connect( worker, SIGNAL(appendStatusSignal(QString)), this, SLOT(appendStatusSlot(QString)) );
+        connect( this, SIGNAL(startService()), worker, SLOT(beginInteract()) );
 
         _incNbPlayers();
 
-        worker->beginInteract();
-
+        emit startService();
         emit newPlayerConnected();
+
+        unlockPlayersStates();
 
         //debug
         emit appendStatusSignal("LoggerWorker::newConnectionSlot: connection accepted");
@@ -93,14 +88,16 @@ bool LoggerWorker::_loggableGameState()
 {
     bool loggable;
 
+    lockGameState();
     loggable =
-            (_gameState.state() != PongTypes::INITIALIZING
+            (PongShared::gameState.state() != PongTypes::INITIALIZING
             &&
-            _gameState.state() != PongTypes::RUNNING
+            PongShared::gameState.state() != PongTypes::RUNNING
             &&
-            _gameState.state() != PongTypes::PAUSED
+            PongShared::gameState.state() != PongTypes::PAUSED
             &&
-            _gameState.state() != PongTypes::EXIT_REQUESTED);
+            PongShared::gameState.state() != PongTypes::EXIT_REQUESTED);
+    unlockGameState();
 
     return loggable;
 }
@@ -109,27 +106,34 @@ bool LoggerWorker::_exit_requested()
 {
     bool requested;
 
-    requested = ( _gameState.state() == PongTypes::EXIT_REQUESTED );
+    lockGameState();
+    requested = ( PongShared::gameState.state() == PongTypes::EXIT_REQUESTED );
+    unlockGameState();
 
     return requested;
 }
 
 void LoggerWorker::_setNbPlayers(const qint32 &nbPlayers)
 {
-    _gameState.setNbPlayers(nbPlayers);
+    lockGameState();
+    PongShared::gameState.setNbPlayers(nbPlayers);
+    unlockGameState();
 }
 
 void LoggerWorker::_incNbPlayers()
 {
-    _gameState.setNbPlayers( _gameState.nbPlayers() + 1 );
-
+    lockGameState();
+    PongShared::gameState.setNbPlayers( PongShared::gameState.nbPlayers() + 1 );
+    unlockGameState();
 }
 
 qint32 LoggerWorker::_nbPlayers()
 {
     qint32 nbPlayers;
 
-    nbPlayers = _gameState.nbPlayers();
+    lockGameState();
+    nbPlayers = PongShared::gameState.nbPlayers();
+    unlockGameState();
 
     return nbPlayers;
 }

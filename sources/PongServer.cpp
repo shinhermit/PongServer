@@ -1,31 +1,34 @@
 #include "PongServer.hpp"
 
-PongServer::PongServer(const int & maxPlayers,
-                       const int & renderAreaWidth,
-                       const qint16 & port):
-    _maxPlayers(maxPlayers),
-    _gameState(PongTypes::NOPARTY),
-    _playingArea(maxPlayers, renderAreaWidth),
-    _gameStateChecker(&_gameState, &_playingArea, &_playersStates, &_playersStatesMutex),
-    _ballMover(&_gameState, &_playingArea),
-    _playerLogger(_gameState, _playingArea, _playersStates, _playersStatesMutex, _socketWorkers, port)
+PongServer::PongServer(const qint16 & port,
+                       const qint32 &renderAreaWidth):
+    _scene(new QGraphicsScene( QRectF( -renderAreaWidth/2, -renderAreaWidth/2, renderAreaWidth, renderAreaWidth) ) ),
+    _playerLogger(port)
 {
+    PongShared::gameState.setNoParty();
+    PongShared::playingArea.setScene(_scene);
+    PongShared::playingArea.build();
+
     connect( this, SIGNAL(newGameSignal()), this, SLOT(newGameSlot()) );
 
     connect( this, SIGNAL(startService()), &_gameStateChecker, SLOT(waitStartSlot()) );
     connect( &_gameStateChecker, SIGNAL(finishedSignal()), &_gameStateCheckerThread, SLOT(quit()) );
     connect( &_gameStateChecker, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
     connect( &_gameStateCheckerThread, SIGNAL(finished()), this, SLOT(threadTerminated()) );
+    connect( this, SIGNAL(stopService()), &_gameStateCheckerThread, SLOT(quit()) );
     connect( &_gameStateChecker, SIGNAL(gameOverSignal()), this, SLOT(newGameSlot()) );
 
-    _gameStateChecker.moveToThread(&_gameStateCheckerThread);
-    _gameStateCheckerThread.start();
-
-    connect( &_gameStateChecker, SIGNAL(beginMovingBallSignal()), &_ballMover, SLOT(beginMovingBall()) );
+    connect( &_gameStateChecker, SIGNAL(startMovingBall()), &_ballMover, SLOT(startMoving()) );
+    connect( &_gameStateChecker, SIGNAL(stopMovingBall()), &_ballMover, SLOT(stopMoving()) );
+    connect( &_ballMover, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
     connect( &_ballMover, SIGNAL(finishedSignal()), &_ballMoverThread, SLOT(quit()) );
+    connect( this, SIGNAL(stopService()), &_ballMoverThread, SLOT(quit()) );
     connect( &_ballMoverThread, SIGNAL(finished()), this, SLOT(threadTerminated()) );
 
+    _gameStateChecker.moveToThread(&_gameStateCheckerThread);
     _ballMover.moveToThread(&_ballMoverThread);
+
+    _gameStateCheckerThread.start();
     _ballMoverThread.start();
 
     connect( this, SIGNAL(startService()), &_playerLogger, SLOT(waitConnections()) );
@@ -37,13 +40,7 @@ PongServer::PongServer(const int & maxPlayers,
     connect(&_view, SIGNAL(exitSignal()), this, SLOT(quitSlot()) );
 
     //debug
-    _view.appendStatus("Server Active; GameState set to NOPARTY, checker and logger started");
-}
-
-PongServer::~PongServer()
-{
-    for(int i=0; i < _playersStates.size(); ++i)
-        _playersStates[i]->deleteLater();
+    _view.appendStatus("Server Active; GameState set to NOPARTY, gameStatechecker started");
 }
 
 void PongServer::start()
@@ -53,16 +50,18 @@ void PongServer::start()
     emit newGameSignal();
 }
 
-void PongServer::showPlayingArea()
+void PongServer::showScene()
 {
-    _areaView.setScene( _playingArea.scene() );
+    _areaView.setScene(_scene);
     _areaView.show();
 }
 
 void PongServer::gameStateErrorSlot(const QString &mess)
 {
     //when not enough players (only 1)
-    _gameState.setStateError();
+    lockGameState();
+    PongShared::gameState.setStateError();
+    unlockGameState();
 
     qDebug() << mess << endl;
 }
@@ -74,7 +73,9 @@ void PongServer::newPlayerConnected()
     //debug
     _view.appendStatus("PongServer::newPlayersConnected : signal received");
 
-    nbPlayers = _gameState.nbPlayers();
+    lockGameState();
+    nbPlayers = PongShared::gameState.nbPlayers();
+    unlockGameState();
 
     if(nbPlayers > 1)
         _view.enableStartButton();
@@ -82,9 +83,16 @@ void PongServer::newPlayerConnected()
 
 void PongServer::startRequestedSlot()
 {
+    qint32 nbPlayers;
 
-    _playingArea.rebuild( _gameState.nbPlayers() );
-    _gameState.setStartRequested();
+    lockGameState();
+    PongShared::gameState.setStartRequested();
+    nbPlayers = PongShared::gameState.nbPlayers();
+    unlockGameState();
+
+    lockPlayingArea();
+    PongShared::playingArea.rebuild(nbPlayers);
+    unlockPlayingArea();
 
     //debug
     _view.appendStatus("PongServer::startRequestedSlot: gameState set to START_REQUESTED");
@@ -96,7 +104,11 @@ void PongServer::quitSlot()
     _view.appendStatus("PongServer::quitSlot: quitSignal received");
     _view.disableStartButton();
 
-    _gameState.setExitRequested();
+    lockGameState();
+    PongShared::gameState.setExitRequested();
+    unlockGameState();
+
+    emit stopService();
 }
 
 void PongServer::threadTerminated()
@@ -119,26 +131,30 @@ void PongServer::newGameSlot()
 
     //delete workers and thread for disconnected players
 
-    if(_playersStates.size() > 0)
+    lockPlayersStates();
+    if(PongShared::playersStates.size() > 0)
     {
         int i=0;
-        while( i < _playersStates.size() )
+        while( i < PongShared::playersStates.size() )
         {
-            _playersStates[i]->setId(i);
+            PongShared::playersStates[i].setId(i);
 
-            if( _playersStates[i]->state() == PongTypes::DISCONNECTED )
-            {
-                _playersStates.erase( _playersStates.begin()+i );
-                _socketWorkers.erase( _socketWorkers.begin()+i );
-            }
+            if( PongShared::playersStates[i].state() == PongTypes::DISCONNECTED )
+                PongShared::playersStates.erase( PongShared::playersStates.begin()+i );
 
             else
                 ++i;
         }
     }
 
-    if( _socketWorkers.size() > 1 )
+    if( PongShared::playersStates.size() > 1 )
         _view.enableStartButton();
+
+    else
+        _view.disableStartButton();
+
+    unlockPlayersStates();
+
 
     //reset gameState, playersStates
     _reset_gameState();
@@ -153,27 +169,33 @@ void PongServer::newGameSlot()
 
 void PongServer::_reset_gameState()
 {
-    _gameState.setWaitingServer();
-    _gameState.setNbPlayers( _socketWorkers.size() );
-    _gameState.setLoserIndex(-1);
-    _gameState.setDownCounter(0);
+    qint32 nbPlayers;
+
+    lockPlayersStates();
+    nbPlayers = PongShared::playersStates.size();
+    unlockPlayersStates();
+
+    lockGameState();
+    PongShared::gameState.setWaitingServer();
+    PongShared::gameState.setNbPlayers(nbPlayers);
+    PongShared::gameState.setLoserIndex(-1);
+    PongShared::gameState.setDownCounter(0);
+    unlockGameState();
 }
 
 void PongServer::_reset_playersStates()
 {
-    for(int i=0; i < _playersStates.size(); ++i)
+    lockPlayersStates();
+    for(int i=0; i < PongShared::playersStates.size(); ++i)
     {
-        _playersStates[i]->setState(PongTypes::ACCEPTED);
-        _playersStates[i]->setCredit( PlayerState::DefaultCredit() );
-        _playersStates[i]->setdxRacket(0);
+        PongShared::playersStates[i].setState(PongTypes::ACCEPTED);
+        PongShared::playersStates[i].setCredit( PlayerState::DefaultCredit() );
+        PongShared::playersStates[i].setdxRacket(0);
     }
+    unlockPlayersStates();
 }
 
 bool PongServer::_all_threads_finished()
 {
-    bool finished;
-
-    finished = _gameStateCheckerThread.isFinished();
-
-    return finished;
+    return ( _gameStateCheckerThread.isFinished() && _ballMoverThread.isFinished() );
 }

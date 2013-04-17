@@ -12,31 +12,26 @@
 #include <QVector>
 #include <QTimer>
 
-#include "PlayingArea.hpp"
-#include "PlayerState.hpp"
-#include "GameState.hpp"
-#include "PlayersStatesHolder.hpp"
+#include "Concurrent.hpp"
+#include "PongShared.hpp"
 #include "PongTypes.hpp"
 #include "PongServerView.hpp"
 
-class GameStateWorker : public QObject
+class GameStateWorker : public QObject, public Concurrent
 {
     Q_OBJECT
 
 public:
-    GameStateWorker(
-            GameState * globalGameState,
-            PlayingArea * globalPlayingArea,
-            PlayersStatesHolder * globalPlayersStates
-            );
+    GameStateWorker(QObject * parent=0);
 
 signals:
     void checkInitSignal();
     void checkRunningSignal();
-    void beginMovingBallSignal();
     void finishedSignal();
     void appendStatusSignal(const QString & status);
     void gameOverSignal();
+    void startMovingBall();
+    void stopMovingBall();
 
 public slots:
     void waitStartSlot();
@@ -46,13 +41,11 @@ public slots:
 private slots:
     void _countDownSlot();
 
+    void _check_running_routine();
+
 private:
     QTimer _timer;
     qint32 _downCounter;
-
-    PlayingArea _playingArea;
-    QVector<PlayerState*> _playersStates;
-    GameState _gameState;
 
     bool _exit_requested();
 
@@ -71,6 +64,8 @@ private:
     bool _game_over();
 
     void _manage_game_over();
+
+    void _move_ball();
 };
 
 #endif

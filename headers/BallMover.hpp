@@ -3,45 +3,39 @@
 
 #include <cmath>
 
-#include <QObject>
+#include <QString>
 #include <QTimer>
 
-#include "PlayingArea.hpp"
-#include "GameState.hpp"
+#include "Concurrent.hpp"
+#include "PongShared.hpp"
 #include "PongTypes.hpp"
 
-class BallMover : public QObject
+class BallMover : public QObject, public Concurrent
 {
     Q_OBJECT
 public:
-    BallMover(
-            GameState * gameState,
-            PlayingArea *playingArea,
-            const int & period=500
-            );
+    BallMover(const qint32 & period=300);
 
     ~BallMover();
 
-    const int & period()const;
-    void setPeriod(const int & period);
+    void setPeriod(const qint32 & period);
+
+    qint32 period()const;
 
 signals:
     void finishedSignal();
+    void appendStatusSignal(QString status);
 
 public slots:
-    void beginMovingBall();
-
-private slots:
-    void _moveBall();
+    void startMoving();
+    void moveBall();
+    void stopMoving();
 
 private:
     QTimer _timer;
-    int _period;
+    qint32 _period;
 
-    GameState * _gameState;
-    PlayingArea * _playingArea;
-
-    bool _running_state()const;
+    bool _exit_requested();
 };
 
 #endif // BALLMOVER_HPP

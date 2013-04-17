@@ -1,50 +1,50 @@
 #include "BallMover.hpp"
 
-BallMover::BallMover(
-        GameState *gameState,
-        PlayingArea * playingArea,
-        const int & period
-        ):
-    _period(period),
-    _gameState(gameState),
-    _playingArea(playingArea)
+BallMover::BallMover(const qint32 & period):
+    _period(period)
 {
-    connect(&_timer, SIGNAL(timeout()), this, SLOT(_moveBall()) );
+    connect( &_timer, SIGNAL(timeout()), this, SLOT(moveBall()) );
 }
 
 BallMover::~BallMover()
 {
     if(_timer.isActive())
         _timer.stop();
-
-    emit finishedSignal();
 }
 
-const int & BallMover::period() const
+void BallMover::setPeriod(const qint32 &period)
+{
+    _period = ::abs(period);
+}
+
+qint32 BallMover::period() const
 {
     return _period;
 }
 
-void BallMover::setPeriod(const int &period)
-{
-    _timer.stop();
-    _period = ::abs(period);
-    _timer.start(_period);
-}
 
-void BallMover::beginMovingBall()
+void BallMover::startMoving()
 {
-    if( _running_state() )
+    emit appendStatusSignal("Signal startMovingBall received");
+
+    if( _timer.isActive() )
+        _timer.stop();
+
+    if( !_exit_requested() )
         _timer.start(_period);
 
     else
         emit finishedSignal();
 }
 
-void BallMover::_moveBall()
+void BallMover::moveBall()
 {
-    if( _running_state() )
-        _playingArea->moveBall();
+    if( !_exit_requested() )
+    {
+        lockPlayingArea();
+        PongShared::playingArea.moveBall();
+        unlockPlayingArea();
+    }
 
     else
     {
@@ -53,7 +53,24 @@ void BallMover::_moveBall()
     }
 }
 
-bool BallMover::_running_state() const
+void BallMover::stopMoving()
 {
-    return ( _gameState->state() == PongTypes::RUNNING );
+    emit appendStatusSignal("Signal stopMovingBall received");
+
+    if(_timer.isActive())
+        _timer.stop();
+
+    if( _exit_requested() )
+        emit finishedSignal();
+}
+
+bool BallMover::_exit_requested()
+{
+    bool requested;
+
+    lockGameState();
+    requested = ( PongShared::gameState.state() == PongTypes::EXIT_REQUESTED );
+    unlockGameState();
+
+    return requested;
 }
