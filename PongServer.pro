@@ -24,7 +24,10 @@ HEADERS += headers/GameState.hpp \
            headers/SocketWorker.hpp \
            headers/Trigo.hpp \
            headers/Workers.hpp \
-    headers/PongServerView.hpp
+    headers/PongServerView.hpp \
+    headers/PongShared.hpp \
+    headers/Concurrent.hpp \
+    headers/BallMover.hpp
 FORMS += headers/PongServerView.ui
 SOURCES += sources/GameState.cpp \
            sources/GameStateWorker.cpp \
@@ -37,4 +40,7 @@ SOURCES += sources/GameState.cpp \
            sources/SocketWorker.cpp \
            sources/Trigo.cpp \
     sources/PongServerView.cpp \
-    sources/main.cpp
+    sources/main.cpp \
+    sources/PongShared.cpp \
+    sources/Concurrent.cpp \
+    sources/BallMover.cpp

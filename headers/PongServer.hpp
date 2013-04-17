@@ -2,33 +2,34 @@
 #define _PongServer
 
 #include <QWidget>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QThread>
 #include <QVector>
 #include <QMutex>
 #include <QDebug>
 
 #include "Workers.hpp"
-#include "GameState.hpp"
-#include "PlayingArea.hpp"
-#include "PlayerState.hpp"
+#include "Concurrent.hpp"
+#include "PongShared.hpp"
 #include "PongServerView.hpp"
 
-class PongServer : public QObject
+class PongServer : public QObject, public Concurrent
 {
     Q_OBJECT
 public:
-    PongServer(const int & maxPlayers=6,
-               const int & renderAreaWidth=600,
-               const qint16 & port=6666);
-
-    ~PongServer();
+    PongServer(const qint16 & port=6666,
+               const qint32 &renderAreaWidth=600);
 
     void start();
+
+    void showScene();
 
 signals:
     void gameStateErrorSignal(const QString & mess);
     void newGameSignal();
     void startService();
+    void stopService();
 
 public slots:
     void newGameSlot();
@@ -38,25 +39,23 @@ public slots:
     void quitSlot();
     void threadTerminated();
 
+//shared stuffs
+
 private:
-    short _maxPlayers;
     PongServerView _view;
+    QGraphicsScene * _scene;
+    QGraphicsView _areaView;
 
-    //shared memories
-    GameState _gameState; //shared memory
-    PlayingArea _playingArea; //shared memory
-    QVector<PlayerState*> _playersStates; //shared memory
-
-    //Mutex for shared memory
-    QMutex _playersStatesMutex;
 
     //worker classes for threads
     GameStateWorker _gameStateChecker;
     LoggerWorker _playerLogger;
-    QVector<SocketWorker*> _socketWorkers;
+    BallMover _ballMover;
 
     //thread object
     QThread _gameStateCheckerThread;
+    QThread _ballMoverThread;
+
 
     void _reset_gameState();
     void _reset_playersStates();

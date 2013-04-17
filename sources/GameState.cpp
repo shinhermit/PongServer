@@ -7,6 +7,23 @@ GameState::GameState(const PongTypes::E_GameState & initialState):
     _nbPlayers(0)
 {}
 
+GameState::GameState(const GameState &source):
+    _state(source._state),
+    _loserIndex(source._loserIndex),
+    _downCounter(source._downCounter),
+    _nbPlayers(source._nbPlayers)
+{}
+
+GameState &GameState::operator =(const GameState &source)
+{
+    _state = source._state;
+    _loserIndex = source._loserIndex;
+    _downCounter = source._downCounter;
+    _nbPlayers = source._nbPlayers;
+
+    return *this;
+}
+
 
 void GameState::setGameOver(const qint32 &cageIndex)
 {

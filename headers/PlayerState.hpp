@@ -14,10 +14,16 @@ class PlayerState : public QObject, public Lockable
     Q_OBJECT
 public:
     PlayerState(
-            const qint32 & id,
+            const qint32 & id=0,
             const PongTypes::E_PlayerState & state=PongTypes::WAITING,
             QObject * parent=0
             );
+
+    PlayerState(const PlayerState & source);
+
+    PlayerState & operator=(const PlayerState & source);
+
+    bool operator==(const PlayerState & ref)const;
 
     void setId(const qint32 & id);
     void setCredit(const qint32 &credit);

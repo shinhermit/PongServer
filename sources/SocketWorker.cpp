@@ -1,63 +1,67 @@
 #include "SocketWorker.hpp"
 
-SocketWorker::SocketWorker(
-        QTcpSocket &socket,
-        PlayingArea &playingArea,
-        GameState &gameState,
-        PlayerState &playerState
-        ):
-    _streamer(&socket),
-    _socket(socket),
-    _playingArea(playingArea),
-    _gameState(gameState),
-    _playerState(playerState)
+SocketWorker::SocketWorker(QTcpSocket * socket,
+                           const qint32 & playerIndex,
+                           QObject *parent):
+    QObject(parent),
+    _playerIndex(playerIndex),
+    _streamer(socket),
+    _socket(socket)
 {
-    connect( &_socket, SIGNAL(readyRead()), this, SLOT(getDataSlot()) );
+    connect( _socket, SIGNAL(readyRead()), this, SLOT(getDataSlot()) );
     connect( this, SIGNAL(sendDataSignal()), this, SLOT(sendDataSlot()) );
-    connect( &_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)) );
-    connect( &_socket, SIGNAL(disconnected()), this, SLOT(disconnected()) );
+    connect( _socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)) );
+    connect( _socket, SIGNAL(disconnected()), this, SLOT(disconnected()) );
 }
 
 
 SocketWorker::~SocketWorker()
 {
-    if( _socket.isOpen() )
-        _socket.close();
+    if( _socket->isOpen() )
+        _socket->close();
+
+    _socket->deleteLater();
 }
 
-void SocketWorker::operator>>(QDataStream &out) const
+void SocketWorker::operator>>(QDataStream &out)
 {
     qint32 nbRackets, nbPlayers, loserIndex, gameState, downCounter=-1;
     QLineF racketLine;
-    QPointF p1_racket, p2_racket;
+    QPointF p1_racket, p2_racket, ballPos;
 
-    _playingArea.lock();
-    nbRackets = _playingArea.nbRackets();
-    _playingArea.unlock();
+    lockPlayingArea();
+    nbRackets = PongShared::playingArea.nbRackets();
+    ballPos = PongShared::playingArea.ballPos();
+    unlockPlayingArea();
 
-    _gameState.lock();
-    loserIndex = _gameState.loserIndex();
-    gameState = _gameState.state();
-    nbPlayers = _gameState.nbPlayers();
+    lockGameState();
+    loserIndex = PongShared::gameState.loserIndex();
+    gameState = PongShared::gameState.state();
+    nbPlayers = PongShared::gameState.nbPlayers();
 
     if( gameState == PongTypes::INITIALIZING )
-        downCounter = _gameState.downCounter();
-    _gameState.unlock();
+        downCounter = PongShared::gameState.downCounter();
+    unlockGameState();
 
-    out << _playingArea.ballPos() << _playerState.id() << nbRackets << nbPlayers << loserIndex << gameState << downCounter;
-    for(qint32 playerIndex=0; playerIndex<nbPlayers; ++playerIndex)
+    out << ballPos << _playerIndex << nbRackets-1 << nbPlayers << loserIndex << gameState << downCounter;
+    lockPlayingArea();
+    for(qint32 playerIndex=0;
+        playerIndex<nbPlayers && playerIndex < nbRackets;
+        ++playerIndex)
     {
-        _playingArea.lock();
-        QGraphicsLineItem & racket = *_playingArea.racket(playerIndex);
+        if(playerIndex != _playerIndex)
+        {
+            QGraphicsLineItem & racket = * PongShared::playingArea.racket(playerIndex);
 
-        racketLine = racket.line();
+            racketLine = racket.line();
 
-        p1_racket = racket.mapToScene(racketLine.p1());
-        p2_racket = racket.mapToScene(racketLine.p2());
-        _playingArea.unlock();
+            p1_racket = racket.mapToScene(racketLine.p1());
+            p2_racket = racket.mapToScene(racketLine.p2());
 
-        out << playerIndex << p1_racket << p2_racket;
+            out << playerIndex << p1_racket << p2_racket;
+        }
     }
+    unlockPlayingArea();
 
 }
 
@@ -67,12 +71,13 @@ void SocketWorker::operator<<(QDataStream & in)
 
     in >> dxRacket;
 
-    _playerState.lock();
-    _playerState.setdxRacket(dxRacket);
-    _playerState.unlock();
+    lockPlayersStates();
+    qDebug() << "dx: " << dxRacket << endl;
+    PongShared::playersStates[_playerIndex].setdxRacket(dxRacket);
+    unlockPlayersStates();
 }
 
-QDataStream & operator<<(QDataStream &out, const SocketWorker &sckw)
+QDataStream & operator<<(QDataStream &out, SocketWorker &sckw)
 {
     sckw>>out;
 
@@ -140,9 +145,9 @@ void SocketWorker::getDataSlot()
 
 void SocketWorker::socketError(QAbstractSocket::SocketError socketError)
 {
-    _playerState.lock();
-    _playerState.setState(PongTypes::SOCKET_ERROR);
-    _playerState.unlock();
+    lockPlayersStates();
+    PongShared::playersStates[_playerIndex].setState(PongTypes::SOCKET_ERROR);
+    unlockPlayersStates();
 
     qDebug() << "SocketWorker::socketError: error code = " << QString::number(socketError) << endl;
 
@@ -153,14 +158,14 @@ void SocketWorker::socketError(QAbstractSocket::SocketError socketError)
 void SocketWorker::disconnected()
 {
     //debug
-    emit appendStatusSignal("SocketWorker::disconnected: players "+QString::number(_playerState.id())+" disconnected");
+    emit appendStatusSignal("SocketWorker::disconnected: players "+QString::number(_playerIndex)+" disconnected");
 
-    _playerState.lock();
-    _playerState.setState(PongTypes::DISCONNECTED);
-    _playerState.unlock();
+    lockPlayersStates();
+    PongShared::playersStates[_playerIndex].setState(PongTypes::DISCONNECTED);
+    unlockPlayersStates();
 
-    //debug
-    emit appendStatusSignal("SocketWorker::disconnected: signal hostDisconnected emitted");
+    if( _socket->isOpen() )
+        _socket->close();
 }
 
 bool SocketWorker::_running_state()
@@ -168,13 +173,13 @@ bool SocketWorker::_running_state()
     PongTypes::E_GameState gameState;
     PongTypes::E_PlayerState playerState;
 
-    _gameState.lock();
-    gameState = _gameState.state();
-    _gameState.unlock();
+    lockGameState();
+    gameState = PongShared::gameState.state();
+    unlockGameState();
 
-    _playerState.lock();
-    playerState = _playerState.state();
-    _playerState.unlock();
+    lockPlayersStates();
+    playerState = PongShared::playersStates[_playerIndex].state();
+    unlockPlayersStates();
 
     return (gameState != PongTypes::GAMEOVER
             &&
@@ -189,9 +194,9 @@ bool SocketWorker::_exit_requested()
 {
     bool requested;
 
-    _gameState.lock();
-    requested = ( _gameState.state() == PongTypes::EXIT_REQUESTED );
-    _gameState.unlock();
+    lockGameState();
+    requested = ( PongShared::gameState.state() == PongTypes::EXIT_REQUESTED );
+    unlockGameState();
 
     return requested;
 }

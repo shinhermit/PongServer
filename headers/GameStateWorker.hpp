@@ -12,23 +12,17 @@
 #include <QVector>
 #include <QTimer>
 
-#include "PlayingArea.hpp"
-#include "PlayerState.hpp"
-#include "GameState.hpp"
+#include "Concurrent.hpp"
+#include "PongShared.hpp"
 #include "PongTypes.hpp"
 #include "PongServerView.hpp"
 
-class GameStateWorker : public QObject
+class GameStateWorker : public QObject, public Concurrent
 {
     Q_OBJECT
 
 public:
-    GameStateWorker(
-            GameState & gameState,
-            PlayingArea & playingArea,
-            QVector<PlayerState*> & playersStates,
-            QMutex & playersStatesMutex
-            );
+    GameStateWorker(QObject * parent=0);
 
 signals:
     void checkInitSignal();
@@ -36,6 +30,8 @@ signals:
     void finishedSignal();
     void appendStatusSignal(const QString & status);
     void gameOverSignal();
+    void startMovingBall();
+    void stopMovingBall();
 
 public slots:
     void waitStartSlot();
@@ -45,14 +41,11 @@ public slots:
 private slots:
     void _countDownSlot();
 
+    void _check_running_routine();
+
 private:
     QTimer _timer;
     qint32 _downCounter;
-
-    PlayingArea & _playingArea;
-    QVector<PlayerState*> & _playersStates;
-    QMutex & _playersStatesMutex;
-    GameState & _gameState;
 
     bool _exit_requested();
 
@@ -74,77 +67,5 @@ private:
 
     void _move_ball();
 };
-
-/*!
- *\class GameStateWorker GameStateWorker.hpp "headers/GameStateWorker.hpp"
- * \brief The GameStateWorker class is mean to be runned by a thread
- *This class checks shared memories and update the game state (rackets positions, game over, discard player, etc.)
- */
-
-/*!
-* \fn GameStateWorker
-* \param playingArea
-* \param playingAreaMutex
-* \param playersStates
-* \param playersStatesMutexes
-* \param gameState
-* \param gameStateMutex
-*
-* Constructor
-*/
-
-/*!
- * \fn _update_rackets
- * read rackets delta(x)
- * update playingArea
- */
-
-/*!
- * \fn _check_collisions
- */
-
-/*!
- * \fn _manage_goal
- * \param cageIndex
- * change credits (ie conceded goals)
- * eventually discard player
- *bring in a new ball (position+direction+speed)
- */
-
-/*!
- * \fn _discard_player
- * \param racketIndex
- * remove cage (+ racket ?) of the player
- * put player in discarded state
- */
-
-/*!
- * \fn _manage_wall_collision
- * \param wallIndex
- *determine ball (position, direction)
- */
-
-/*!
- * \fn _manage_racket_collision
- * \param racketIndex
- * determine ball (position, direction, speed)
- * eventually according to the the racket speed
- */
-
-/*!
- * \fn _game_over
- * \return true if the state of the game is PongTypes::GAMEOVER
- */
-
-/*!
- * \fn _manage_game_over
- * planned for any action eventually needed in a game over state
- */
-
-/*!
- * \fn _move_ball
- * just moves the ball in the direction of
- * ball _playingArea.ball().direction()
- */
 
 #endif

@@ -16,20 +16,18 @@
 
 class PlayingArea : public Lockable
 {
-private:
-    void _clear_scene();
-    void _generate_area(const qint32 & nbPlayers);
-    void _generate_area();
-    void _set_ball_random_direction();
-    void _init_ball(const QRectF &ballRect);
-
 public:
     PlayingArea(const qint32 & nbPlayers,
                 const qint32 & renderAreaWidth,
-                const QRectF &ballRect);
+                const QRectF &ballRect,
+                QGraphicsScene * scene=0);
 
-    PlayingArea(const qint32 & nbPlayers=2,
-                const qint32 &renderAreaWidth=600);
+    PlayingArea(const qint32 & nbPlayers=6,
+                const qint32 &renderAreaWidth=600,
+                QGraphicsScene * scene=0);
+
+    void setScene(QGraphicsScene * scene);
+    void build();
 
     const qreal & centerAngle()const;
     qreal areaWidth()const;
@@ -102,6 +100,13 @@ private:
     static const qreal _penWidth;
     static const qreal _ballRadius;
     static const qreal _ballTranslateQuantum;
+
+    void _clear_scene();
+    void _generate_area(const qint32 & nbPlayers);
+    void _generate_area();
+    void _set_ball_random_direction();
+    void _init_ball(const QRectF &ballRect);
+
 };
 
 #endif

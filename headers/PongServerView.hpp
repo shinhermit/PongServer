@@ -3,8 +3,6 @@
 
 #include <QWidget>
 
-#include "Lockable.hpp"
-
 namespace Ui {
     class PongServerView;
 }
