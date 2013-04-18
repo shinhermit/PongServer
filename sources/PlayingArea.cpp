@@ -95,11 +95,7 @@ qint32 PlayingArea::nbWalls()const
 
 QPointF PlayingArea::ballPos() const
 {
-    QPointF relPos, absPos;
-
-    relPos = _ball.pos();
-
-    return absPos;
+    return _ball.pos();
 }
 
 QRectF PlayingArea::ballRect() const
@@ -443,7 +439,7 @@ void PlayingArea::_generate_area(const qint32 & nbPlayers)
 
 void PlayingArea::_set_ball_random_direction()
 {
-    qreal alpha = _rndGen.randomIntbeetween(0, 360);
+    qreal alpha = 30;//_rndGen.randomIntbeetween(0, 360);
 
     _ballDirection.setAngle(_ballDirection.angle()+alpha);
 }
