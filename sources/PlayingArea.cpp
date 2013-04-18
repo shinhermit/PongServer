@@ -98,7 +98,6 @@ QPointF PlayingArea::ballPos() const
     QPointF relPos, absPos;
 
     relPos = _ball.pos();
-    absPos = _ball.mapToParent(relPos);
 
     return absPos;
 }
