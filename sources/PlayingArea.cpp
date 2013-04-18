@@ -6,47 +6,49 @@ const qreal PlayingArea::_wallRatio = 1./4;
 const qreal PlayingArea::_cageRatio = 1./2;
 const qreal PlayingArea::_racketRatio = 1./6;
 const qreal PlayingArea::_racketToWallSpace = 20;
-const qreal PlayingArea::_penWidth = 5;
-const qreal PlayingArea::_ballRadius = 5;
 const qreal PlayingArea::_ballTranslateQuantum = 1;
 
 PlayingArea::PlayingArea(const qint32 & nbPlayers,
                          const qint32 & renderAreaWidth,
-                         const QRectF & ballRect,
-                         QGraphicsScene * scene):
+                         const qreal & ballRadius):
     _nbPlayers(nbPlayers),
     _renderAreaWidth(renderAreaWidth),
     _centerAngle(360/nbPlayers),
-    _scene(scene),
-    _ballDirection(0,0, _ballTranslateQuantum, 0)
+    _scene(-renderAreaWidth/2, -renderAreaWidth/2, renderAreaWidth, renderAreaWidth),
+    _ballRadius(ballRadius),
+    _ball(-ballRadius, -ballRadius, 2*ballRadius, 2*ballRadius),
+    _ballDirection(0,0, _ballTranslateQuantum, 0),
+    _ballCollider(0)
 {
-    _init_ball(ballRect);
-
-    _generate_area();
+    _ball.setParentItem(&_scene);
 }
 
-PlayingArea::PlayingArea(const qint32 & nbPlayers,
-                         const qint32 & renderAreaWidth,
-                         QGraphicsScene * scene):
-    _nbPlayers(nbPlayers),
-    _renderAreaWidth(renderAreaWidth),
-    _centerAngle(360/nbPlayers),
-    _scene(scene),
-    _ballDirection(0,0, _ballTranslateQuantum, 0)
-{}
-
-void PlayingArea::setScene(QGraphicsScene *scene)
-{
-    _scene = scene;
-}
 
 void PlayingArea::build()
 {
-    _init_ball( QRectF( -_ballRadius, -_ballRadius, 2*_ballRadius, 2*_ballRadius ) );
-    _generate_area();
+    if(_nbPlayers == 2)
+    {
+        _generate_area(4);
+
+        removeRacket(3);
+        removeCage(3);
+
+        removeCage(1);
+        removeRacket(1);
+    }
+
+    else
+    {
+        _generate_area(_nbPlayers);
+    }
 }
 
-const qreal &PlayingArea::centerAngle() const
+QPointF PlayingArea::centerPoint()const
+{
+    return _scene.pos();
+}
+
+qreal PlayingArea::centerAngle()const
 {
     return _centerAngle;
 }
@@ -56,24 +58,24 @@ qreal PlayingArea::areaWidth()const
     return _renderAreaWidth;
 }
 
-QGraphicsScene * PlayingArea::scene()
+PlayingArea::Scene * PlayingArea::scene()
 {
-    return _scene;
+    return &_scene;
 }
 
-bool PlayingArea::isCage(QGraphicsItem *item)const
+bool PlayingArea::isCage(PlayingArea::Linear * item)const
 {
-    return _cages.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item)) != -1;
+    return _cages.indexOf(item) != -1;
 }
 
-bool PlayingArea::isRacket(QGraphicsItem *item)const
+bool PlayingArea::isRacket(PlayingArea::Linear *item)const
 {
-    return _rackets.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item)) != -1;
+    return _rackets.indexOf(item) != -1;
 }
 
-bool PlayingArea::isWall(QGraphicsItem *item)const
+bool PlayingArea::isWall(PlayingArea::Linear*item)const
 {
-    return _walls.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item)) != -1;
+    return _walls.indexOf(item) != -1;
 }
 
 qint32 PlayingArea::nbCages()const
@@ -95,69 +97,162 @@ QPointF PlayingArea::ballPos() const
 {
     QPointF relPos, absPos;
 
-    relPos = _ball->pos();
-    absPos = _ball->mapToScene( relPos );
+    relPos = _ball.pos();
+    absPos = _ball.mapToParent(relPos);
 
     return absPos;
 }
 
-qint32 PlayingArea::cageIndex(QGraphicsItem *item)const
+QRectF PlayingArea::ballRect() const
 {
-    return _cages.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item));
+    return _ball.rect();
 }
 
-qint32 PlayingArea::racketIndex(QGraphicsItem *item)const
+qint32 PlayingArea::cageIndex(PlayingArea::Linear * item)const
 {
-    return _rackets.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item));
+    return _cages.indexOf(item);
 }
 
-qint32 PlayingArea::wallIndex(QGraphicsItem *item)const
+qint32 PlayingArea::racketIndex(PlayingArea::Linear * item)const
 {
-    return _walls.indexOf(qgraphicsitem_cast<QGraphicsLineItem*>(item));
+    return _rackets.indexOf(item);
 }
 
-QGraphicsLineItem *PlayingArea::wall(const qint32 &index)const
+qint32 PlayingArea::wallIndex(PlayingArea::Linear * item)const
 {
-    return _walls[index];
+    return _walls.indexOf(item);
 }
 
-QGraphicsLineItem *PlayingArea::cage(const qint32 &index) const
+PlayingArea::Linear * PlayingArea::wall(const qint32 &index)const
 {
-    return _cages[index];
+    if( 0 <= index && index < _walls.size() )
+        return _walls[index];
+
+    else
+    {
+        qDebug() << "PlayingArea::wall(i) : given index " << index << " is out of range" << endl;
+        return 0;
+    }
 }
 
-QGraphicsLineItem *PlayingArea::racket(const qint32 &index) const
+PlayingArea::Linear * PlayingArea::cage(const qint32 &index) const
 {
-    return _rackets[index];
+    if( 0 <= index && index < _cages.size() )
+        return _cages[index];
+
+    else
+    {
+        qDebug() << "PlayingArea::cage(i) : given index " << index << " is out of range" << endl;
+        return 0;
+    }
+}
+
+PlayingArea::Linear * PlayingArea::racket(const qint32 &index) const
+{
+    if( 0 <= index && index < _rackets.size() )
+        return _rackets[index];
+
+    else
+    {
+        qDebug() << "PlayingArea::racket(i) : given index " << index << " is out of range" << endl;
+        return 0;
+    }
 }
 
 qreal PlayingArea::getWallRotation(const qint32 & wallIndex)
 {
-    return _walls[wallIndex]->rotation();
+    if( 0 <= wallIndex && wallIndex < _walls.size() )
+        return _walls[wallIndex]->rotation();
+
+    else
+    {
+        qDebug() << "PlayingArea::getWallRotation(i) : given index " << wallIndex << " is out of range" << endl;
+        return 0;
+    }
+}
+
+bool PlayingArea::collisionHappened()
+{
+    bool collision = false;
+
+    collision = _collisionIn(_rackets);
+
+    if(!collision)
+        collision = _collisionIn(_cages);
+
+    if(!collision)
+        collision = _collisionIn(_walls);
+
+    return collision;
+}
+
+bool PlayingArea::_collisionIn(QVector<PlayingArea::Linear *> & items)
+{
+    QLineF topSide( _ball.rect().topLeft(), _ball.rect().topRight() );
+    QLineF rightSide( _ball.rect().topRight(), _ball.rect().bottomRight() );
+    QLineF downSide( _ball.rect().bottomRight(), _ball.rect().bottomLeft() );
+    QLineF leftSide( _ball.rect().bottomLeft(), _ball.rect().topLeft() );
+    QPointF p1, p2;
+    bool collision;
+    int i;
+
+    i=0;
+    collision = false;
+    while(i < items.size() && !collision)
+    {
+        p1 = _ball.mapFromItem( items[i], items[i]->line().p1() );
+        p2 = _ball.mapFromItem( items[i], items[i]->line().p2() );
+        QLineF itemLine(p1, p2);
+
+        collision = (
+                    itemLine.intersect(topSide, 0) == QLineF::BoundedIntersection
+                     ||
+                     itemLine.intersect(rightSide,0) == QLineF::BoundedIntersection
+                     ||
+                     itemLine.intersect(downSide,0) == QLineF::BoundedIntersection
+                     ||
+                     itemLine.intersect(leftSide,0) == QLineF::BoundedIntersection
+                    );
+
+        if(collision)
+            _ballCollider = items[i];
+
+        else
+            ++i;
+    }
+
+    return collision;
+}
+
+PlayingArea::Linear * PlayingArea::getBallCollider() const
+{
+    return _ballCollider;
 }
 
 void PlayingArea::rebuild(const qint32 &nbPlayers,
                         const qreal &renderAreaWidth,
-                        const QRectF &ballRect)
+                        const qreal & ballRadius)
 {
+    _clear();
+
     _nbPlayers = nbPlayers;
     _renderAreaWidth = renderAreaWidth;
-    _ball->setRect(ballRect);
+
+    setBallRadius(ballRadius);
     resetBallPos();
-    _clear_scene();
-    _generate_area();
+    build();
 }
 
-void PlayingArea::rebuild(const qint32 &nbPlayers,
-                        const qreal &renderAreaWidth)
+void PlayingArea::setBallRadius(const qreal &ballRadius)
 {
-    rebuild(nbPlayers, renderAreaWidth, QRectF( -_ballRadius, -_ballRadius, 2*_ballRadius, 2*_ballRadius ) );
+    _ballRadius = ballRadius;
+    _ball.setRect(-_ballRadius, -_ballRadius, 2*_ballRadius, 2*_ballRadius);
 }
 
 void PlayingArea::resetBallPos()
 {
-    QPointF pt = _ball->mapFromScene(0,0);
-    _ball->setPos(pt);
+    QPointF pt = _ball.mapFromParent(0,0);
+    _ball.setPos(pt);
     _set_ball_random_direction();
 }
 
@@ -166,31 +261,27 @@ void PlayingArea::rotateBallDirection(const qreal & alpha)
     _ballDirection.setAngle(_ballDirection.angle()+alpha);
 }
 
-void PlayingArea::mirrorBallDirection(QGraphicsLineItem * axis)
+void PlayingArea::mirrorBallDirection(PlayingArea::Linear * axis)
 {
-    QPointF endPoint = _ball->mapToItem( axis, _ballDirection.p2() );
+    QGraphicsLineItem ballDir(_ballDirection);
+    QPointF endPoint = ballDir.mapToItem( axis, _ballDirection.p2() );
 
     endPoint.setY( 0 - endPoint.y() );
 
-    endPoint = _ball->mapFromItem( axis, endPoint);
+    endPoint = ballDir.mapFromItem( axis, endPoint);
     QLineF patron(_ballDirection.p1(), endPoint);
     _ballDirection.setAngle(patron.angle());
 }
 
 void PlayingArea::moveBall(const qreal & dx, const qreal & dy)
 {
-    _ball->moveBy(dx, dy);
+    _ball.moveBy(dx, dy);
     _ballDirection.translate( QPointF(dx,dy) );
 }
 
 void PlayingArea::moveBall()
 {
     moveBall( _ballDirection.dx(), _ballDirection.dy() );
-}
-
-QList<QGraphicsItem*> PlayingArea::getBallColliders()const
-{
-    return _scene->collidingItems(_ball);
 }
 
 void PlayingArea::moveRacket(const qint32 & racketIndex,
@@ -207,7 +298,7 @@ void PlayingArea::moveRacket(const qint32 & racketIndex,
     }
 
     else
-        qDebug() << "PlayingArea::moveRacket : erreur index racket " << racketIndex << endl;
+        qDebug() << "PlayingArea::moveRacket : given racket index " << racketIndex << " is out of bounds" << endl;
 }
 
 void PlayingArea::setRacketAbss(const qint32 & racketIndex,
@@ -238,34 +329,35 @@ void PlayingArea::setRacketCoord(const qint32 & racketIndex,
 
 void PlayingArea::removeCage(const qint32 & cageIndex)
 {
-    int index;
-
     if( 0 <= cageIndex && cageIndex < _cages.size() )
     {
 
         QPointF p1 = _cages[cageIndex]->line().p1();
         QPointF p2 = _cages[cageIndex]->line().p2();
 
-        p1 = _cages[cageIndex]->mapToScene(p1);
-        p2 = _cages[cageIndex]->mapToScene(p2);
+        p1 = _cages[cageIndex]->mapToParent(p1);
+        p2 = _cages[cageIndex]->mapToParent(p2);
 
-        index = _walls.size();
-        _walls.push_back( new QGraphicsLineItem(QLineF(p1, p2)) );
-        _scene->addItem(_walls[index]);
-        _walls[index]->setPen(QPen(Qt::blue, _penWidth, Qt::SolidLine));
+        _walls.push_back( new QGraphicsLineItem(QLineF(p1, p2), &_scene) );
 
-        _scene->removeItem(_cages[cageIndex]);
+        delete _cages[cageIndex];
         _cages.erase(_cages.begin()+cageIndex);
     }
+
+    else
+        qDebug() << "PlayingArea::removeCage(i) : given index " << cageIndex << " is out of bounds" << endl;
 }
 
 void PlayingArea::removeRacket(const qint32 & racketIndex)
 {
     if( 0 <= racketIndex && racketIndex < _rackets.size() )
     {
-        _scene->removeItem(_rackets[racketIndex]);
+        delete _rackets[racketIndex];
         _rackets.erase(_rackets.begin()+racketIndex);
     }
+
+    else
+        qDebug() << "PlayingArea::removeRacket(i) : given index " << racketIndex << " is out of bounds" << endl;
 }
 
 void PlayingArea::removeWall(const qint32 & wallIndex)
@@ -273,29 +365,26 @@ void PlayingArea::removeWall(const qint32 & wallIndex)
     if( 0 <= wallIndex && wallIndex < _walls.size() && _nbPlayers >= 3)
     {
         _nbPlayers -= 1;
+
+        _clear();
         resetBallPos();
-        _clear_scene();
-        _generate_area();
+        build();
     }
 
+    else
+        qDebug() << "PlayingArea::removeWall(i) : given index " << wallIndex << " is out of bounds" << endl;
 }
 
-void PlayingArea::_clear_scene()
+void PlayingArea::_clear()
 {
     for(qint32 i=0; i<_walls.size(); ++i)
-    {
-        _scene->removeItem(_walls[i]);
-    }
+        delete _walls[i];
 
     for(qint32 i=0; i<_rackets.size(); ++i)
-    {
-        _scene->removeItem(_rackets[i]);
-    }
+        delete _rackets[i];
 
     for(qint32 i=0; i<_cages.size(); ++i)
-    {
-        _scene->removeItem(_cages[i]);
-    }
+        delete _cages[i];
 
     _walls.clear();
     _rackets.clear();
@@ -319,75 +408,42 @@ void PlayingArea::_generate_area(const qint32 & nbPlayers)
     j = 0;
     for(qint32 i=0; i < nbPlayers; ++i)
     {
-        _walls.push_back( new QGraphicsLineItem(0.,altitude, -wallLength,altitude) );
-        _walls.push_back( new QGraphicsLineItem(0.,altitude, -wallLength,altitude) );
-        _rackets.push_back( new QGraphicsLineItem(racketLength/2,altitude, -racketLength/2,altitude) );
-        _cages.push_back( new QGraphicsLineItem(0.,altitude, -cageLength,altitude) );
+        _walls.push_back( new QGraphicsLineItem(0.,altitude, -wallLength,altitude, &_scene) );
+        _walls.push_back( new QGraphicsLineItem(0.,altitude, -wallLength,altitude, &_scene) );
+        _rackets.push_back( new QGraphicsLineItem(racketLength/2,altitude, -racketLength/2,altitude, &_scene) );
+        _cages.push_back( new QGraphicsLineItem(0.,altitude, -cageLength,altitude, &_scene) );
 
         dx = sideLength / 2;
         dy = 0;
-        _scene->addItem(_walls[j]);
         _walls[j]->moveBy(dx, dy);
-        _walls[j]->setPen(QPen(Qt::blue, _penWidth, Qt::SolidLine));
-        _walls[j]->setTransformOriginPoint(_walls[j]->mapFromScene(0,0));
+        _walls[j]->setTransformOriginPoint(_walls[j]->mapFromParent(0,0));
         _walls[j]->setRotation(_walls[j]->rotation() + i*alpha);
         ++j;
 
         dx -= wallLength;
-        _scene->addItem(_cages[i]);
         _cages[i]->moveBy(dx, dy);
-        _cages[i]->setTransformOriginPoint(_cages[i]->mapFromScene(0,0));
+        _cages[i]->setTransformOriginPoint(_cages[i]->mapFromParent(0,0));
         _cages[i]->setRotation(_cages[i]->rotation() + i*alpha);
 
         dy = -_racketToWallSpace;
-        _scene->addItem(_rackets[i]);
         _rackets[i]->moveBy(0, dy);
-        _rackets[i]->setPen( QPen(Qt::darkRed, _penWidth, Qt::SolidLine) );
-        _rackets[i]->setTransformOriginPoint(_rackets[i]->mapFromScene(0,0));
+        _rackets[i]->setTransformOriginPoint(_rackets[i]->mapFromParent(0,0));
         _rackets[i]->setRotation(_rackets[i]->rotation() + i*alpha);
 
         dy = 0;
         dx -= cageLength;
-        _scene->addItem(_walls[j]);
         _walls[j]->moveBy(dx, dy);
-        _walls[j]->setPen(QPen(Qt::blue, _penWidth, Qt::SolidLine));
-        _walls[j]->setTransformOriginPoint(_walls[j]->mapFromScene(0,0));
+        _walls[j]->setTransformOriginPoint(_walls[j]->mapFromParent(0,0));
         _walls[j]->setRotation(_walls[j]->rotation() + i*alpha);
 
         ++j;
     }
 }
 
-void PlayingArea::_generate_area()
-{
-    if(_nbPlayers == 2)
-    {
-        _generate_area(4);
-
-        removeRacket(3);
-        removeCage(3);
-
-        removeCage(1);
-        removeRacket(1);
-    }
-
-    else
-    {
-        _generate_area(_nbPlayers);
-    }
-}
 
 void PlayingArea::_set_ball_random_direction()
 {
-    qreal alpha = _rndGen.randomIntbeetween(0, 360);
+    qreal alpha = 20;//_rndGen.randomIntbeetween(0, 360);
 
     _ballDirection.setAngle(_ballDirection.angle()+alpha);
-}
-
-void PlayingArea::_init_ball(const QRectF & ballRect)
-{
-    _ball = new QGraphicsEllipseItem(ballRect);
-    _scene->addItem(_ball);
-    _ball->setBrush( Qt::red );
-    _set_ball_random_direction();
 }

@@ -4,11 +4,12 @@
 #include<cmath>
 
 #include <QVector>
-#include <QGraphicsScene>
-#include <QGraphicsLineItem>
-#include <QGraphicsRectItem>
+#include <QList>
 #include <QDebug>
-#include <QPointF>
+#include <QGraphicsItem>
+#include <QGraphicsLineItem>
+#include <QGraphicsEllipseItem>
+#include <QRectF>
 
 #include "Trigo.hpp"
 #include "Random.hpp"
@@ -17,53 +18,55 @@
 class PlayingArea : public Lockable
 {
 public:
-    PlayingArea(const qint32 & nbPlayers,
-                const qint32 & renderAreaWidth,
-                const QRectF &ballRect,
-                QGraphicsScene * scene=0);
+    typedef QGraphicsLineItem Linear;
+    typedef QGraphicsEllipseItem Ball;
+    typedef QGraphicsRectItem Scene;
 
     PlayingArea(const qint32 & nbPlayers=6,
-                const qint32 &renderAreaWidth=600,
-                QGraphicsScene * scene=0);
+                const qint32 & renderAreaWidth=600,
+                const qreal & ballRadius=5);
 
-    void setScene(QGraphicsScene * scene);
     void build();
 
-    const qreal & centerAngle()const;
+    QPointF centerPoint()const;
+    qreal centerAngle()const;
     qreal areaWidth()const;
-    QGraphicsScene * scene();
 
-    bool isCage(QGraphicsItem *item)const;
-    bool isRacket(QGraphicsItem *item)const;
-    bool isWall(QGraphicsItem *item)const;
+    Scene * scene();
+
+    bool isCage(Linear *item)const;
+    bool isRacket(Linear *item)const;
+    bool isWall(Linear *item)const;
 
     qint32 nbCages()const;
     qint32 nbRackets()const;
     qint32 nbWalls()const;
     QPointF ballPos()const;
+    QRectF ballRect()const;
 
-    qint32 cageIndex(QGraphicsItem *item)const;
-    qint32 racketIndex(QGraphicsItem * item)const;
-    qint32 wallIndex(QGraphicsItem *item)const;
+    qint32 cageIndex(Linear *item)const;
+    qint32 racketIndex(Linear * item)const;
+    qint32 wallIndex(Linear * item)const;
 
-    QGraphicsLineItem * wall(const qint32 & index) const;
-    QGraphicsLineItem * cage(const qint32 & index) const;
-    QGraphicsLineItem * racket(const qint32 & index) const;
+    Linear * wall(const qint32 & index) const;
+    Linear * cage(const qint32 & index) const;
+    Linear * racket(const qint32 & index) const;
 
     qreal getWallRotation(const qint32 & wallIndex);
 
-    void rebuild(const qint32 & nbPlayers,
-               const qreal & renderAreaWidth,
-               const QRectF &ballRect);
-    void rebuild(const qint32 & nbPlayers=0,
-               const qreal & renderAreaWidth=600.);
+    bool collisionHappened();
+    Linear * getBallCollider()const;
 
+    void rebuild(const qint32 & nbPlayers=6,
+                 const qreal & renderAreaWidth=600.,
+                 const qreal & ballRadius=5);
+
+    void setBallRadius(const qreal & ballRadius);
     void resetBallPos();
     void rotateBallDirection(const qreal & alpha);
-    void mirrorBallDirection(QGraphicsLineItem *axis);
+    void mirrorBallDirection(Linear * axis);
     void moveBall(const qreal & dx, const qreal &dy);
     void moveBall();
-    QList<QGraphicsItem*> getBallColliders()const;
 
     void moveRacket(const qint32 &racketIndex,
                     const qreal & delta);
@@ -86,27 +89,26 @@ private:
     qreal _centerAngle;
     MathJ::Random _rndGen;
 
-    QGraphicsScene * _scene;
-    QGraphicsEllipseItem * _ball;
+    Scene _scene;
+    qreal _ballRadius;
+    Ball _ball;
     QLineF _ballDirection;
-    QVector<QGraphicsLineItem*> _cages;
-    QVector<QGraphicsLineItem*> _rackets;
-    QVector<QGraphicsLineItem*> _walls;
+    QVector<Linear*> _cages;
+    QVector<Linear*> _rackets;
+    QVector<Linear*> _walls;
+
+    Linear * _ballCollider;
 
     static const qreal _wallRatio;
     static const qreal _cageRatio;
     static const qreal _racketRatio;
     static const qreal _racketToWallSpace;
-    static const qreal _penWidth;
-    static const qreal _ballRadius;
     static const qreal _ballTranslateQuantum;
 
-    void _clear_scene();
+    void _clear();
     void _generate_area(const qint32 & nbPlayers);
-    void _generate_area();
     void _set_ball_random_direction();
-    void _init_ball(const QRectF &ballRect);
-
+    bool _collisionIn(QVector<Linear*> & items);
 };
 
 #endif

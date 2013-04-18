@@ -4,11 +4,6 @@
 #include <cassert>
 
 #include <QObject>
-#include <QList>
-#include <QGraphicsItem>
-#include <QGraphicsLineItem>
-#include <QLineF>
-#include <QPointF>
 #include <QVector>
 #include <QTimer>
 

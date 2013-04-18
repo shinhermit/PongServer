@@ -41,6 +41,8 @@ void GameStateWorker::waitStartSlot()
 
 void GameStateWorker::checkInitSlot()
 {
+    //    _scene( QRectF( -renderAreaWidth/2, -renderAreaWidth/2, renderAreaWidth, renderAreaWidth) )
+
     lockGameState();
     PongShared::gameState.setInitializing();
     unlockGameState();
@@ -152,25 +154,24 @@ void GameStateWorker::_check_collisions()
 
     lockPlayingArea();
 
-    QList<QGraphicsItem*> colliders = PongShared::playingArea.getBallColliders();
-
-    if( !colliders.empty() )
+    if( PongShared::playingArea.collisionHappened() )
     {
-        QGraphicsItem * collided = colliders.at(0);
+//        qDebug() << "GameStateWorker::_check_collisions : Collision detected" << endl;
+        PlayingArea::Linear * collider = PongShared::playingArea.getBallCollider();
 
-        if( ( pos = PongShared::playingArea.cageIndex(collided) ) !=  -1)
+        if( ( pos = PongShared::playingArea.cageIndex(collider) ) !=  -1)
         {
             _manage_goal(pos);
         }
 
-        else if( ( pos = PongShared::playingArea.racketIndex(collided) ) != -1)
+        else if( ( pos = PongShared::playingArea.racketIndex(collider) ) != -1)
         {
             _manage_racket_collision(pos);
         }
 
         else
         {
-            pos = PongShared::playingArea.wallIndex(collided);
+            pos = PongShared::playingArea.wallIndex(collider);
 
             _manage_wall_collision(pos);
         }
@@ -184,7 +185,7 @@ void GameStateWorker::_manage_goal(const int & cageIndex)
     qint32 credit, nbPlayers;
 
     //debug
-    emit appendStatusSignal("GameStateWorker::_manage_goal: player "+QString::number(cageIndex)+"  conceded a goal");
+    emit appendStatusSignal("GameStateWorker::_manage_goal: player "+QString::number(cageIndex)+" conceded a goal");
 
     lockPlayersStates();
     //decrease credits

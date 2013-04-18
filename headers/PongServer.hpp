@@ -2,12 +2,12 @@
 #define _PongServer
 
 #include <QWidget>
-#include <QGraphicsScene>
-#include <QGraphicsView>
 #include <QThread>
 #include <QVector>
 #include <QMutex>
 #include <QDebug>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 
 #include "Workers.hpp"
 #include "Concurrent.hpp"
@@ -18,8 +18,7 @@ class PongServer : public QObject, public Concurrent
 {
     Q_OBJECT
 public:
-    PongServer(const qint16 & port=6666,
-               const qint32 &renderAreaWidth=600);
+    PongServer(const qint16 & port=6666);
 
     void start();
 
@@ -44,9 +43,8 @@ public slots:
 
 private:
     PongServerView _view;
-    QGraphicsScene _scene;
-    QGraphicsView _areaView;
-
+    QGraphicsScene _graphicScene;
+    QGraphicsView _graphicView;
 
     //worker classes for threads
     GameStateWorker _gameStateChecker;
