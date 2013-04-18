@@ -30,10 +30,10 @@ public class Communicator extends Thread {
 		
 		String str;
 		int id;
-		while(_state==LobbyState.WAITING)
+		while(_state.equals(LobbyState.WAITING))
 		{
 			str= _receiveString();
-			if(str.split(" ")[0]=="HELLO")
+			if(str.split(" ")[0].equals("HELLO"))
 			{
 				id= Integer.parseInt(str.split(" ")[1]);
 				if(!_isPlayerInVector(id))
@@ -42,10 +42,15 @@ public class Communicator extends Thread {
 			}
 		}
 		
-		for(int i=0;i<5;i++)
-			_sendString("GO " + _serverAddress + " " + _serverPort);
+		if(_state.equals(LobbyState.READY_TO_START))
+		{
+			for(int i=0;i<5;i++)
+				_sendString("GO " + _serverAddress + " " + _serverPort);
+		}
+		_state=LobbyState.STARTING;
+		_socket.close();
+		_state=LobbyState.STARTED;
 	}
-	
 	
 	
 	//Methodes privées

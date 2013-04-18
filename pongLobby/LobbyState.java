@@ -4,5 +4,6 @@ public enum LobbyState {
 	INITIALISING,
 	WAITING,
 	READY_TO_START,
-	STARTING
+	STARTING,
+	STARTED
 }
