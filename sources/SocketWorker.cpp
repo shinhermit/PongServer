@@ -73,6 +73,7 @@ void SocketWorker::operator<<(QDataStream & in)
 
     lockPlayersStates();
     PongShared::playersStates[_playerIndex].setdxRacket(dxRacket);
+//    qDebug() << "SocketWorker::operator<< : written dx="<<dxRacket<<" for player"<<_playerIndex;
     unlockPlayersStates();
 }
 

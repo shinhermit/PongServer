@@ -260,10 +260,10 @@ void PlayingArea::mirrorBallDirection(PlayingArea::Linear * axis)
 {
     qreal alpha = _ballDirection.angleTo( axis->line() );
 
-    qDebug() << "PlayingArea::mirrorBallDirection :"
-             << "axisLineAngle=" << axisLine.angle()
-             << "_ballDirection=" << _ballDirection.angle()
-             << ", alpha=" << alpha << endl;
+//    qDebug() << "PlayingArea::mirrorBallDirection :"
+//             << "axisLineAngle=" << axis->line().angle()
+//             << "_ballDirection=" << _ballDirection.angle()
+//             << ", alpha=" << alpha << endl;
 
     _ballDirection.setAngle(_ballDirection.angle() + 2*alpha);
     moveBall(5*_ballDirection.dx(), 5*_ballDirection.dy());
@@ -285,7 +285,7 @@ void PlayingArea::moveRacket(const qint32 & racketIndex,
 {
     if( 0 <= racketIndex && racketIndex < _rackets.size() )
     {
-        qreal deviationAngle = _rackets[racketIndex]->rotation();
+        qreal deviationAngle = _rackets[racketIndex]->line().angle();
         qreal dx = delta * ::cos( MathJ::Trigo::DegreeToRadian(deviationAngle) );
         qreal dy = delta * ::sin(MathJ::Trigo::DegreeToRadian(deviationAngle) );
 

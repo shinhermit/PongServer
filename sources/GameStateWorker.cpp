@@ -136,15 +136,20 @@ bool GameStateWorker::_exit_requested()
 void GameStateWorker::_update_rackets()
 {
     QVector<qreal> dx;
+    int i;
 
     lockPlayersStates();
-    for(int i=0; i < PongShared::playersStates.size(); ++i)
+    for(i=0; i < PongShared::playersStates.size(); ++i)
         dx.push_back( PongShared::playersStates[i].dxRacket() );
     unlockPlayersStates();
 
     lockPlayingArea();
-    for(int i=0; i < PongShared::playingArea.nbRackets() && i < dx.size(); ++i)
+    i=0;
+    while( i < PongShared::playingArea.nbRackets() && i < dx.size()  )
+    {
         PongShared::playingArea.moveRacket( i, dx[i] );
+        ++i;
+    }
     unlockPlayingArea();
 }
 
