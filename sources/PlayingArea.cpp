@@ -259,7 +259,7 @@ void PlayingArea::rotateBallDirection(const qreal & alpha)
 void PlayingArea::mirrorBallDirection(PlayingArea::Linear * axis)
 {
     QLineF axisLine = axis->line();
-    axisLine.setAngle( axis->rotation() );
+    axisLine.setAngle( 360 - axis->rotation() );
     qreal alpha = _ballDirection.angleTo(axisLine);
 
     qDebug() << "PlayingArea::mirrorBallDirection :"
@@ -385,7 +385,6 @@ void PlayingArea::_clear()
 
 void PlayingArea::_generate_area(const qint32 & nbPlayers)
 {
-    qint32 j;
     qreal dx, dy;
     qreal radius = _renderAreaWidth / 2;
     qreal alpha = 360 / nbPlayers;
@@ -397,45 +396,70 @@ void PlayingArea::_generate_area(const qint32 & nbPlayers)
     qreal cageLength = sideLength * _cageRatio;
     qreal altitude = radius * ::cos( Trigo::DegreeToRadian(alpha/2) );
 
-    j = 0;
     for(qint32 i=0; i < nbPlayers; ++i)
     {
-        _walls.push_back( new QGraphicsLineItem(0.,altitude, -wallLength,altitude, &_scene) );
-        _walls.push_back( new QGraphicsLineItem(0.,altitude, -wallLength,altitude, &_scene) );
-        _rackets.push_back( new QGraphicsLineItem(racketLength/2,altitude, -racketLength/2,altitude, &_scene) );
-        _cages.push_back( new QGraphicsLineItem(0.,altitude, -cageLength,altitude, &_scene) );
+        QLineF wall1(-wallLength,altitude, 0.,altitude);
+        QLineF wall2(-wallLength,altitude, 0.,altitude);
+        QLineF racket(-racketLength/2,altitude, racketLength/2,altitude);
+        QLineF cage(-cageLength,altitude, 0.,altitude);
+        QLineF rotator(0,0, 0, 1);
 
         dx = sideLength / 2;
         dy = 0;
-        _walls[j]->moveBy(dx, dy);
-        _walls[j]->setTransformOriginPoint(_walls[j]->mapFromParent(0,0));
-        _walls[j]->setRotation(_walls[j]->rotation() + i*alpha);
-        ++j;
+        wall1.translate(dx, dy);
+        rotator.setP2( wall1.p1() );
+        rotator.setAngle(rotator.angle() + i*alpha);
+        wall1.setP1( rotator.p2() );
+
+        rotator.setP2( wall1.p2() );
+        rotator.setAngle(rotator.angle() + i*alpha);
+        wall1.setP2( rotator.p2() );
+
 
         dx -= wallLength;
-        _cages[i]->moveBy(dx, dy);
-        _cages[i]->setTransformOriginPoint(_cages[i]->mapFromParent(0,0));
-        _cages[i]->setRotation(_cages[i]->rotation() + i*alpha);
+        cage.translate(dx, dy);
+        rotator.setP2( cage.p1() );
+        rotator.setAngle(rotator.angle() + i*alpha);
+        cage.setP1( rotator.p2() );
+
+        rotator.setP2( cage.p2() );
+        rotator.setAngle(rotator.angle() + i*alpha);
+        cage.setP2( rotator.p2() );
+
 
         dy = -_racketToWallSpace;
-        _rackets[i]->moveBy(0, dy);
-        _rackets[i]->setTransformOriginPoint(_rackets[i]->mapFromParent(0,0));
-        _rackets[i]->setRotation(_rackets[i]->rotation() + i*alpha);
+        racket.translate(0, dy);
+        rotator.setP2( racket.p1() );
+        rotator.setAngle(rotator.angle() + i*alpha);
+        racket.setP1( rotator.p2() );
+
+        rotator.setP2( racket.p2() );
+        rotator.setAngle(rotator.angle() + i*alpha);
+        racket.setP2( rotator.p2() );
+
 
         dy = 0;
         dx -= cageLength;
-        _walls[j]->moveBy(dx, dy);
-        _walls[j]->setTransformOriginPoint(_walls[j]->mapFromParent(0,0));
-        _walls[j]->setRotation(_walls[j]->rotation() + i*alpha);
+        wall2.translate(dx, dy);
+        rotator.setP2( wall2.p1() );
+        rotator.setAngle(rotator.angle() + i*alpha);
+        wall2.setP1( rotator.p2() );
 
-        ++j;
+        rotator.setP2( wall2.p2() );
+        rotator.setAngle(rotator.angle() + i*alpha);
+        wall2.setP2( rotator.p2() );
+
+        _walls.push_back( new QGraphicsLineItem(wall1, &_scene) );
+        _cages.push_back( new QGraphicsLineItem(cage, &_scene) );
+        _rackets.push_back( new QGraphicsLineItem(racket, &_scene) );
+        _walls.push_back( new QGraphicsLineItem(wall2, &_scene) );
     }
 }
 
 
 void PlayingArea::_set_ball_random_direction()
 {
-    qreal alpha = 30;//_rndGen.randomIntbeetween(0, 360);
+    qreal alpha = 50;//_rndGen.randomIntbeetween(0, 360);
 
     _ballDirection.setAngle(_ballDirection.angle()+alpha);
 }
