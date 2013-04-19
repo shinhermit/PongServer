@@ -258,15 +258,18 @@ void PlayingArea::rotateBallDirection(const qreal & alpha)
 
 void PlayingArea::mirrorBallDirection(PlayingArea::Linear * axis)
 {
-    qreal alpha = _ballDirection.angleTo( axis->line() );
+    QLineF axisLine = axis->line();
+    axisLine.setAngle( axis->rotation() );
+    qreal alpha = _ballDirection.angleTo(axisLine);
 
-    if(alpha > 180)
-        alpha = 360 - alpha;
-
-    if(alpha > 90)
-        alpha = 180 - alpha;
+    qDebug() << "PlayingArea::mirrorBallDirection :"
+             << "axis.rotation()=" << axis->rotation()
+             << "axisLineAngle=" << axisLine.angle()
+             << "_ballDirection=" << _ballDirection.angle()
+             << ", alpha=" << alpha << endl;
 
     _ballDirection.setAngle(_ballDirection.angle() + 2*alpha);
+    moveBall(5*_ballDirection.dx(), 5*_ballDirection.dy());
 }
 
 void PlayingArea::moveBall(const qreal & dx, const qreal & dy)
@@ -328,15 +331,8 @@ void PlayingArea::removeCage(const qint32 & cageIndex)
     if( 0 <= cageIndex && cageIndex < _cages.size() )
     {
 
-        QPointF p1 = _cages[cageIndex]->line().p1();
-        QPointF p2 = _cages[cageIndex]->line().p2();
+        _walls.push_back(_cages[cageIndex]);
 
-        p1 = _cages[cageIndex]->mapToParent(p1);
-        p2 = _cages[cageIndex]->mapToParent(p2);
-
-        _walls.push_back( new QGraphicsLineItem(QLineF(p1, p2), &_scene) );
-
-        delete _cages[cageIndex];
         _cages.erase(_cages.begin()+cageIndex);
     }
 
