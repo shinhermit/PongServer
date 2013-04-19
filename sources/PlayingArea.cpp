@@ -258,12 +258,9 @@ void PlayingArea::rotateBallDirection(const qreal & alpha)
 
 void PlayingArea::mirrorBallDirection(PlayingArea::Linear * axis)
 {
-    QLineF axisLine = axis->line();
-    axisLine.setAngle( 360 - axis->rotation() );
-    qreal alpha = _ballDirection.angleTo(axisLine);
+    qreal alpha = _ballDirection.angleTo( axis->line() );
 
     qDebug() << "PlayingArea::mirrorBallDirection :"
-             << "axis.rotation()=" << axis->rotation()
              << "axisLineAngle=" << axisLine.angle()
              << "_ballDirection=" << _ballDirection.angle()
              << ", alpha=" << alpha << endl;
