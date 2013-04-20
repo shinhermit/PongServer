@@ -9,7 +9,6 @@ PlayerState::PlayerState(
         ):
     QObject(parent),
     _myIndex(id),
-    _dxRacket(3),
     _credit(_defaultCredit),
     _state(state)
 {}
@@ -17,7 +16,7 @@ PlayerState::PlayerState(
 PlayerState::PlayerState(const PlayerState &source):
     QObject( source.parent() ),
     _myIndex(source._myIndex),
-    _dxRacket(source._dxRacket),
+    _racket(source._racket),
     _credit(source._credit),
     _state(source._state)
 {}
@@ -25,7 +24,7 @@ PlayerState::PlayerState(const PlayerState &source):
 PlayerState &PlayerState::operator =(const PlayerState &source)
 {
     _myIndex = source._myIndex;
-    _dxRacket = source._dxRacket;
+    _racket = source._racket;
     _credit = source._credit,
     _state = source._state;
 
@@ -36,7 +35,7 @@ bool PlayerState::operator ==(const PlayerState &ref) const
 {
     return (_myIndex == ref._myIndex
             &&
-            _dxRacket == ref._dxRacket
+            _racket == ref._racket
             &&
             _credit == ref._credit
             &&
@@ -70,9 +69,19 @@ void PlayerState::setFailState()
     _state = PongTypes::DISCARDED;
 }
 
-void PlayerState::setdxRacket(const qreal & dxRacket)
+void PlayerState::setRacket(const QLineF & racket)
 {
-    _dxRacket = dxRacket;
+    _racket = racket;
+}
+
+void PlayerState::setRacket(const QPointF &p1, const QPointF &p2)
+{
+    _racket = QLineF(p1, p2);
+}
+
+void PlayerState::setRacket(const qreal &x1, const qreal &y1, const qreal &x2, const qreal &y2)
+{
+    _racket = QLineF(x1,y1, x2,y2);
 }
 
 const qint32 &PlayerState::id() const
@@ -80,9 +89,9 @@ const qint32 &PlayerState::id() const
     return _myIndex;
 }
 
-const qreal &PlayerState::dxRacket() const
+const QLineF &PlayerState::racket() const
 {
-    return _dxRacket;
+    return _racket;
 }
 
 const qint32 &PlayerState::credit() const

@@ -41,8 +41,6 @@ void GameStateWorker::waitStartSlot()
 
 void GameStateWorker::checkInitSlot()
 {
-    //    _scene( QRectF( -renderAreaWidth/2, -renderAreaWidth/2, renderAreaWidth, renderAreaWidth) )
-
     lockGameState();
     PongShared::gameState.setInitializing();
     unlockGameState();
@@ -135,19 +133,20 @@ bool GameStateWorker::_exit_requested()
 
 void GameStateWorker::_update_rackets()
 {
-    QVector<qreal> dx;
+    QVector<QLineF> rackets;
     int i;
 
     lockPlayersStates();
     for(i=0; i < PongShared::playersStates.size(); ++i)
-        dx.push_back( PongShared::playersStates[i].dxRacket() );
+        rackets.push_back( PongShared::playersStates[i].racket() );
     unlockPlayersStates();
 
     lockPlayingArea();
     i=0;
-    while( i < PongShared::playingArea.nbRackets() && i < dx.size()  )
+    while( i < PongShared::playingArea.nbRackets() && i < rackets.size()  )
     {
-        PongShared::playingArea.moveRacket( i, dx[i] );
+        if( rackets[i] != PongShared::playingArea.racketLine(i) )
+            PongShared::playingArea.setRacketLine(i, rackets[i]);
         ++i;
     }
     unlockPlayingArea();

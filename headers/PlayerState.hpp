@@ -30,10 +30,15 @@ public:
     void decreaseCredit(const qint32 & step=1);
     void setState(const PongTypes::E_PlayerState & state);
     void setFailState();
-    void setdxRacket(const qreal & dxRacket);
+    void setRacket(const QLineF & racket);
+    void setRacket(const QPointF & p1, const QPointF & p2);
+    void setRacket(const qreal & x1,
+                   const qreal & y1,
+                   const qreal & x2,
+                   const qreal & y2);
 
     const qint32 & id()const;
-    const qreal & dxRacket()const;
+    const QLineF & racket()const;
     const qint32 & credit()const;
     const PongTypes::E_PlayerState & state()const;
 
@@ -41,7 +46,7 @@ public:
 
 private:
     qint32 _myIndex;
-    qreal _dxRacket;
+    QLineF _racket;
     qint32 _credit;
     PongTypes::E_PlayerState _state;
 

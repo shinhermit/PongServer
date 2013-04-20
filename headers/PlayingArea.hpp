@@ -51,6 +51,7 @@ public:
     Linear * wall(const qint32 & index) const;
     Linear * cage(const qint32 & index) const;
     Linear * racket(const qint32 & index) const;
+    QLineF racketLine(const qint32 & index)const;
 
     qreal getWallRotation(const qint32 & wallIndex);
 
@@ -71,6 +72,8 @@ public:
     void moveRacket(const qint32 &racketIndex,
                     const qreal & delta);
 
+    void setRacketLine(const qint32 &racketIndex,
+                       const QLineF & line);
     void setRacketAbss(const qint32 & racketIndex,
                        const qreal & abss);
     void setRacketOrd(const qint32 & racketIndex,
@@ -107,6 +110,10 @@ private:
 
     void _clear();
     void _generate_area(const qint32 & nbPlayers);
+    void _set_line_position(QLineF & line,
+                            const qreal & dx,
+                            const qreal & dy,
+                            const qreal & alpha);
     void _set_ball_random_direction();
     bool _collisionIn(QVector<Linear*> & items);
 };

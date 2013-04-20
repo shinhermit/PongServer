@@ -154,6 +154,11 @@ PlayingArea::Linear * PlayingArea::racket(const qint32 &index) const
     }
 }
 
+QLineF PlayingArea::racketLine(const qint32 &index) const
+{
+    return _rackets[index]->line();
+}
+
 qreal PlayingArea::getWallRotation(const qint32 & wallIndex)
 {
     if( 0 <= wallIndex && wallIndex < _walls.size() )
@@ -283,18 +288,29 @@ void PlayingArea::moveBall()
 void PlayingArea::moveRacket(const qint32 & racketIndex,
                              const qreal & delta)
 {
+    QLineF racketLine;
+
     if( 0 <= racketIndex && racketIndex < _rackets.size() )
     {
-        qreal deviationAngle = _rackets[racketIndex]->line().angle();
-        qreal dx = delta * ::cos( MathJ::Trigo::DegreeToRadian(deviationAngle) );
-        qreal dy = delta * ::sin(MathJ::Trigo::DegreeToRadian(deviationAngle) );
+//        qreal deviationAngle = _rackets[racketIndex]->line().angle();
+//        qreal dx = delta * ::cos( MathJ::Trigo::DegreeToRadian(deviationAngle) );
+//        qreal dy = delta * ::sin(MathJ::Trigo::DegreeToRadian(deviationAngle) );
 
-
-        _rackets[racketIndex]->moveBy(dx, dy);
+        racketLine = _rackets[racketIndex]->line();
+        racketLine.translate(delta, 0);
+        _rackets[racketIndex]->setLine(racketLine);
+        qDebug() << "PlayingArea::moveRacket : racket translated by dx=" << delta;
     }
 
     else
-        qDebug() << "PlayingArea::moveRacket : given racket index " << racketIndex << " is out of bounds" << endl;
+        qDebug() << "PlayingArea::moveRacket : given racket index " << racketIndex << " is out of bounds";
+}
+
+void PlayingArea::setRacketLine(const qint32 & racketIndex,
+                                const QLineF &line)
+{
+    _rackets[racketIndex]->setLine(line);
+    qDebug() << "PlayingArea::setRacketLine: racket set to line " << line;
 }
 
 void PlayingArea::setRacketAbss(const qint32 & racketIndex,
@@ -399,58 +415,44 @@ void PlayingArea::_generate_area(const qint32 & nbPlayers)
         QLineF wall2(-wallLength,altitude, 0.,altitude);
         QLineF racket(-racketLength/2,altitude, racketLength/2,altitude);
         QLineF cage(-cageLength,altitude, 0.,altitude);
-        QLineF rotator(0,0, 0, 1);
+        qreal theta = i*alpha;
 
         dx = sideLength / 2;
         dy = 0;
-        wall1.translate(dx, dy);
-        rotator.setP2( wall1.p1() );
-        rotator.setAngle(rotator.angle() + i*alpha);
-        wall1.setP1( rotator.p2() );
-
-        rotator.setP2( wall1.p2() );
-        rotator.setAngle(rotator.angle() + i*alpha);
-        wall1.setP2( rotator.p2() );
-
+        _set_line_position(wall1, dx, dy, theta);
 
         dx -= wallLength;
-        cage.translate(dx, dy);
-        rotator.setP2( cage.p1() );
-        rotator.setAngle(rotator.angle() + i*alpha);
-        cage.setP1( rotator.p2() );
-
-        rotator.setP2( cage.p2() );
-        rotator.setAngle(rotator.angle() + i*alpha);
-        cage.setP2( rotator.p2() );
-
+        _set_line_position(cage, dx, dy, theta);
 
         dy = -_racketToWallSpace;
-        racket.translate(0, dy);
-        rotator.setP2( racket.p1() );
-        rotator.setAngle(rotator.angle() + i*alpha);
-        racket.setP1( rotator.p2() );
-
-        rotator.setP2( racket.p2() );
-        rotator.setAngle(rotator.angle() + i*alpha);
-        racket.setP2( rotator.p2() );
-
+        _set_line_position(racket, 0, dy, theta);
 
         dy = 0;
         dx -= cageLength;
-        wall2.translate(dx, dy);
-        rotator.setP2( wall2.p1() );
-        rotator.setAngle(rotator.angle() + i*alpha);
-        wall2.setP1( rotator.p2() );
-
-        rotator.setP2( wall2.p2() );
-        rotator.setAngle(rotator.angle() + i*alpha);
-        wall2.setP2( rotator.p2() );
+        _set_line_position(wall2, dx, dy, theta);
 
         _walls.push_back( new QGraphicsLineItem(wall1, &_scene) );
         _cages.push_back( new QGraphicsLineItem(cage, &_scene) );
         _rackets.push_back( new QGraphicsLineItem(racket, &_scene) );
         _walls.push_back( new QGraphicsLineItem(wall2, &_scene) );
     }
+}
+
+void PlayingArea::_set_line_position(QLineF & line,
+                                     const qreal & dx,
+                                     const qreal & dy,
+                                     const qreal & alpha)
+{
+    QLineF rotator(0,0, 0, 1);
+
+    line.translate(dx, dy);
+    rotator.setP2( line.p1() );
+    rotator.setAngle(rotator.angle() + alpha);
+    line.setP1( rotator.p2() );
+
+    rotator.setP2( line.p2() );
+    rotator.setAngle(rotator.angle() + alpha);
+    line.setP2( rotator.p2() );
 }
 
 

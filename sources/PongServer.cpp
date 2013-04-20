@@ -26,7 +26,7 @@ PongServer::PongServer(const qint16 & port):
     _ballMover.moveToThread(&_ballMoverThread);
 
     _gameStateCheckerThread.start();
-    _ballMoverThread.start();
+    //_ballMoverThread.start();
 
     connect( this, SIGNAL(startService()), &_playerLogger, SLOT(waitConnections()) );
     connect( &_playerLogger, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
@@ -82,6 +82,7 @@ void PongServer::newPlayerConnected()
 void PongServer::startRequestedSlot()
 {
     qint32 nbPlayers;
+    QVector<QLineF> rackets;
 
     lockGameState();
     PongShared::gameState.setStartRequested();
@@ -90,7 +91,14 @@ void PongServer::startRequestedSlot()
 
     lockPlayingArea();
     PongShared::playingArea.rebuild(nbPlayers);
+    for(int i=0; i < PongShared::playingArea.nbRackets(); ++i)
+        rackets.push_back( PongShared::playingArea.racketLine(i) );
     unlockPlayingArea();
+
+    lockPlayersStates();
+    for(int i=0; i < PongShared::playersStates.size(); ++i)
+        PongShared::playersStates[i].setRacket(rackets[i]);
+    unlockPlayersStates();
 
     //debug
     _view.appendStatus("PongServer::startRequestedSlot: gameState set to START_REQUESTED");
@@ -188,7 +196,7 @@ void PongServer::_reset_playersStates()
     {
         PongShared::playersStates[i].setState(PongTypes::ACCEPTED);
         PongShared::playersStates[i].setCredit( PlayerState::DefaultCredit() );
-        PongShared::playersStates[i].setdxRacket(0);
+        //PongShared::playersStates[i].setdxRacket(0);
     }
     unlockPlayersStates();
 }

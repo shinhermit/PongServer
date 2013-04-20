@@ -26,8 +26,8 @@ SocketWorker::~SocketWorker()
 void SocketWorker::operator>>(QDataStream &out)
 {
     qint32 nbRackets, nbPlayers, loserIndex, gameState, downCounter=-1;
+    QPointF ballPos;
     QLineF racketLine;
-    QPointF p1_racket, p2_racket, ballPos;
 
     lockPlayingArea();
     nbRackets = PongShared::playingArea.nbRackets();
@@ -51,14 +51,9 @@ void SocketWorker::operator>>(QDataStream &out)
     {
         if(playerIndex != _playerIndex)
         {
-            QGraphicsLineItem & racket = * PongShared::playingArea.racket(playerIndex);
+            racketLine = PongShared::playingArea.racketLine(playerIndex);
 
-            racketLine = racket.line();
-
-            p1_racket = racket.mapToScene(racketLine.p1());
-            p2_racket = racket.mapToScene(racketLine.p2());
-
-            out << playerIndex << p1_racket << p2_racket;
+            out << playerIndex << racketLine.p1() << racketLine.p2();
         }
     }
     unlockPlayingArea();
@@ -67,14 +62,23 @@ void SocketWorker::operator>>(QDataStream &out)
 
 void SocketWorker::operator<<(QDataStream & in)
 {
-    qreal dxRacket;
+    qreal dx;
+    QLineF racket;
 
-    in >> dxRacket;
+    in >> dx;
 
-    lockPlayersStates();
-    PongShared::playersStates[_playerIndex].setdxRacket(dxRacket);
-//    qDebug() << "SocketWorker::operator<< : written dx="<<dxRacket<<" for player"<<_playerIndex;
-    unlockPlayersStates();
+    if(dx != 0)
+    {
+        lockPlayingArea();
+        racket = PongShared::playingArea.racket(_playerIndex)->line();
+        racket.translate(dx, 0);
+        unlockPlayingArea();
+
+        qDebug() << "SocketWorker::operator<< : written dx="<<dx<<" for player"<<_playerIndex;
+        lockPlayersStates();
+        PongShared::playersStates[_playerIndex].setRacket(racket);
+        unlockPlayersStates();
+    }
 }
 
 QDataStream & operator<<(QDataStream &out, SocketWorker &sckw)
