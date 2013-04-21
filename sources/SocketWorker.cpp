@@ -62,23 +62,15 @@ void SocketWorker::operator>>(QDataStream &out)
 
 void SocketWorker::operator<<(QDataStream & in)
 {
-    qreal dx;
-    QLineF racket;
+    QPointF point1, point2;
+    qint32 id;
 
-    in >> dx;
+    in >> id >> point1 >> point2;
 
-    if(dx != 0)
-    {
-        lockPlayingArea();
-        racket = PongShared::playingArea.racket(_playerIndex)->line();
-        racket.translate(dx, 0);
-        unlockPlayingArea();
-
-        qDebug() << "SocketWorker::operator<< : written dx="<<dx<<" for player"<<_playerIndex;
-        lockPlayersStates();
-        PongShared::playersStates[_playerIndex].setRacket(racket);
-        unlockPlayersStates();
-    }
+    QLineF racket(point1,point2);
+    lockPlayersStates();
+    PongShared::playersStates[_playerIndex].setRacket(racket);
+    unlockPlayersStates();
 }
 
 QDataStream & operator<<(QDataStream &out, SocketWorker &sckw)
