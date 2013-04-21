@@ -78,6 +78,11 @@ bool PlayingArea::isWall(PlayingArea::Linear*item)const
     return _walls.indexOf(item) != -1;
 }
 
+qint32 PlayingArea::nbPlayers() const
+{
+    return _nbPlayers;
+}
+
 qint32 PlayingArea::nbCages()const
 {
     return _cages.size();

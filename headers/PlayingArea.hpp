@@ -38,6 +38,7 @@ public:
     bool isRacket(Linear *item)const;
     bool isWall(Linear *item)const;
 
+    qint32 nbPlayers()const;
     qint32 nbCages()const;
     qint32 nbRackets()const;
     qint32 nbWalls()const;
