@@ -98,9 +98,14 @@ void GameStateWorker::checkRunningSlot()
     //debug
     emit appendStatusSignal("GameStateWorker::checkInitSlot: gameState set to RUNNING");
 
-    emit startMovingBall();
+    if( _enough_players() )
+    {
+        emit startMovingBall();
+        _check_running_routine();
+    }
 
-    _check_running_routine();
+    else
+        _manage_not_enough_players();
 }
 
 void GameStateWorker::_check_running_routine()
@@ -115,7 +120,13 @@ void GameStateWorker::_check_running_routine()
 
     //routine
     else if( !_exit_requested() )
-        QTimer::singleShot( 3, this, SLOT(_check_running_routine()) );
+    {
+        if( _enough_players() )
+            QTimer::singleShot( 3, this, SLOT(_check_running_routine()) );
+
+        else
+            _manage_not_enough_players();
+    }
 
     else
     {

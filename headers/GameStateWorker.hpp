@@ -54,11 +54,11 @@ private:
 
     void _manage_racket_collision(const int & racketIndex);
 
-    bool _enough_players();
-
     bool _game_over();
 
     void _manage_game_over();
+
+    bool _enough_players();
 
     void _manage_not_enough_players();
 
