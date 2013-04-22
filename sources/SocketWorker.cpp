@@ -107,12 +107,15 @@ void SocketWorker::beginInteract()
 
 void SocketWorker::sendDataSlot()
 {
-    _streamer.resetStatus();
+    QDataStream socketStream(_socket);
+    QByteArray byteArray;
+    QDataStream byteStream(&byteArray, QIODevice::ReadWrite);
 
     if( !_exit_requested() )
     {
         //debug
-        (*this) >> _streamer;
+        (*this) >> byteStream;
+        socketStream<<byteArray.size()<<byteArray;
     }
 
     else
@@ -126,14 +129,20 @@ void SocketWorker::sendDataSlot()
 
 void SocketWorker::getDataSlot()
 {
-    _streamer.resetStatus();
+    QDataStream socketStream(_socket);
+    QByteArray byteArray;
+    QDataStream byteStream(&byteArray, QIODevice::ReadWrite);
+    qint32 size;
 
     if( !_exit_requested() )
     {
-        (*this) << _streamer;
-
-        //QTimer::singleShot( 125, this, SLOT(sendDataSlot()) );
-        emit sendDataSignal();
+        socketStream>>size;
+        if(_socket->bytesAvailable()>=size)
+        {
+            socketStream<<byteArray;
+            (*this) << byteStream;
+            emit sendDataSignal();
+        }
     }
 
     else
