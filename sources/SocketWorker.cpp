@@ -132,8 +132,8 @@ void SocketWorker::getDataSlot()
     {
         (*this) << _streamer;
 
-        QTimer::singleShot( 125, this, SLOT(sendDataSlot()) );
-        //emit sendDataSignal();
+        //QTimer::singleShot( 125, this, SLOT(sendDataSlot()) );
+        emit sendDataSignal();
     }
 
     else
