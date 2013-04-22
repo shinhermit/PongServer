@@ -132,7 +132,8 @@ void SocketWorker::getDataSlot()
     {
         (*this) << _streamer;
 
-        emit sendDataSignal();
+        QTimer::singleShot( 125, this, SLOT(sendDataSlot()) );
+        //emit sendDataSignal();
     }
 
     else
@@ -171,6 +172,11 @@ void SocketWorker::disconnected()
     PongShared::gameState.decNbPlayers();
     PongShared::gameState.decNbActive();
     unlockGameState();
+
+    lockPlayingArea();
+    PongShared::playingArea.removeCage(_playerIndex);
+    PongShared::playingArea.removeRacket(_playerIndex);
+    unlockPlayingArea();
 
     if( _socket->isOpen() )
         _socket->close();

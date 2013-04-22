@@ -269,8 +269,9 @@ void PlayingArea::rotateBallDirection(const qreal & alpha)
 void PlayingArea::mirrorBallDirection(PlayingArea::Linear * axis)
 {
     qreal alpha = _ballDirection.angleTo( axis->line() );
+    qreal rnd = _rndGen.randomIntbeetween(-10,10);
 
-    _ballDirection.setAngle(_ballDirection.angle() + 2*alpha);
+    _ballDirection.setAngle(_ballDirection.angle() + 2*alpha + rnd);
     moveBall(5*_ballDirection.dx(), 5*_ballDirection.dy());
 }
 
@@ -453,7 +454,7 @@ void PlayingArea::_set_line_position(QLineF & line,
 
 void PlayingArea::_set_ball_random_direction()
 {
-    qreal alpha = 90;//_rndGen.randomIntbeetween(0, 360);
+    qreal alpha = _rndGen.randomIntbeetween(0, 360);
 
     _ballDirection.setAngle(alpha);
 }
