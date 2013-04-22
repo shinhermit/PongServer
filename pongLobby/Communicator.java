@@ -29,16 +29,43 @@ public class Communicator extends Thread {
 		_state=LobbyState.WAITING;
 		
 		String str;
-		int id;
+		long id;
 		while(_state.equals(LobbyState.WAITING))
 		{
+			str="";
 			str= _receiveString();
 			if(str.split(" ")[0].equals("HELLO"))
 			{
-				id= Integer.parseInt(str.split(" ")[1]);
-				if(!_isPlayerInVector(id))
-					_playerVector.add(new Player(id));
-				_sendString("ACK " + id);
+				try{
+					id= Long.parseLong(str.split(" ")[1]);
+					if(!_isPlayerInVector(id))
+					{
+						System.out.println("Un joueur s'est connecté.");
+						_playerVector.add(new Player(id));
+					}
+					_sendString("ACK " + id);
+				}
+				catch(NumberFormatException ex)
+				{
+					System.out.println(ex);
+					System.exit(1);
+				}
+			}
+			else if(str.split(" ")[0].equals("BYE"))
+			{
+				try{
+					id= Long.parseLong(str.split(" ")[1]);
+					if(_isPlayerInVector(id))
+					{
+						System.out.println("Un joueur s'est déconnecté.");
+						_playerVector.remove(_searchPlayer(id));
+					}
+				}
+				catch(NumberFormatException ex)
+				{
+					System.out.println(ex);
+					System.exit(1);
+				}
 			}
 		}
 		
@@ -55,6 +82,14 @@ public class Communicator extends Thread {
 	
 	//Methodes privées
 	//********************
+	private Player _searchPlayer(long id)
+	{
+		for(int i=0; i<_playerVector.size(); i++)
+			if(_playerVector.elementAt(i).get_id() == id)
+				return _playerVector.elementAt(i);
+		return null;
+	}
+	
 	private void _initializeSocket()
 	{
 		try{
@@ -78,7 +113,9 @@ public class Communicator extends Thread {
 	}
 	
 	private void _sendString(String msg){
-		DatagramPacket packet= new DatagramPacket(msg.getBytes(), msg.length(),
+		String str=msg;
+		str+="\0";
+		DatagramPacket packet= new DatagramPacket(str.getBytes(), str.length(),
 				_multicastGroup,_port);
 		try{
 		_socket.send(packet);
@@ -107,12 +144,12 @@ public class Communicator extends Thread {
 		return str;
 	}
 	
-	private boolean _isPlayerInVector(int id)
+	private boolean _isPlayerInVector(long id)
 	{
 		for(int i=0; i<_playerVector.size();i++)
 			if(_playerVector.elementAt(i).get_id()==id)
-				return false;
-		return true;
+				return true;
+		return false;
 	}
 	
 	

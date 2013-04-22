@@ -63,8 +63,8 @@ public class Lobby {
 	Lobby(InetAddress serverAddress){
 		_state=LobbyState.INITIALISING;
 		_playersVector = new Vector<Player>();
-		_port = 6667;
-		_serverPort = 6667;
+		_port = 6665;
+		_serverPort = 6666;
 		_serverAddress= serverAddress;
 	}
 	
@@ -107,7 +107,7 @@ public class Lobby {
 			if(str.toLowerCase().equals("l"))
 				System.out.println(displayPlayers());
 			else if(str.toLowerCase().equals("q"))
-				_state=LobbyState.STARTING;
+				_state=LobbyState.STARTED;
 			else if(str.toLowerCase().equals("s") && _playersVector.size()>=2)
 				_state=LobbyState.READY_TO_START;
 		}
@@ -116,10 +116,11 @@ public class Lobby {
 		{
 			System.out.println("Lancement du jeu.");
 		}
-		System.out.println("Jeu lancé, fermeture du serveur du lobby.");
+		if(_state.equals(LobbyState.STARTING))
+			System.out.println("Jeu lancé, fermeture du serveur du lobby.");
 		while(_state.equals(LobbyState.STARTING))
 		{
-			System.out.println("Caca");
+
 		}
 		if(_state.equals(LobbyState.STARTED))
 		{

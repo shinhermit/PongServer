@@ -2,21 +2,21 @@ package pongLobby;
 
 
 public class Player {
-	Player(int id){
+	Player(long id){
 	set_id(id);
 	}
 	
 	//Getters/setters
 	//*******************************************
 	
-	public int get_id() {
+	public long get_id() {
 		return _id;
 	}
-	public void set_id(int _id) {
+	public void set_id(long _id) {
 		this._id = _id;
 	}
 	
 	// Privates fields
 	//********************************************
-	private int _id;
+	private long _id;
 }
