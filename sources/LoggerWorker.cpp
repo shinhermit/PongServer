@@ -56,6 +56,10 @@ void LoggerWorker::newConnectionSlot()
         QTcpSocket * socket = _tcpServer.nextPendingConnection();
         SocketWorker * worker = new SocketWorker(socket, index, this);
 
+//        QThread * workerThread = new QThread(this);
+//        worker->moveToThread(workerThread);
+//        workerThread->start();
+
         connect( socket, SIGNAL(disconnected()), worker, SLOT(deleteLater()) );
         connect( worker, SIGNAL(appendStatusSignal(QString)), this, SLOT(appendStatusSlot(QString)) );
         connect( this, SIGNAL(startService()), worker, SLOT(beginInteract()) );

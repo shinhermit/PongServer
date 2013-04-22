@@ -211,12 +211,12 @@ bool PlayingArea::_collisionIn(QVector<PlayingArea::Linear *> & items)
 
         collision = (
                     itemLine.intersect(topSide, 0) == QLineF::BoundedIntersection
-                     ||
-                     itemLine.intersect(rightSide,0) == QLineF::BoundedIntersection
-                     ||
-                     itemLine.intersect(downSide,0) == QLineF::BoundedIntersection
-                     ||
-                     itemLine.intersect(leftSide,0) == QLineF::BoundedIntersection
+                    ||
+                    itemLine.intersect(rightSide,0) == QLineF::BoundedIntersection
+                    ||
+                    itemLine.intersect(downSide,0) == QLineF::BoundedIntersection
+                    ||
+                    itemLine.intersect(leftSide,0) == QLineF::BoundedIntersection
                     );
 
         if(collision)
@@ -256,8 +256,8 @@ void PlayingArea::setBallRadius(const qreal &ballRadius)
 
 void PlayingArea::resetBallPos()
 {
-    QPointF pt = _ball.mapFromParent(0,0);
-    _ball.setPos(pt);
+    _ball.setPos(QPointF(0,0));
+    _ballDirection.setPoints(QPointF(0,0), QPointF(_ballTranslateQuantum,0));
     _set_ball_random_direction();
 }
 
@@ -269,11 +269,6 @@ void PlayingArea::rotateBallDirection(const qreal & alpha)
 void PlayingArea::mirrorBallDirection(PlayingArea::Linear * axis)
 {
     qreal alpha = _ballDirection.angleTo( axis->line() );
-
-//    qDebug() << "PlayingArea::mirrorBallDirection :"
-//             << "axisLineAngle=" << axis->line().angle()
-//             << "_ballDirection=" << _ballDirection.angle()
-//             << ", alpha=" << alpha << endl;
 
     _ballDirection.setAngle(_ballDirection.angle() + 2*alpha);
     moveBall(5*_ballDirection.dx(), 5*_ballDirection.dy());
@@ -297,10 +292,6 @@ void PlayingArea::moveRacket(const qint32 & racketIndex,
 
     if( 0 <= racketIndex && racketIndex < _rackets.size() )
     {
-//        qreal deviationAngle = _rackets[racketIndex]->line().angle();
-//        qreal dx = delta * ::cos( MathJ::Trigo::DegreeToRadian(deviationAngle) );
-//        qreal dy = delta * ::sin(MathJ::Trigo::DegreeToRadian(deviationAngle) );
-
         racketLine = _rackets[racketIndex]->line();
         racketLine.translate(delta, 0);
         _rackets[racketIndex]->setLine(racketLine);
@@ -315,7 +306,6 @@ void PlayingArea::setRacketLine(const qint32 & racketIndex,
                                 const QLineF &line)
 {
     _rackets[racketIndex]->setLine(line);
-    qDebug() << "PlayingArea::setRacketLine: racket set to line " << line;
 }
 
 void PlayingArea::setRacketAbss(const qint32 & racketIndex,
@@ -463,7 +453,7 @@ void PlayingArea::_set_line_position(QLineF & line,
 
 void PlayingArea::_set_ball_random_direction()
 {
-    qreal alpha = 50;//_rndGen.randomIntbeetween(0, 360);
+    qreal alpha = 90;//_rndGen.randomIntbeetween(0, 360);
 
-    _ballDirection.setAngle(_ballDirection.angle()+alpha);
+    _ballDirection.setAngle(alpha);
 }

@@ -4,14 +4,16 @@ GameState::GameState(const PongTypes::E_GameState & initialState):
     _state(initialState),
     _loserIndex(-1),
     _downCounter(0),
-    _nbPlayers(0)
+    _nbPlayers(0),
+    _nbActive(0)
 {}
 
 GameState::GameState(const GameState &source):
     _state(source._state),
     _loserIndex(source._loserIndex),
     _downCounter(source._downCounter),
-    _nbPlayers(source._nbPlayers)
+    _nbPlayers(source._nbPlayers),
+    _nbActive(source._nbActive)
 {}
 
 GameState &GameState::operator =(const GameState &source)
@@ -20,6 +22,7 @@ GameState &GameState::operator =(const GameState &source)
     _loserIndex = source._loserIndex;
     _downCounter = source._downCounter;
     _nbPlayers = source._nbPlayers;
+    _nbActive = source._nbActive;
 
     return *this;
 }
@@ -71,10 +74,10 @@ void GameState::setStartRequested()
     _state = PongTypes::START_REQUESTED;
 }
 
-void GameState::setLoserIndex(const qint32 &index) throw(std::invalid_argument)
+void GameState::setLoserIndex(const qint32 &index)
 {
     if(index < -1)
-        throw std::invalid_argument("GameState::setLoserIndex: index must be positive or -1 (no loser)");
+        qDebug() << "GameState::setLoserIndex: loserIndex must be positive or -1 (no loser)";
 
     _loserIndex = index;
 }
@@ -84,12 +87,45 @@ void GameState::setDownCounter(const qint32 &value)
     _downCounter = ::abs(value);
 }
 
-void GameState::setNbPlayers(const qint32 &nbPlayers) throw(std::invalid_argument)
+void GameState::setNbPlayers(const qint32 &nbPlayers)
 {
     if(nbPlayers < 0)
-        throw std::invalid_argument("GameState::setNbPlayers: invalid negative value");
+        qDebug() << "GameState::setNbPlayers: invalid negative value";
 
     _nbPlayers = nbPlayers;
+    if(_nbActive > _nbPlayers)
+        _nbActive = _nbPlayers;
+}
+
+void GameState::setNbActive(const qint32 &nbActive)
+{
+    if(nbActive < 0)
+        qDebug() << "GameState::setNBActive: invalid negative value";
+
+    if(nbActive > _nbPlayers)
+        qDebug() << "GameState::setNBActive: warning: more active players than connected players";
+
+    _nbActive= nbActive;
+}
+
+void GameState::incNbPlayers()
+{
+    ++_nbPlayers;
+}
+
+void GameState::decNbPlayers()
+{
+    --_nbPlayers;
+}
+
+void GameState::decNbActive()
+{
+    -- _nbActive;
+}
+
+void GameState::incActive()
+{
+    ++_nbActive;
 }
 
 const PongTypes::E_GameState &GameState::state() const
@@ -110,5 +146,10 @@ const qint32 &GameState::downCounter() const
 const qint32 &GameState::nbPlayers() const
 {
     return _nbPlayers;
+}
+
+const qint32 &GameState::nbActive() const
+{
+    return _nbActive;
 }
 

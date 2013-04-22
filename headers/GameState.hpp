@@ -2,7 +2,8 @@
 #define _GameState
 
 #include <cmath>
-#include <stdexcept>
+
+#include <QDebug>
 
 #include "PongTypes.hpp"
 #include "Lockable.hpp"
@@ -24,20 +25,27 @@ class GameState : public Lockable
   void setStateError();
   void setStartRequested();
 
-  void setLoserIndex(const qint32 & index) throw(std::invalid_argument);
+  void setLoserIndex(const qint32 & index);
   void setDownCounter(const qint32 & value);
-  void setNbPlayers(const qint32 & nbPlayers) throw(std::invalid_argument);
+  void setNbPlayers(const qint32 & nbPlayers);
+  void setNbActive(const qint32 & nbActive);
+  void incNbPlayers();
+  void decNbPlayers();
+  void decNbActive();
+  void incActive();
 
   const PongTypes::E_GameState & state()const;
   const qint32 & loserIndex()const;
   const qint32 & downCounter()const;
   const qint32  & nbPlayers()const;
+  const qint32 & nbActive()const;
 
 private:
   PongTypes::E_GameState _state;
   qint32 _loserIndex;
   qint32 _downCounter;
   qint32 _nbPlayers;
+  qint32 _nbActive;
 };
 
 #endif

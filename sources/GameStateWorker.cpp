@@ -52,25 +52,16 @@ void GameStateWorker::checkInitSlot()
     emit appendStatusSignal("GameStateWorker::checkInitSlot: arming timer, with downCounter initialized to 4");
 
     if( !_exit_requested() )
-        _timer.start(1000);
+    {
+        if( _enough_players() ) //some players has been disconnected ?
+            _timer.start(1000);
+
+        else
+            _manage_not_enough_players();
+    }
+
     else
         emit finishedSignal();
-}
-
-void GameStateWorker::checkRunningSlot()
-{
-    //debug
-    emit appendStatusSignal("GameStateWorker::checkRunningSlot: entering checkRunning routine");
-
-    lockGameState();
-    PongShared::gameState.setRunning();
-    unlockGameState();
-
-    emit appendStatusSignal("GameStateWorker::checkInitSlot: gameState set to RUNNING");
-
-    emit startMovingBall();
-
-    _check_running_routine();
 }
 
 void GameStateWorker::_countDownSlot()
@@ -95,6 +86,23 @@ void GameStateWorker::_countDownSlot()
     }
 }
 
+void GameStateWorker::checkRunningSlot()
+{
+    //debug
+    emit appendStatusSignal("GameStateWorker::checkRunningSlot: entering checkRunning routine");
+
+    lockGameState();
+    PongShared::gameState.setRunning();
+    unlockGameState();
+
+    //debug
+    emit appendStatusSignal("GameStateWorker::checkInitSlot: gameState set to RUNNING");
+
+    emit startMovingBall();
+
+    _check_running_routine();
+}
+
 void GameStateWorker::_check_running_routine()
 {
     _update_rackets();
@@ -103,7 +111,6 @@ void GameStateWorker::_check_running_routine()
     if( _game_over() )
     {
         _manage_game_over();
-        emit stopMovingBall();
     }
 
     //routine
@@ -118,17 +125,6 @@ void GameStateWorker::_check_running_routine()
         emit stopMovingBall();
         emit finishedSignal();
     }
-}
-
-bool GameStateWorker::_exit_requested()
-{
-    bool requested;
-
-    lockGameState();
-    requested  = ( PongShared::gameState.state() == PongTypes::EXIT_REQUESTED );
-    unlockGameState();
-
-    return requested;
 }
 
 void GameStateWorker::_update_rackets()
@@ -154,54 +150,56 @@ void GameStateWorker::_update_rackets()
 
 void GameStateWorker::_check_collisions()
 {
-    int pos;
+    int cageIndex, racketIndex, wallIndex;
+    bool collisionHappened;
+    PlayingArea::Linear * collider = 0;
 
     lockPlayingArea();
+    collisionHappened = PongShared::playingArea.collisionHappened();
+    collider = PongShared::playingArea.getBallCollider();
+    cageIndex = PongShared::playingArea.cageIndex(collider);
+    racketIndex = PongShared::playingArea.racketIndex(collider);
+    wallIndex = PongShared::playingArea.wallIndex(collider);
+    unlockPlayingArea();
 
-    if( PongShared::playingArea.collisionHappened() )
+    if(collisionHappened)
     {
-//        qDebug() << "GameStateWorker::_check_collisions : Collision detected" << endl;
-        PlayingArea::Linear * collider = PongShared::playingArea.getBallCollider();
-
-        if( ( pos = PongShared::playingArea.cageIndex(collider) ) !=  -1)
+        if(cageIndex !=  -1)
         {
-            _manage_goal(pos);
+            _manage_goal(cageIndex);
         }
 
-        else if( ( pos = PongShared::playingArea.racketIndex(collider) ) != -1)
+        else if( racketIndex != -1)
         {
-            _manage_racket_collision(pos);
+            _manage_racket_collision(racketIndex);
         }
 
         else
         {
-            pos = PongShared::playingArea.wallIndex(collider);
-
-            _manage_wall_collision(pos);
+            _manage_wall_collision(wallIndex);
         }
     }
-
-    unlockPlayingArea();
 }
 
 void GameStateWorker::_manage_goal(const int & cageIndex)
 {
-    qint32 credit, nbPlayers;
+    qint32 credit, nbActive;
 
-    //debug
-    emit appendStatusSignal("GameStateWorker::_manage_goal: player "+QString::number(cageIndex)+" conceded a goal");
+    emit stopMovingBall();
 
     lockPlayersStates();
-    //decrease credits
     PongShared::playersStates[cageIndex].decreaseCredit();
     credit = PongShared::playersStates[cageIndex].credit();
-    nbPlayers = PongShared::playersStates.size();
     unlockPlayersStates();
+
+    lockGameState();
+    nbActive = PongShared::gameState.nbActive();
+    unlockGameState();
 
     //discard player ?
     if( credit == 0 )
     {
-        if(nbPlayers > 2)
+        if(nbActive > 2)
             _discard_player(cageIndex);
 
         else
@@ -218,21 +216,26 @@ void GameStateWorker::_manage_goal(const int & cageIndex)
         lockPlayingArea();
         PongShared::playingArea.resetBallPos();
         unlockPlayingArea();
+        emit checkInitSignal();//emit startMovingBall();
     }
+
+    emit appendStatusSignal("GameStateWorker::_manage_goal: player "+QString::number(cageIndex)+" conceded a goal");
 }
 
 void GameStateWorker::_discard_player(const int & racketIndex)
 {
     lockPlayersStates();
-    //set playerState to discarded
     PongShared::playersStates[racketIndex].setState(PongTypes::DISCARDED);
     unlockPlayersStates();
 
-    //remove cage and racket
     lockPlayingArea();
     PongShared::playingArea.removeCage(racketIndex);
     PongShared::playingArea.removeRacket(racketIndex);
     unlockPlayingArea();
+
+    lockGameState();
+    PongShared::gameState.decNbActive();
+    unlockGameState();
 
     //debug
     emit appendStatusSignal("GameStateWorker::_discard_player: player "+QString::number(racketIndex)+"  discarded");
@@ -252,12 +255,15 @@ void GameStateWorker::_manage_racket_collision(const int & racketIndex)
     unlockPlayingArea();
 }
 
-void GameStateWorker::_move_ball()
+bool GameStateWorker::_enough_players()
 {
-    lockPlayingArea();
-    //translate in relative referential
-    PongShared::playingArea.moveBall();
-    unlockPlayingArea();
+    bool enough = false;
+
+    lockGameState();
+    enough = ( PongShared::gameState.nbPlayers() >= 2 );
+    unlockGameState();
+
+    return enough;
 }
 
 bool GameStateWorker::_game_over()
@@ -276,6 +282,29 @@ void GameStateWorker::_manage_game_over()
     //debug
     emit appendStatusSignal("GameStateWorker::_manage_game_over: game over state detected");
 
-    //maybe some actions will be needed later
+    emit stopMovingBall();
     emit gameOverSignal();
+}
+
+void GameStateWorker::_manage_not_enough_players()
+{
+    lockGameState();
+    PongShared::gameState.setGameOver(-1);
+    unlockGameState();
+
+    //debug
+    emit appendStatusSignal("GameStateWorker::_manage_not_enough_players(): too few players remaining");
+
+    _manage_game_over();
+}
+
+bool GameStateWorker::_exit_requested()
+{
+    bool requested;
+
+    lockGameState();
+    requested  = ( PongShared::gameState.state() == PongTypes::EXIT_REQUESTED );
+    unlockGameState();
+
+    return requested;
 }

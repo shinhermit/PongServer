@@ -29,10 +29,6 @@ void SocketWorker::operator>>(QDataStream &out)
     QPointF ballPos;
     QLineF racketLine;
 
-    lockPlayingArea();
-    nbRackets = PongShared::playingArea.nbRackets();
-    ballPos = PongShared::playingArea.ballPos();
-    unlockPlayingArea();
 
     lockGameState();
     loserIndex = PongShared::gameState.loserIndex();
@@ -43,8 +39,11 @@ void SocketWorker::operator>>(QDataStream &out)
         downCounter = PongShared::gameState.downCounter();
     unlockGameState();
 
-    out << ballPos << _playerIndex << nbRackets-1 << nbPlayers << loserIndex << gameState << downCounter;
     lockPlayingArea();
+    nbRackets = PongShared::playingArea.nbRackets();
+    ballPos = PongShared::playingArea.ballPos();
+
+    out << ballPos << _playerIndex << nbRackets-1 << nbPlayers << loserIndex << gameState << downCounter;
     for(qint32 playerIndex=0;
         playerIndex<nbPlayers && playerIndex < nbRackets;
         ++playerIndex)
@@ -99,6 +98,8 @@ void SocketWorker::beginInteract()
 
     else
     {
+        if( _socket->isOpen() )
+            _socket->close();
         //debug
         emit appendStatusSignal("SocketWorker::beginInteract: exit requested, can not enter interact routine");
     }
@@ -116,6 +117,8 @@ void SocketWorker::sendDataSlot()
 
     else
     {
+        if( _socket->isOpen() )
+            _socket->close();
         //debug
         emit appendStatusSignal("SocketWorker::sendDataSlot: exit requested, leaving interact routine");
     }
@@ -134,6 +137,8 @@ void SocketWorker::getDataSlot()
 
     else
     {
+        if( _socket->isOpen() )
+            _socket->close();
         //debug
         emit appendStatusSignal("SocketWorker::getDataSlot: exit requested, leaving interact routine");
     }
@@ -147,6 +152,8 @@ void SocketWorker::socketError(QAbstractSocket::SocketError socketError)
 
     qDebug() << "SocketWorker::socketError: error code = " << QString::number(socketError) << endl;
 
+    if( _socket->isOpen() )
+        _socket->close();
     //debug
     emit appendStatusSignal( "SocketWorker::socketError: error code = " + QString::number(socketError) );
 }
@@ -159,6 +166,11 @@ void SocketWorker::disconnected()
     lockPlayersStates();
     PongShared::playersStates[_playerIndex].setState(PongTypes::DISCONNECTED);
     unlockPlayersStates();
+
+    lockGameState();
+    PongShared::gameState.decNbPlayers();
+    PongShared::gameState.decNbActive();
+    unlockGameState();
 
     if( _socket->isOpen() )
         _socket->close();

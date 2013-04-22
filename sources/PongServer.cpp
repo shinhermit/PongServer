@@ -26,7 +26,7 @@ PongServer::PongServer(const qint16 & port):
     _ballMover.moveToThread(&_ballMoverThread);
 
     _gameStateCheckerThread.start();
-    //_ballMoverThread.start();
+    _ballMoverThread.start();
 
     connect( this, SIGNAL(startService()), &_playerLogger, SLOT(waitConnections()) );
     connect( &_playerLogger, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
@@ -184,6 +184,7 @@ void PongServer::_reset_gameState()
     lockGameState();
     PongShared::gameState.setWaitingServer();
     PongShared::gameState.setNbPlayers(nbPlayers);
+    PongShared::gameState.setNbActive(nbPlayers);
     PongShared::gameState.setLoserIndex(-1);
     PongShared::gameState.setDownCounter(0);
     unlockGameState();
@@ -196,7 +197,6 @@ void PongServer::_reset_playersStates()
     {
         PongShared::playersStates[i].setState(PongTypes::ACCEPTED);
         PongShared::playersStates[i].setCredit( PlayerState::DefaultCredit() );
-        //PongShared::playersStates[i].setdxRacket(0);
     }
     unlockPlayersStates();
 }

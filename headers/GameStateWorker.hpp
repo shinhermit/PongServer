@@ -42,8 +42,6 @@ private:
     QTimer _timer;
     qint32 _downCounter;
 
-    bool _exit_requested();
-
     void _update_rackets();
 
     void _check_collisions();
@@ -56,11 +54,15 @@ private:
 
     void _manage_racket_collision(const int & racketIndex);
 
+    bool _enough_players();
+
     bool _game_over();
 
     void _manage_game_over();
 
-    void _move_ball();
+    void _manage_not_enough_players();
+
+    bool _exit_requested();
 };
 
 #endif
