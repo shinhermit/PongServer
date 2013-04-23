@@ -50,6 +50,8 @@ private:
 
     bool _running_state();
     bool _exit_requested();
+    bool _sizeRead;
+    quint32 _size;
 };
 
 #endif
