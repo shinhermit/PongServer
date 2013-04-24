@@ -30,6 +30,7 @@ public slots:
     void startMoving();
     void moveBall();
     void stopMoving();
+    void notBusyQuit();
 
 private:
     QTimer _timer;

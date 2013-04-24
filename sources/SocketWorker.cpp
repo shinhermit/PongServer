@@ -67,7 +67,8 @@ void SocketWorker::operator<<(QDataStream & in)
 
     QLineF racket(point1,point2);
     lockPlayersStates();
-    PongShared::playersStates[_playerIndex].setRacket(racket);
+    if( _active_player() )
+        PongShared::playersStates[_playerIndex].setRacket(racket);
     unlockPlayersStates();
 }
 
@@ -169,6 +170,7 @@ void SocketWorker::disconnected()
 
     lockPlayersStates();
     PongShared::playersStates[_playerIndex].setState(PongTypes::DISCONNECTED);
+    PongShared::playersStates[_playerIndex].setRacket(500,500,500,500);
     unlockPlayersStates();
 
     lockGameState();
@@ -178,12 +180,13 @@ void SocketWorker::disconnected()
 
     lockPlayingArea();
     PongShared::playingArea.removeCage(_playerIndex);
-    PongShared::playingArea.removeRacket(_playerIndex);
-    qDebug() << "SocketWorker::disconnected(): removed cage and racket of player " << _playerIndex;
+    PongShared::playingArea.setRacketLine(_playerIndex, QLineF(500,500,500,500));
+    qDebug() << "SocketWorker::disconnected(): removed cage and discarded racket of player " << _playerIndex;
     unlockPlayingArea();
 
     if( _socket->isOpen() )
         _socket->close();
+    deleteLater();
 }
 
 bool SocketWorker::_running_state()
@@ -206,6 +209,20 @@ bool SocketWorker::_running_state()
             playerState != PongTypes::SOCKET_ERROR
             &&
             playerState != PongTypes::DISCONNECTED);
+}
+
+bool SocketWorker::_active_player()
+{
+    bool active;
+
+    lockPlayersStates();
+    active = (PongShared::playersStates[_playerIndex].state() != PongTypes::DISCARDED
+            &&
+            PongShared::playersStates[_playerIndex].state() != PongTypes::DISCONNECTED
+            );
+    unlockPlayersStates();
+
+    return active;
 }
 
 bool SocketWorker::_exit_requested()

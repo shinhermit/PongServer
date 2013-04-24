@@ -32,6 +32,7 @@ public slots:
     void waitStartSlot();
     void checkInitSlot();
     void checkRunningSlot();
+    void notBusyQuit();
 
 private slots:
     void _countDownSlot();

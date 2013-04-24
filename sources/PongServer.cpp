@@ -12,14 +12,14 @@ PongServer::PongServer(const qint16 & port):
     connect( &_gameStateChecker, SIGNAL(finishedSignal()), &_gameStateCheckerThread, SLOT(quit()) );
     connect( &_gameStateChecker, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
     connect( &_gameStateCheckerThread, SIGNAL(finished()), this, SLOT(threadTerminated()) );
-    connect( this, SIGNAL(stopService()), &_gameStateCheckerThread, SLOT(quit()) );
+    connect( this, SIGNAL(stopService()), &_gameStateChecker, SLOT(notBusyQuit()) );
     connect( &_gameStateChecker, SIGNAL(gameOverSignal()), this, SLOT(newGameSlot()) );
 
     connect( &_gameStateChecker, SIGNAL(startMovingBall()), &_ballMover, SLOT(startMoving()) );
     connect( &_gameStateChecker, SIGNAL(stopMovingBall()), &_ballMover, SLOT(stopMoving()) );
     connect( &_ballMover, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
     connect( &_ballMover, SIGNAL(finishedSignal()), &_ballMoverThread, SLOT(quit()) );
-    connect( this, SIGNAL(stopService()), &_ballMoverThread, SLOT(quit()) );
+    connect( this, SIGNAL(stopService()), &_ballMover, SLOT(notBusyQuit()) );
     connect( &_ballMoverThread, SIGNAL(finished()), this, SLOT(threadTerminated()) );
 
     _gameStateChecker.moveToThread(&_gameStateCheckerThread);

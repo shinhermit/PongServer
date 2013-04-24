@@ -48,6 +48,7 @@ private:
     QTcpSocket * _socket;
 
     bool _running_state();
+    bool _active_player();
     bool _exit_requested();
 };
 

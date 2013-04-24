@@ -64,6 +64,14 @@ void BallMover::stopMoving()
         emit finishedSignal();
 }
 
+void BallMover::notBusyQuit()
+{
+    if( _timer.isActive() )
+        _timer.stop();
+
+    emit finishedSignal();
+}
+
 bool BallMover::_exit_requested()
 {
     bool requested;

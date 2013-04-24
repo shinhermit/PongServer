@@ -58,12 +58,15 @@ void GameStateWorker::checkInitSlot()
 
     //debug
     emit appendStatusSignal("GameStateWorker::checkInitSlot: gameState set to INITIALIZING");
-    emit appendStatusSignal("GameStateWorker::checkInitSlot: arming timer, with downCounter initialized to 4");
 
     if( !_exit_requested() )
     {
         if( _enough_players() ) //some players has been disconnected ?
+        {
+            //debug
+            emit appendStatusSignal("GameStateWorker::checkInitSlot: arming timer, with downCounter initialized to 4");
             _timer.start(1000);
+        }
 
         else
             _manage_not_enough_players();
@@ -115,6 +118,14 @@ void GameStateWorker::checkRunningSlot()
 
     else
         _manage_not_enough_players();
+}
+
+void GameStateWorker::notBusyQuit()
+{
+    if( _timer.isActive() )
+        _timer.stop();
+
+    emit finishedSignal();
 }
 
 void GameStateWorker::_check_running_routine()
@@ -219,7 +230,7 @@ void GameStateWorker::_manage_goal(const int & cageIndex)
     //discard player ?
     if( credit == 0 )
     {
-        if(nbActive >= 2)
+        if(nbActive > 2)
             _discard_player(cageIndex);
 
         else
@@ -247,12 +258,13 @@ void GameStateWorker::_discard_player(const int & racketIndex)
 {
     lockPlayersStates();
     PongShared::playersStates[racketIndex].setState(PongTypes::DISCARDED);
+    PongShared::playersStates[racketIndex].setRacket(500,500,500,500);
     unlockPlayersStates();
 
     lockPlayingArea();
     PongShared::playingArea.removeCage(racketIndex);
-    PongShared::playingArea.removeRacket(racketIndex);
-    qDebug() << "GameStateWorker::_discard_player(" << racketIndex << "): removing cage and racket";
+    PongShared::playingArea.setRacketLine(racketIndex, QLineF(500,500,500,500));
+    qDebug() << "GameStateWorker::_discard_player(" << racketIndex << "): removed cage and discarded racket";
     unlockPlayingArea();
 
     lockGameState();
