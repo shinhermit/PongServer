@@ -454,7 +454,7 @@ void PlayingArea::_set_line_position(QLineF & line,
 
 void PlayingArea::_set_ball_random_direction()
 {
-    qreal alpha = -90;//_rndGen.randomIntbeetween(0, 360);
+    qreal alpha = _rndGen.randomIntbeetween(-360, 360);
 
     _ballDirection.setAngle(alpha);
 }

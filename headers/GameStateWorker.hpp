@@ -36,7 +36,7 @@ public slots:
 
 private slots:
     void _countDownSlot();
-
+    void _wait_start_routine();
     void _check_running_routine();
 
 private:

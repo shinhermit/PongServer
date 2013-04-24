@@ -18,43 +18,41 @@ void GameStateWorker::waitStartSlot()
 
     lockGameState();
     PongShared::gameState.setWaitingServer();
-
-    //debug
-    qDebug() << "GameStateWorker::waitStartSlot : nbPlayers="
-             << PongShared::gameState.nbPlayers()
-             << ", nbActive=" << PongShared::gameState.nbActive();
-
     state = PongShared::gameState.state();
     unlockGameState();
 
-    while(state != PongTypes::START_REQUESTED && state != PongTypes::EXIT_REQUESTED)
-    {
-        lockGameState();
-        state = PongShared::gameState.state();
-        unlockGameState();
-    }
+    if(state != PongTypes::START_REQUESTED && state != PongTypes::EXIT_REQUESTED)
+        _wait_start_routine();
 
-    //debug
-    emit appendStatusSignal("GameStateWorker::waitStartSlot: getting out of waitStart routine");
-    emit appendStatusSignal("GameStateWorker::waitStartSlot: emitting checkInitSignal");
-
-    if(state != PongTypes::EXIT_REQUESTED)
-        emit checkInitSignal();
-    else
+    if(state == PongTypes::EXIT_REQUESTED)
         emit finishedSignal();
+}
+
+void GameStateWorker::_wait_start_routine()
+{
+
+    PongTypes::E_GameState state;
+
+    lockGameState();
+    state = PongShared::gameState.state();
+    unlockGameState();
+
+    if(state != PongTypes::START_REQUESTED && state != PongTypes::EXIT_REQUESTED)
+        QTimer::singleShot( 5, this, SLOT(_wait_start_routine()) );
+
+    else if( state == PongTypes::EXIT_REQUESTED )
+        emit finishedSignal();
+    else
+        emit checkInitSignal();
 }
 
 void GameStateWorker::checkInitSlot()
 {
     lockGameState();
     PongShared::gameState.setInitializing();
-    //debug
-    qDebug() << "GameStateWorker::waitStartSlot : nbPlayers="
-             << PongShared::gameState.nbPlayers()
-             << ", nbActive=" << PongShared::gameState.nbActive();
     unlockGameState();
 
-    _downCounter = 4;
+    _downCounter = 3;
 
     //debug
     emit appendStatusSignal("GameStateWorker::checkInitSlot: gameState set to INITIALIZING");
@@ -64,7 +62,7 @@ void GameStateWorker::checkInitSlot()
         if( _enough_players() ) //some players has been disconnected ?
         {
             //debug
-            emit appendStatusSignal("GameStateWorker::checkInitSlot: arming timer, with downCounter initialized to 4");
+            emit appendStatusSignal("GameStateWorker::checkInitSlot: arming timer, with downCounter initialized to 3");
             _timer.start(1000);
         }
 
@@ -235,7 +233,6 @@ void GameStateWorker::_manage_goal(const int & cageIndex)
 
         else
         {
-            qDebug() << "GameStateWorker::_manage_goal : nbActive = " << nbActive;
             lockGameState();
             PongShared::gameState.setGameOver(cageIndex);
             unlockGameState();
