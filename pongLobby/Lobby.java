@@ -80,8 +80,10 @@ public class Lobby {
 	}
 	
 	public void startMulticastNetworkThread(){
-		_communicator = new MulticastCommunicator(this);
-		_communicator.start();
+		_multicastCommunicator = new MulticastCommunicator(this);
+		_unicastListener = new UnicastListener(this);
+		_multicastCommunicator.start();
+		_unicastListener.start();
 		set_state(LobbyState.WAITING);
 		_displayMenu();
 	}
@@ -200,7 +202,8 @@ public class Lobby {
 
 	private Vector<Player> _playersVector;
 	private LobbyState _state;
-	private MulticastCommunicator _communicator;
+	private MulticastCommunicator _multicastCommunicator;
+	private UnicastListener _unicastListener;
 	private int _multicastPort;
 	private int _unicastPort;
 	//private int _serverPort;

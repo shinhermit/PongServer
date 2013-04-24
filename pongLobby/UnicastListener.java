@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.lang.Thread;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketException;
 import java.net.InetAddress;
 
 
@@ -36,14 +35,6 @@ public class UnicastListener extends Thread {
 		catch(IOException exception)
 		{
 			System.out.println("Impossible de lancer la socket: " + exception);
-			System.exit(1);
-		}
-		try{
-		_socket.setSoTimeout(500);
-		}
-		catch(SocketException ex)
-		{
-			System.out.println("Impossible de mettre un timeout à la socket: " + ex);
 			System.exit(1);
 		}
 	}
