@@ -55,7 +55,7 @@ void BallMover::moveBall()
 
 void BallMover::stopMoving()
 {
-    emit appendStatusSignal("Signal stopMovingBall received");
+    emit appendStatusSignal("BallMover::stopMoving : Signal stopMovingBall received");
 
     if(_timer.isActive())
         _timer.stop();

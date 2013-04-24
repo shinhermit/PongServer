@@ -248,7 +248,7 @@ void GameStateWorker::_manage_goal(const int & cageIndex)
         lockPlayingArea();
         PongShared::playingArea.resetBallPos();
         unlockPlayingArea();
-        emit checkInitSignal();//emit startMovingBall();
+        emit checkInitSignal();
     }
 
     emit appendStatusSignal("GameStateWorker::_manage_goal: player "+QString::number(cageIndex)+" conceded a goal");

@@ -36,6 +36,7 @@ public slots:
     void gameStateErrorSlot(const QString & mess);
     void newPlayerConnected();
     void startRequestedSlot();
+    void gameOverSlot();
     void quitSlot();
     void threadTerminated();
 

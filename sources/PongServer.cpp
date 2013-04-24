@@ -13,7 +13,7 @@ PongServer::PongServer(const qint16 & port):
     connect( &_gameStateChecker, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
     connect( &_gameStateCheckerThread, SIGNAL(finished()), this, SLOT(threadTerminated()) );
     connect( this, SIGNAL(stopService()), &_gameStateChecker, SLOT(notBusyQuit()) );
-    connect( &_gameStateChecker, SIGNAL(gameOverSignal()), this, SLOT(newGameSlot()) );
+    connect( &_gameStateChecker, SIGNAL(gameOverSignal()), this, SLOT(gameOverSlot()) );
 
     connect( &_gameStateChecker, SIGNAL(startMovingBall()), &_ballMover, SLOT(startMoving()) );
     connect( &_gameStateChecker, SIGNAL(stopMovingBall()), &_ballMover, SLOT(stopMoving()) );
@@ -37,7 +37,7 @@ PongServer::PongServer(const qint16 & port):
     connect(&_view, SIGNAL(exitSignal()), this, SLOT(quitSlot()) );
 
     //debug
-    _view.appendStatus("Server Active; GameState set to NOPARTY, gameStatechecker started");
+    _view.appendStatus("PongServer::PongServer : Server Active; GameState set to NOPARTY, gameStatechecker started");
 }
 
 void PongServer::start()
@@ -106,6 +106,11 @@ void PongServer::startRequestedSlot()
     _view.appendStatus("PongServer::startRequestedSlot: gameState set to START_REQUESTED");
 }
 
+void PongServer::gameOverSlot()
+{
+    QTimer::singleShot( 500, this, SLOT(newGameSlot()) );
+}
+
 void PongServer::quitSlot()
 {
     //debug
@@ -121,11 +126,11 @@ void PongServer::quitSlot()
 
 void PongServer::threadTerminated()
 {
-    _view.appendStatus("a thread has terminated");
+    _view.appendStatus("PongServer::threadTerminated : a thread has terminated");
 
     if( _all_threads_finished() )
     {
-        _view.appendStatus("All thread have terminated");
+        _view.appendStatus("PongServer::threadTerminated : All thread have terminated");
         _view.disableQuitButton();
     }
 }
@@ -172,7 +177,7 @@ void PongServer::newGameSlot()
     emit startService();
 
     //debug
-    _view.appendStatus("Server Active; GameState set to NOPARTY; startService signal sent");
+    _view.appendStatus("PongServer::newGameSlot : GameState reset; startService signal sent");
 }
 
 void PongServer::_reset_gameState()
