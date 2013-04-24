@@ -5,10 +5,7 @@ SocketWorker::SocketWorker(QTcpSocket * socket,
                            QObject *parent):
     QObject(parent),
     _playerIndex(playerIndex),
-    _streamer(socket),
-    _socket(socket),
-    _sizeRead(false),
-    _size(0)
+    _socket(socket)
 {
     connect( _socket, SIGNAL(readyRead()), this, SLOT(getDataSlot()) );
     connect( this, SIGNAL(sendDataSignal()), this, SLOT(sendDataSlot()) );
@@ -109,15 +106,15 @@ void SocketWorker::beginInteract()
 
 void SocketWorker::sendDataSlot()
 {
+    QByteArray raw;
     QDataStream socketStream(_socket);
-    QByteArray byteArray;
-    QDataStream byteStream(&byteArray, QIODevice::ReadWrite);
+    QDataStream rawStream(&raw, QIODevice::ReadWrite);
 
     if( !_exit_requested() )
     {
         //debug
-        (*this) >> byteStream;
-        socketStream<<byteArray.size()<<byteArray;
+        (*this) >> rawStream;
+        socketStream << raw;
     }
 
     else
@@ -131,24 +128,15 @@ void SocketWorker::sendDataSlot()
 
 void SocketWorker::getDataSlot()
 {
+    QByteArray raw;
     QDataStream socketStream(_socket);
-    QByteArray byteArray;
-    QDataStream byteStream(&byteArray, QIODevice::ReadWrite);
+    QDataStream rawStream(&raw, QIODevice::ReadWrite);
 
     if( !_exit_requested() )
     {
-        if(_socket->bytesAvailable()>=sizeof(qint32) && !_sizeRead)
-        {
-            socketStream>>_size;
-            _sizeRead=true;
-        }
-        if(_socket->bytesAvailable()>=_size && _sizeRead)
-        {
-            socketStream<<byteArray;
-            (*this) << byteStream;
-            _sizeRead=false;
-            emit sendDataSignal();
-        }
+        socketStream >> raw;
+        (*this) << rawStream;
+        emit sendDataSignal();
     }
 
     else

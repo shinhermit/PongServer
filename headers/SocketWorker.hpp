@@ -44,14 +44,11 @@ public slots:
 
 private:
     qint32 _playerIndex;
-    QDataStream _streamer;
 
     QTcpSocket * _socket;
 
     bool _running_state();
     bool _exit_requested();
-    bool _sizeRead;
-    quint32 _size;
 };
 
 #endif
