@@ -38,15 +38,22 @@ void LoggerWorker::waitConnections()
 
 void LoggerWorker::newConnectionSlot()
 {
-    int index;
+    int index, nbPlayers;
+    bool loggable;
 
     //debug
     emit appendStatusSignal("LoggerWorker::newConnectionSlot: connection demand");
 
-    if( !_loggableGameState() )
+    loggable = _loggableGameState();
+
+    lockGameState();
+    nbPlayers = PongShared::gameState.nbPlayers();
+    unlockGameState();
+
+    if(!loggable)
         emit appendStatusSignal("LoggerWorker::newConnectionSlot: unloggable gameState");
 
-    if( _nbPlayers() <= PongShared::maxPlayers && _loggableGameState() )
+    if( nbPlayers < PongShared::maxPlayers && loggable )
     {
         lockPlayersStates();
 
@@ -64,12 +71,15 @@ void LoggerWorker::newConnectionSlot()
         connect( worker, SIGNAL(appendStatusSignal(QString)), this, SLOT(appendStatusSlot(QString)) );
         connect( this, SIGNAL(startService()), worker, SLOT(beginInteract()) );
 
-        _incNbPlayers();
+        unlockPlayersStates();
+
+        lockGameState();
+        PongShared::gameState.incNbPlayers();
+        PongShared::gameState.incNbActive();
+        unlockGameState();
 
         emit startService();
         emit newPlayerConnected();
-
-        unlockPlayersStates();
 
         //debug
         emit appendStatusSignal("LoggerWorker::newConnectionSlot: connection accepted");
@@ -115,29 +125,4 @@ bool LoggerWorker::_exit_requested()
     unlockGameState();
 
     return requested;
-}
-
-void LoggerWorker::_setNbPlayers(const qint32 &nbPlayers)
-{
-    lockGameState();
-    PongShared::gameState.setNbPlayers(nbPlayers);
-    unlockGameState();
-}
-
-void LoggerWorker::_incNbPlayers()
-{
-    lockGameState();
-    PongShared::gameState.setNbPlayers( PongShared::gameState.nbPlayers() + 1 );
-    unlockGameState();
-}
-
-qint32 LoggerWorker::_nbPlayers()
-{
-    qint32 nbPlayers;
-
-    lockGameState();
-    nbPlayers = PongShared::gameState.nbPlayers();
-    unlockGameState();
-
-    return nbPlayers;
 }

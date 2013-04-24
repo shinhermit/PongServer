@@ -31,8 +31,8 @@ class GameState : public Lockable
   void setNbActive(const qint32 & nbActive);
   void incNbPlayers();
   void decNbPlayers();
+  void incNbActive();
   void decNbActive();
-  void incActive();
 
   const PongTypes::E_GameState & state()const;
   const qint32 & loserIndex()const;

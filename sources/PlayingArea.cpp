@@ -130,7 +130,7 @@ PlayingArea::Linear * PlayingArea::wall(const qint32 &index)const
 
     else
     {
-        qDebug() << "PlayingArea::wall(i) : given index " << index << " is out of range" << endl;
+        qDebug() << "PlayingArea::wall(" << index << ") : index out of range [0," << _walls.size()-1 << "]";
         return 0;
     }
 }
@@ -142,7 +142,7 @@ PlayingArea::Linear * PlayingArea::cage(const qint32 &index) const
 
     else
     {
-        qDebug() << "PlayingArea::cage(i) : given index " << index << " is out of range" << endl;
+        qDebug() << "PlayingArea::cage(" << index << ") : index out of range [0," << _cages.size()-1 << "]";
         return 0;
     }
 }
@@ -154,7 +154,7 @@ PlayingArea::Linear * PlayingArea::racket(const qint32 &index) const
 
     else
     {
-        qDebug() << "PlayingArea::racket(i) : given index " << index << " is out of range" << endl;
+        qDebug() << "PlayingArea::racket(" << index << ") : index out of range [0," << _rackets.size()-1 << "]";
         return 0;
     }
 }
@@ -171,7 +171,7 @@ qreal PlayingArea::getWallRotation(const qint32 & wallIndex)
 
     else
     {
-        qDebug() << "PlayingArea::getWallRotation(i) : given index " << wallIndex << " is out of range" << endl;
+        qDebug() << "PlayingArea::getWallRotation(" << wallIndex << ") : index out of range [0," << _walls.size()-1 << "]";
         return 0;
     }
 }
@@ -300,7 +300,7 @@ void PlayingArea::moveRacket(const qint32 & racketIndex,
     }
 
     else
-        qDebug() << "PlayingArea::moveRacket : given racket index " << racketIndex << " is out of bounds";
+        qDebug() << "PlayingArea::moveRacket(" << racketIndex << ") : index out of range [0," << _rackets.size()-1 << "]";
 }
 
 void PlayingArea::setRacketLine(const qint32 & racketIndex,
@@ -337,7 +337,7 @@ void PlayingArea::setRacketCoord(const qint32 & racketIndex,
 
 void PlayingArea::removeCage(const qint32 & cageIndex)
 {
-    if( 0 <= cageIndex && cageIndex < _cages.size() )
+    if( 0 <= cageIndex && cageIndex < (qint32)_cages.size() )
     {
 
         _walls.push_back(_cages[cageIndex]);
@@ -346,7 +346,7 @@ void PlayingArea::removeCage(const qint32 & cageIndex)
     }
 
     else
-        qDebug() << "PlayingArea::removeCage(i) : given index " << cageIndex << " is out of bounds" << endl;
+        qDebug() << "PlayingArea::removeCage(" << cageIndex << ") : index out of range [0," << _cages.size()-1 << "]";
 }
 
 void PlayingArea::removeRacket(const qint32 & racketIndex)
@@ -358,7 +358,7 @@ void PlayingArea::removeRacket(const qint32 & racketIndex)
     }
 
     else
-        qDebug() << "PlayingArea::removeRacket(i) : given index " << racketIndex << " is out of bounds" << endl;
+        qDebug() << "PlayingArea::removeRacket(" << racketIndex << ") : index out of range [0," << _rackets.size()-1 << "]";
 }
 
 void PlayingArea::removeWall(const qint32 & wallIndex)
@@ -373,7 +373,7 @@ void PlayingArea::removeWall(const qint32 & wallIndex)
     }
 
     else
-        qDebug() << "PlayingArea::removeWall(i) : given index " << wallIndex << " is out of bounds" << endl;
+        qDebug() << "PlayingArea::removeWall(" << wallIndex << ") : index out of range [0," << _walls.size()-1 << "]";
 }
 
 void PlayingArea::_clear()
@@ -454,7 +454,7 @@ void PlayingArea::_set_line_position(QLineF & line,
 
 void PlayingArea::_set_ball_random_direction()
 {
-    qreal alpha = _rndGen.randomIntbeetween(0, 360);
+    qreal alpha = -90;//_rndGen.randomIntbeetween(0, 360);
 
     _ballDirection.setAngle(alpha);
 }

@@ -19,6 +19,11 @@ void GameStateWorker::waitStartSlot()
     lockGameState();
     PongShared::gameState.setWaitingServer();
 
+    //debug
+    qDebug() << "GameStateWorker::waitStartSlot : nbPlayers="
+             << PongShared::gameState.nbPlayers()
+             << ", nbActive=" << PongShared::gameState.nbActive();
+
     state = PongShared::gameState.state();
     unlockGameState();
 
@@ -43,6 +48,10 @@ void GameStateWorker::checkInitSlot()
 {
     lockGameState();
     PongShared::gameState.setInitializing();
+    //debug
+    qDebug() << "GameStateWorker::waitStartSlot : nbPlayers="
+             << PongShared::gameState.nbPlayers()
+             << ", nbActive=" << PongShared::gameState.nbActive();
     unlockGameState();
 
     _downCounter = 4;
@@ -210,11 +219,12 @@ void GameStateWorker::_manage_goal(const int & cageIndex)
     //discard player ?
     if( credit == 0 )
     {
-        if(nbActive > 2)
+        if(nbActive >= 2)
             _discard_player(cageIndex);
 
         else
         {
+            qDebug() << "GameStateWorker::_manage_goal : nbActive = " << nbActive;
             lockGameState();
             PongShared::gameState.setGameOver(cageIndex);
             unlockGameState();
@@ -242,6 +252,7 @@ void GameStateWorker::_discard_player(const int & racketIndex)
     lockPlayingArea();
     PongShared::playingArea.removeCage(racketIndex);
     PongShared::playingArea.removeRacket(racketIndex);
+    qDebug() << "GameStateWorker::_discard_player(" << racketIndex << "): removing cage and racket";
     unlockPlayingArea();
 
     lockGameState();

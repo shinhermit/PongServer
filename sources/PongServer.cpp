@@ -89,6 +89,8 @@ void PongServer::startRequestedSlot()
     nbPlayers = PongShared::gameState.nbPlayers();
     unlockGameState();
 
+    qDebug() << "PongServer::startRequestedSlot : nbPlayers=" << nbPlayers;
+
     lockPlayingArea();
     PongShared::playingArea.rebuild(nbPlayers);
     for(int i=0; i < PongShared::playingArea.nbRackets(); ++i)

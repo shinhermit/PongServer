@@ -14,7 +14,7 @@ class BallMover : public QObject, public Concurrent
 {
     Q_OBJECT
 public:
-    BallMover(const qint32 & period=1);
+    BallMover(const qint32 & period=3);
 
     ~BallMover();
 

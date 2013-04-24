@@ -105,7 +105,7 @@ void GameState::setNbActive(const qint32 &nbActive)
     if(nbActive > _nbPlayers)
         qDebug() << "GameState::setNBActive: warning: more active players than connected players";
 
-    _nbActive= nbActive;
+    _nbActive = nbActive;
 }
 
 void GameState::incNbPlayers()
@@ -118,14 +118,14 @@ void GameState::decNbPlayers()
     --_nbPlayers;
 }
 
+void GameState::incNbActive()
+{
+    ++_nbActive;
+}
+
 void GameState::decNbActive()
 {
     -- _nbActive;
-}
-
-void GameState::incActive()
-{
-    ++_nbActive;
 }
 
 const PongTypes::E_GameState &GameState::state() const

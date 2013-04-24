@@ -179,6 +179,7 @@ void SocketWorker::disconnected()
     lockPlayingArea();
     PongShared::playingArea.removeCage(_playerIndex);
     PongShared::playingArea.removeRacket(_playerIndex);
+    qDebug() << "SocketWorker::disconnected(): removed cage and racket of player " << _playerIndex;
     unlockPlayingArea();
 
     if( _socket->isOpen() )

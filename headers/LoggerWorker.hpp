@@ -45,12 +45,6 @@ private:
     bool _loggableGameState();
 
     bool _exit_requested();
-
-    void _setNbPlayers(const qint32 & nbPlayers);
-
-    void _incNbPlayers();
-
-    qint32 _nbPlayers();
 };
 
 #endif
