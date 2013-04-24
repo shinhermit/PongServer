@@ -52,89 +52,161 @@ public class Lobby {
 		}
 		else{
 			if(nbParameter==2)
-				lobby = new Lobby(serverAddress, localPort, serverPort);
+				lobby = new Lobby(serverAddress, localPort, localPort-1, serverPort);
 			else
 				lobby = new Lobby(serverAddress);
-			lobby.startNetworkThread();
+			lobby.startMulticastNetworkThread();
 		}
 			
 	}
 	
 	Lobby(InetAddress serverAddress){
-		_state=LobbyState.INITIALISING;
-		_playersVector = new Vector<Player>();
-		_port = 6665;
-		_serverPort = 6666;
-		_serverAddress= serverAddress;
+		set_state(LobbyState.INITIALISING);
+		set_playersVector(new Vector<Player>());
+		set_multicastPort(6665);
+		set_unicastPort(6664);
+		//_serverPort = 6666;
+		//_serverAddress= serverAddress;
 	}
 	
-	Lobby(InetAddress serverAddress, int port, int serverPort)
+	Lobby(InetAddress serverAddress, int unicastPort, int multicastPort, int serverPort)
 	{
-		_state=LobbyState.INITIALISING;
-		_playersVector = new Vector<Player>();
-		_port = port;
-		_serverPort = serverPort;
-		_serverAddress= serverAddress;
+		set_state(LobbyState.INITIALISING);
+		set_playersVector(new Vector<Player>());
+		set_unicastPort(unicastPort);
+		set_multicastPort(multicastPort);
+		//_serverPort = serverPort;
+		//_serverAddress= serverAddress;
 	}
 	
-	public void startNetworkThread(){
-		_communicator = new Communicator(_playersVector, _state, _port, _serverAddress, _serverPort);
-		_communicator.start();
+	public void startMulticastNetworkThread(){
+		_multicastCommunicator = new MulticastCommunicator(this);
+		_unicastListener = new UnicastListener(this);
+		_multicastCommunicator.start();
+		_unicastListener.start();
+		set_state(LobbyState.WAITING);
 		_displayMenu();
 	}
 	
 	public String displayPlayers(){
 		String string;
 		string = "Joueurs connectés à la partie:\n";
-		for(int i=0;i<_playersVector.size();++i)
-			string += "Joueur n° " + i + " id: " + _playersVector.elementAt(i).get_id() + "\n";
+		for(int i=0;i<get_playersVector().size();++i)
+			string += "Joueur n° " + i + " id: " + get_playersVector().elementAt(i).get_id() + "\n";
 		return string;
 	}
 	
+	public Player searchPlayer(long id)
+	{
+		for(int i=0; i<_playersVector.size(); i++)
+			if(_playersVector.elementAt(i).get_id() == id)
+				return _playersVector.elementAt(i);
+		return null;
+	}
+	
+	public Player searchPlayer(InetAddress ip)
+	{
+		for(int i=0; i<_playersVector.size(); i++)
+			if(_playersVector.elementAt(i).get_ipAddress().equals(ip))
+				return _playersVector.elementAt(i);
+		return null;
+	}
+	
+	public boolean isPlayerInVector(long id)
+	{
+		for(int i=0; i<_playersVector.size();i++)
+			if(_playersVector.elementAt(i).get_id()==id)
+				return true;
+		return false;
+	}
+
+	
+	//Methodes privées
+	/*******************/
 	private void _displayMenu()
 	{
 		Scanner sc = new Scanner(System.in);
 		String str = "";
-		while(_state.equals(LobbyState.INITIALISING))
+		while(get_state().equals(LobbyState.WAITING))
 		{
-			System.out.println("En écoute, " + _playersVector.size() + " joueurs connectés.");
+			System.out.println("En écoute, " + get_playersVector().size() + " joueurs connectés.");
 			System.out.println("a: actualiser cette ligne.");
 			System.out.println("l: afficher la liste des joueurs.");
 			System.out.println("q: quitter sans lancer la partie.");
-			if(_playersVector.size()>=2)
+			if(get_playersVector().size()>=2)
 				System.out.println("s: lancer la partie.");
 			str=sc.nextLine();
 			if(str.toLowerCase().equals("l"))
 				System.out.println(displayPlayers());
 			else if(str.toLowerCase().equals("q"))
-				_state=LobbyState.STARTED;
-			else if(str.toLowerCase().equals("s") && _playersVector.size()>=2)
-				_state=LobbyState.READY_TO_START;
+				set_state(LobbyState.STARTED);
+			else if(str.toLowerCase().equals("s") && get_playersVector().size()>=2)
+				set_state(LobbyState.READY_TO_START);
 		}
+		sc.close();
 		
-		while(_state.equals(LobbyState.READY_TO_START))
+		while(get_state().equals(LobbyState.READY_TO_START))
 		{
 			System.out.println("Lancement du jeu.");
 		}
-		if(_state.equals(LobbyState.STARTING))
+		if(get_state().equals(LobbyState.STARTING))
 			System.out.println("Jeu lancé, fermeture du serveur du lobby.");
-		while(_state.equals(LobbyState.STARTING))
+		while(get_state().equals(LobbyState.STARTING))
 		{
 
 		}
-		if(_state.equals(LobbyState.STARTED))
+		if(get_state().equals(LobbyState.STARTED))
 		{
 			System.out.println("Lobby fermé.");
 			System.exit(0);
 		}
 	}
 	
-	
+	//getters/setters
+	/******************/
+	public LobbyState get_state() {
+		return _state;
+	}
+
+	public void set_state(LobbyState _state) {
+		this._state = _state;
+	}
+
+
+	public Vector<Player> get_playersVector() {
+		return _playersVector;
+	}
+
+	public void set_playersVector(Vector<Player> _playersVector) {
+		this._playersVector = _playersVector;
+	}
+
+
+	public int get_multicastPort() {
+		return _multicastPort;
+	}
+
+	public void set_multicastPort(int _multicastPort) {
+		this._multicastPort = _multicastPort;
+	}
+
+
+	public int get_unicastPort() {
+		return _unicastPort;
+	}
+
+	public void set_unicastPort(int _unicastPort) {
+		this._unicastPort = _unicastPort;
+	}
+
+
 	private Vector<Player> _playersVector;
 	private LobbyState _state;
-	private Communicator _communicator;
-	private int _port;
-	private int _serverPort;
-	private InetAddress _serverAddress;
+	private MulticastCommunicator _multicastCommunicator;
+	private UnicastListener _unicastListener;
+	private int _multicastPort;
+	private int _unicastPort;
+	//private int _serverPort;
+	//private InetAddress _serverAddress;
 
 }
