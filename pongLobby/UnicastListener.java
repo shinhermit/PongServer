@@ -39,11 +39,11 @@ public class UnicastListener extends Thread {
 		}
 	}
 	
-	private void _sendString(String msg, InetAddress address){
+	private void _sendString(String msg, InetAddress address, int port){
 		String str=msg;
 		str+="\0";
 		DatagramPacket packet= new DatagramPacket(str.getBytes(), str.length(),
-				address,_lobby.get_unicastPort());
+				address, port);
 		try{
 		_socket.send(packet);
 		}
@@ -81,8 +81,11 @@ public class UnicastListener extends Thread {
 				System.exit(1);
 			}
 			player = _lobby.searchPlayer(id);
-			_sendString("SYNC " + player.get_id(), player.get_ipAddress());
-			player.resetTimer();
+			if(!player.equals(null))
+			{
+				_sendString("SYNC " + player.get_id(), player.get_ipAddress(), player.get_port());
+				player.resetTimer();
+			}
 		}
 	}
 	//Attributs privés

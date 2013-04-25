@@ -12,7 +12,12 @@ public class PlayerTimeout implements ActionListener {
 	
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		_player.get_lobby().get_playersVector().remove(_player);
+		if(_player.get_lobby().get_playersVector().contains(_player))
+		{
+			System.out.println("Joueur déconnecté.");
+			_player.get_lobby().get_playersVector().removeElement(_player);
+			
+		}
 		_player=null;
 	}
 	

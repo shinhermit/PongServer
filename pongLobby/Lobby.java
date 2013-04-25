@@ -1,5 +1,6 @@
 package pongLobby;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Vector;
@@ -55,7 +56,7 @@ public class Lobby {
 				lobby = new Lobby(serverAddress, localPort, localPort-1, serverPort);
 			else
 				lobby = new Lobby(serverAddress);
-			lobby.startMulticastNetworkThread();
+			lobby.startNetworkThreads();
 		}
 			
 	}
@@ -79,12 +80,12 @@ public class Lobby {
 		//_serverAddress= serverAddress;
 	}
 	
-	public void startMulticastNetworkThread(){
+	public void startNetworkThreads(){
 		_multicastCommunicator = new MulticastCommunicator(this);
 		_unicastListener = new UnicastListener(this);
+		set_state(LobbyState.WAITING);
 		_multicastCommunicator.start();
 		_unicastListener.start();
-		set_state(LobbyState.WAITING);
 		_displayMenu();
 	}
 	
@@ -199,6 +200,16 @@ public class Lobby {
 		this._unicastPort = _unicastPort;
 	}
 
+	public String get_localAddress()
+	{
+		String address= "";
+		try {
+			address= Inet4Address.getLocalHost().getHostAddress();
+		} catch (UnknownHostException e) {
+			System.out.println(" Impossible d'obtrenir l'addresse locale: " + e);
+		}
+		return address;
+	}
 
 	private Vector<Player> _playersVector;
 	private LobbyState _state;
