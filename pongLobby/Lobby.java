@@ -16,7 +16,8 @@ public class Lobby {
 		int nbParameter=0;
 		for(int i=0;i<args.length;i+=2)
 		{
-			if(args[i].equals("-h")){
+			if(args[i].equals("-h"))
+			{
 				try{
 					serverAddress = InetAddress.getByName(args[i+1]);
 				}
@@ -66,8 +67,8 @@ public class Lobby {
 		set_playersVector(new Vector<Player>());
 		set_multicastPort(6665);
 		set_unicastPort(6664);
-		//_serverPort = 6666;
-		//_serverAddress= serverAddress;
+		set_serverPort(6666);
+		set_serverAddress(serverAddress);
 	}
 	
 	Lobby(InetAddress serverAddress, int unicastPort, int multicastPort, int serverPort)
@@ -76,8 +77,8 @@ public class Lobby {
 		set_playersVector(new Vector<Player>());
 		set_unicastPort(unicastPort);
 		set_multicastPort(multicastPort);
-		//_serverPort = serverPort;
-		//_serverAddress= serverAddress;
+		set_serverPort(serverPort);
+		set_serverAddress(serverAddress);
 	}
 	
 	public void startNetworkThreads(){
@@ -142,7 +143,7 @@ public class Lobby {
 			else if(str.toLowerCase().equals("q"))
 				set_state(LobbyState.STARTED);
 			else if(str.toLowerCase().equals("s") && get_playersVector().size()>=2)
-				set_state(LobbyState.READY_TO_START);
+				set_state(LobbyState.STARTING);
 		}
 		sc.close();
 		
@@ -211,13 +212,29 @@ public class Lobby {
 		return address;
 	}
 
+	public int get_serverPort() {
+		return _serverPort;
+	}
+
+	public void set_serverPort(int _serverPort) {
+		this._serverPort = _serverPort;
+	}
+
+	public InetAddress get_serverAddress() {
+		return _serverAddress;
+	}
+
+	public void set_serverAddress(InetAddress _serverAddress) {
+		this._serverAddress = _serverAddress;
+	}
+
 	private Vector<Player> _playersVector;
 	private LobbyState _state;
 	private MulticastCommunicator _multicastCommunicator;
 	private UnicastListener _unicastListener;
 	private int _multicastPort;
 	private int _unicastPort;
-	//private int _serverPort;
-	//private InetAddress _serverAddress;
+	private int _serverPort;
+	private InetAddress _serverAddress;
 
 }

@@ -14,10 +14,11 @@ public class PlayerTimeout implements ActionListener {
 	public void actionPerformed(ActionEvent arg0) {
 		if(_player.get_lobby().get_playersVector().contains(_player))
 		{
-			System.out.println("Joueur déconnecté.");
 			_player.get_lobby().get_playersVector().removeElement(_player);
 			
 		}
+		System.out.println("Joueur déconnecté: " + _player.get_id());
+		_player.stopTimer();
 		_player=null;
 	}
 	

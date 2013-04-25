@@ -9,8 +9,14 @@ public class Player {
 	set_id(id);
 	set_port(port);
 	set_ipAddress(ipAddress);
+	_lobby=lobby;
 	_timer = new Timer(500, new PlayerTimeout(this));
 	_timer.start();
+	}
+	
+	public void stopTimer()
+	{
+		_timer.stop();
 	}
 	
 	public void resetTimer()
