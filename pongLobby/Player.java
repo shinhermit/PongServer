@@ -5,12 +5,18 @@ import javax.swing.Timer;
 
 
 public class Player {
-	Player(long id, long port, InetAddress ipAddress, Lobby lobby){
+	Player(long id, int port, InetAddress ipAddress, Lobby lobby){
 	set_id(id);
 	set_port(port);
 	set_ipAddress(ipAddress);
+	_lobby=lobby;
 	_timer = new Timer(500, new PlayerTimeout(this));
 	_timer.start();
+	}
+	
+	public void stopTimer()
+	{
+		_timer.stop();
 	}
 	
 	public void resetTimer()
@@ -27,11 +33,11 @@ public class Player {
 		this._id = _id;
 	}
 	
-	public long get_port() {
+	public int get_port() {
 		return _port;
 	}
 
-	public void set_port(long port) {
+	public void set_port(int port) {
 		this._port = port;
 	}
 
@@ -55,7 +61,7 @@ public class Player {
 	//********************************************
 	private long _id;
 	private InetAddress _ipAddress;
-	private long _port;
+	private int _port;
 	private Timer _timer;
 	private Lobby _lobby;
 }

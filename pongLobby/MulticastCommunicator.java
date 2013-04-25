@@ -21,9 +21,10 @@ public class MulticastCommunicator extends Thread {
 	{	
 		_initializeSocket();
 		//Lancement de la routine de scrutations de nouveaux joueurs
-		
+
 		String str;
-		long id=0, port=0;
+		long id=0;
+		int port=0;
 		InetAddress address = null;
 		while(_lobby.get_state().equals(LobbyState.WAITING))
 		{
@@ -33,7 +34,7 @@ public class MulticastCommunicator extends Thread {
 			{
 				try{
 					id= Long.parseLong(str.split(" ")[1]);
-					port= Long.parseLong(str.split(" ")[2]);
+					port= Integer.parseInt(str.split(" ")[2]);
 				}
 				catch(NumberFormatException ex)
 				{
@@ -50,13 +51,14 @@ public class MulticastCommunicator extends Thread {
 				}
 				if(!_lobby.isPlayerInVector(id))
 				{
-					System.out.println("Un joueur s'est connecté.");
+
 					_lobby.get_playersVector().add(new Player(id, port, address, _lobby));
+					_sendString("SERVER " + id + " " + _lobby.get_unicastPort() + " " + _lobby.get_localAddress());
+					System.out.println("Un joueur s'est connecté.");
 				}
 			}
 		}
 	}
-	
 	
 	//Methodes privées
 	//********************

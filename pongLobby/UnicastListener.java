@@ -20,11 +20,36 @@ public class UnicastListener extends Thread {
 		{
 			_readPacket();
 		}
+		
+		if(_lobby.get_state().equals(LobbyState.STARTING))
+			_sendGoToAll();
 	}
 	
 	
 	//Méthodes privées
 	//*******************
+	
+	private void _sendGoToAll()
+	{
+		for(int i=0;i<_lobby.get_playersVector().size();i++)
+		{
+			String str="GO " + _lobby.get_serverPort() + " " +
+					_lobby.get_serverAddress().toString();
+			str+="\0";
+	 		DatagramPacket packet= new DatagramPacket(str.getBytes(), str.length(),
+					_lobby.get_playersVector().elementAt(i).get_ipAddress(),
+					_lobby.get_playersVector().elementAt(i).get_port());
+			try{
+				_socket.send(packet);
+			}
+			catch(IOException exception)
+			{
+				System.out.println("Impossible d'envoyer le paquet dans la socket: "
+						+ exception);
+				System.exit(1);
+			}	
+		}
+	}
 	
 	private void _initializeSocket()
 	{
@@ -39,11 +64,11 @@ public class UnicastListener extends Thread {
 		}
 	}
 	
-	private void _sendString(String msg, InetAddress address){
+	private void _sendString(String msg, InetAddress address, int port){
 		String str=msg;
 		str+="\0";
-		DatagramPacket packet= new DatagramPacket(str.getBytes(), str.length(),
-				address,_lobby.get_unicastPort());
+ 		DatagramPacket packet= new DatagramPacket(str.getBytes(), str.length(),
+				address, port);
 		try{
 		_socket.send(packet);
 		}
@@ -81,8 +106,12 @@ public class UnicastListener extends Thread {
 				System.exit(1);
 			}
 			player = _lobby.searchPlayer(id);
-			_sendString("SYNC " + player.get_id(), player.get_ipAddress());
-			player.resetTimer();
+			if(player != null)
+			{
+				_sendString("SYNC " + player.get_id(), player.get_ipAddress(), player.get_port());
+				player.resetTimer();
+			}
+
 		}
 	}
 	//Attributs privés
