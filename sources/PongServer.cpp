@@ -38,6 +38,7 @@ PongServer::PongServer(const qint16 & port):
 
 
     connect(&_view, SIGNAL(startClickedSignal()), this, SLOT(startRequestedSlot()) );
+    connect( &_view, SIGNAL(connectToLobbySignal()), this, SLOT(connectToLobby()) );
     connect(&_view, SIGNAL(exitSignal()), this, SLOT(quitSlot()) );
 
     //debug

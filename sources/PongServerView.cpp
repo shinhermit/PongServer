@@ -70,3 +70,8 @@ void PongServerView::appendStatusSlot(const QString &status)
 {
     appendStatus(status);
 }
+
+void PongServerView::connectToLobby()
+{
+    emit connectToLobbySignal();
+}

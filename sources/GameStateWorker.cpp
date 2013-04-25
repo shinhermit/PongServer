@@ -315,6 +315,9 @@ void GameStateWorker::_manage_game_over()
 
     emit stopMovingBall();
 
+    lockGameState();
+    PongShared::gameState.setResetRequested();
+    unlockGameState();
 
     emit gameOverSignal();
 }

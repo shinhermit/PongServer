@@ -28,9 +28,11 @@ public:
 signals:
     void startClickedSignal();
     void exitSignal();
+    void connectToLobbySignal();
 
 public slots:
     void appendStatusSlot(const QString & status);
+    void connectToLobby();
 
 private slots:
     void startClickedSlot();

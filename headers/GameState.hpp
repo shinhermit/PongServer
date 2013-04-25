@@ -24,6 +24,7 @@ class GameState : public Lockable
   void setNoParty();
   void setStateError();
   void setStartRequested();
+  void setResetRequested();
 
   void setLoserIndex(const qint32 & index);
   void setDownCounter(const qint32 & value);
