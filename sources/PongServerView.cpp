@@ -44,6 +44,16 @@ QString PongServerView::status() const
     return _ui->statusText->toPlainText();
 }
 
+QString PongServerView::lobbyHost() const
+{
+    return _ui->lobbyHost->text();
+}
+
+qint16 PongServerView::lobbyPort() const
+{
+    return (qint16)_ui->lobbyPort->value();
+}
+
 
 void PongServerView::startClickedSlot()
 {

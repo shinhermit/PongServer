@@ -1,7 +1,8 @@
 #include "PongServer.hpp"
 
 PongServer::PongServer(const qint16 & port):
-    _playerLogger(port)
+    _playerLogger(port),
+    _lobbyAgent(new QTcpSocket)
 {
     PongShared::gameState.setNoParty();
     PongShared::playingArea.build();
@@ -22,11 +23,14 @@ PongServer::PongServer(const qint16 & port):
     connect( this, SIGNAL(stopService()), &_ballMover, SLOT(notBusyQuit()) );
     connect( &_ballMoverThread, SIGNAL(finished()), this, SLOT(threadTerminated()) );
 
+    connect( &_lobbyAgent, SIGNAL(startSignal()), this, SLOT(startRequestedSlot()) );
+    connect( &_lobbyAgent, SIGNAL(finishedSignal()), &_lobbyAgentThread, SLOT(quit()) );
+    connect( &_lobbyAgent, SIGNAL(appendStatus(QString)), &_view, SLOT(appendStatusSlot(QString)) );
+    connect( this, SIGNAL(stopService()), &_lobbyAgent, SLOT(notBusyQuit()) );
+
     _gameStateChecker.moveToThread(&_gameStateCheckerThread);
     _ballMover.moveToThread(&_ballMoverThread);
-
-    _gameStateCheckerThread.start();
-    _ballMoverThread.start();
+    _lobbyAgent.moveToThread(&_lobbyAgentThread);
 
     connect( this, SIGNAL(startService()), &_playerLogger, SLOT(waitConnections()) );
     connect( &_playerLogger, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
@@ -44,6 +48,10 @@ void PongServer::start()
 {
     _view.show();
 
+    _gameStateCheckerThread.start();
+    _ballMoverThread.start();
+    _lobbyAgentThread.start();
+
     emit newGameSignal();
 }
 
@@ -52,6 +60,13 @@ void PongServer::showScene()
     _graphicScene.addItem( PongShared::playingArea.scene() );
     _graphicView.setScene(&_graphicScene);
     _graphicView.show();
+}
+
+void PongServer::connectToLobby()
+{
+    QString lobbyHost = _view.lobbyHost();
+    qint16 lobbyPort = _view.lobbyPort();
+    _lobbyAgent.connectToLobby(lobbyHost, lobbyPort);
 }
 
 void PongServer::gameStateErrorSlot(const QString &mess)

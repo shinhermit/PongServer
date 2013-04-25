@@ -14,7 +14,7 @@
 #include "PongShared.hpp"
 #include "PongServerView.hpp"
 
-class PongServer : public QObject, public Concurrent
+class PongServer : public Concurrent
 {
     Q_OBJECT
 public:
@@ -32,6 +32,7 @@ signals:
 
 
 public slots:
+    void connectToLobby();
     void newGameSlot();
     void gameStateErrorSlot(const QString & mess);
     void newPlayerConnected();
@@ -51,11 +52,12 @@ private:
     GameStateWorker _gameStateChecker;
     LoggerWorker _playerLogger;
     BallMover _ballMover;
+    LobbyAgent _lobbyAgent;
 
     //thread object
     QThread _gameStateCheckerThread;
     QThread _ballMoverThread;
-
+    QThread _lobbyAgentThread;
 
     void _reset_gameState();
     void _reset_playersStates();

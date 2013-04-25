@@ -6,10 +6,11 @@
 
 #include "PongShared.hpp"
 
-class Concurrent
+class Concurrent : public QObject
 {
+    Q_OBJECT
 public:
-    Concurrent();
+    Concurrent(QObject * parent=0);
 
     void lockGameState();
     void lockPlayingArea();
@@ -18,6 +19,15 @@ public:
     void unlockGameState();
     void unlockPlayingArea();
     void unlockPlayersStates();
+
+public slots:
+    void notBusyQuit();
+
+protected:
+    bool _exit_requested();
+
+signals:
+    void finishedSignal();
 
 private:
     bool _I_locked_gameState;

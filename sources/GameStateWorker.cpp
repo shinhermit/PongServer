@@ -1,7 +1,7 @@
 #include "GameStateWorker.hpp"
 
 GameStateWorker::GameStateWorker(QObject *parent):
-    QObject(parent),
+    Concurrent(parent),
     _downCounter(-1)
 {
     connect( &_timer, SIGNAL(timeout()), this, SLOT(_countDownSlot()) );
@@ -123,7 +123,7 @@ void GameStateWorker::notBusyQuit()
     if( _timer.isActive() )
         _timer.stop();
 
-    emit finishedSignal();
+    Concurrent::notBusyQuit();
 }
 
 void GameStateWorker::_check_running_routine()
@@ -314,6 +314,8 @@ void GameStateWorker::_manage_game_over()
     emit appendStatusSignal("GameStateWorker::_manage_game_over: game over state detected");
 
     emit stopMovingBall();
+
+
     emit gameOverSignal();
 }
 
@@ -327,15 +329,4 @@ void GameStateWorker::_manage_not_enough_players()
     emit appendStatusSignal("GameStateWorker::_manage_not_enough_players(): too few players remaining");
 
     _manage_game_over();
-}
-
-bool GameStateWorker::_exit_requested()
-{
-    bool requested;
-
-    lockGameState();
-    requested  = ( PongShared::gameState.state() == PongTypes::EXIT_REQUESTED );
-    unlockGameState();
-
-    return requested;
 }

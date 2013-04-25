@@ -12,17 +12,15 @@
 #include "PongTypes.hpp"
 #include "PongServerView.hpp"
 
-class GameStateWorker : public QObject, public Concurrent
+class GameStateWorker : public Concurrent
 {
     Q_OBJECT
-
 public:
     GameStateWorker(QObject * parent=0);
 
 signals:
     void checkInitSignal();
     void checkRunningSignal();
-    void finishedSignal();
     void appendStatusSignal(const QString & status);
     void gameOverSignal();
     void startMovingBall();
@@ -62,8 +60,6 @@ private:
     bool _enough_players();
 
     void _manage_not_enough_players();
-
-    bool _exit_requested();
 };
 
 #endif

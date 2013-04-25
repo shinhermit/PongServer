@@ -22,6 +22,8 @@ public:
     void disableQuitButton();
 
     QString status()const;
+    QString lobbyHost()const;
+    qint16 lobbyPort()const;
 
 signals:
     void startClickedSignal();

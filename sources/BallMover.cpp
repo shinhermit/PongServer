@@ -71,14 +71,3 @@ void BallMover::notBusyQuit()
 
     emit finishedSignal();
 }
-
-bool BallMover::_exit_requested()
-{
-    bool requested;
-
-    lockGameState();
-    requested = ( PongShared::gameState.state() == PongTypes::EXIT_REQUESTED );
-    unlockGameState();
-
-    return requested;
-}

@@ -16,7 +16,7 @@
 #include "SocketWorker.hpp"
 #include "PongServerView.hpp"
 
-class LoggerWorker : public QObject, public Concurrent
+class LoggerWorker : public Concurrent
 {
     Q_OBJECT
 public:
@@ -43,8 +43,6 @@ private:
     static const short _maxPending;
 
     bool _loggableGameState();
-
-    bool _exit_requested();
 };
 
 #endif

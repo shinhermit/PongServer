@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>519</width>
-    <height>455</height>
+    <width>560</width>
+    <height>522</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -42,6 +42,57 @@
        </property>
        <property name="text">
         <string>Start</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Lobby: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="lobbyHost">
+       <property name="maximumSize">
+        <size>
+         <width>200</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>127.0.0.1</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>port:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="lobbyPort">
+       <property name="minimum">
+        <number>1024</number>
+       </property>
+       <property name="maximum">
+        <number>65535</number>
+       </property>
+       <property name="value">
+        <number>6666</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton">
+       <property name="text">
+        <string>connect</string>
        </property>
       </widget>
      </item>
@@ -93,9 +144,26 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>PongServerView</receiver>
+   <slot>connectToLobby()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>491</x>
+     <y>61</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>547</x>
+     <y>43</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>startClickedSlot()</slot>
   <slot>quitClickedSlot()</slot>
+  <slot>connectToLobby()</slot>
  </slots>
 </ui>

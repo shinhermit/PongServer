@@ -1,6 +1,7 @@
 #include "Concurrent.hpp"
 
-Concurrent::Concurrent():
+Concurrent::Concurrent(QObject * parent):
+    QObject(parent),
     _I_locked_gameState(false),
     _I_locked_playingArea(false),
     _I_locked_playersStates(false)
@@ -58,4 +59,20 @@ void Concurrent::unlockPlayersStates()
         PongShared::playersStatesMutex.unlock();
         _I_locked_playersStates = false;
     }
+}
+
+void Concurrent::notBusyQuit()
+{
+    emit finishedSignal();
+}
+
+bool Concurrent::_exit_requested()
+{
+    bool requested;
+
+    lockGameState();
+    requested  = ( PongShared::gameState.state() == PongTypes::EXIT_REQUESTED );
+    unlockGameState();
+
+    return requested;
 }

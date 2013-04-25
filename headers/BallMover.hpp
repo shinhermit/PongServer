@@ -10,7 +10,7 @@
 #include "PongShared.hpp"
 #include "PongTypes.hpp"
 
-class BallMover : public QObject, public Concurrent
+class BallMover : public Concurrent
 {
     Q_OBJECT
 public:
@@ -23,7 +23,6 @@ public:
     qint32 period()const;
 
 signals:
-    void finishedSignal();
     void appendStatusSignal(QString status);
 
 public slots:
@@ -35,8 +34,6 @@ public slots:
 private:
     QTimer _timer;
     qint32 _period;
-
-    bool _exit_requested();
 };
 
 #endif // BALLMOVER_HPP

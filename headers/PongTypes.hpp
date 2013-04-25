@@ -22,6 +22,7 @@ struct PongTypes
         RUNNING,
         PAUSED,
         GAMEOVER,
+        RESET_REQUESTED,
         EXIT_REQUESTED,
         STATE_ERROR
     };

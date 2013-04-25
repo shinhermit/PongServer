@@ -3,7 +3,7 @@
 SocketWorker::SocketWorker(QTcpSocket * socket,
                            const qint32 & playerIndex,
                            QObject *parent):
-    QObject(parent),
+    Concurrent(parent),
     _playerIndex(playerIndex),
     _socket(socket)
 {
@@ -222,15 +222,4 @@ bool SocketWorker::_active_player()
     unlockPlayersStates();
 
     return active;
-}
-
-bool SocketWorker::_exit_requested()
-{
-    bool requested;
-
-    lockGameState();
-    requested = ( PongShared::gameState.state() == PongTypes::EXIT_REQUESTED );
-    unlockGameState();
-
-    return requested;
 }

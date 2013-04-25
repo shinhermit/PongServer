@@ -27,7 +27,8 @@ HEADERS += headers/GameState.hpp \
     headers/PongServerView.hpp \
     headers/PongShared.hpp \
     headers/Concurrent.hpp \
-    headers/BallMover.hpp
+    headers/BallMover.hpp \
+    headers/LobbyAgent.hpp
 FORMS += headers/PongServerView.ui
 SOURCES += sources/GameState.cpp \
            sources/GameStateWorker.cpp \
@@ -43,4 +44,5 @@ SOURCES += sources/GameState.cpp \
     sources/main.cpp \
     sources/PongShared.cpp \
     sources/Concurrent.cpp \
-    sources/BallMover.cpp
+    sources/BallMover.cpp \
+    sources/LobbyAgent.cpp

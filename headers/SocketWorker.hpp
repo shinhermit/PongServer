@@ -14,7 +14,7 @@
 #include "PongShared.hpp"
 #include "PongServerView.hpp"
 
-class SocketWorker : public QObject, public Concurrent
+class SocketWorker : public Concurrent
 {
     Q_OBJECT
 public:
@@ -49,7 +49,6 @@ private:
 
     bool _running_state();
     bool _active_player();
-    bool _exit_requested();
 };
 
 #endif
