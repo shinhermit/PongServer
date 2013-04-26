@@ -26,6 +26,7 @@ SocketWorker::~SocketWorker()
 void SocketWorker::operator>>(QDataStream &out)
 {
     qint32 nbRackets, nbPlayers, loserIndex, gameState, downCounter=-1;
+    bool discarded;
     QPointF ballPos;
     QLineF racketLine;
 
@@ -40,11 +41,19 @@ void SocketWorker::operator>>(QDataStream &out)
             downCounter = PongShared::gameState.downCounter();
         unlockGameState();
 
+        lockPlayersStates();
+        if( _playerIndex < PongShared::playersStates.size() )
+            discarded = PongShared::playersStates[_playerIndex].state() == PongTypes::DISCARDED;
+
+        else
+            qDebug() << "SocketWorker::operator>> : " << _playerIndex << " is out of bounds [0," << PongShared::playersStates.size()-1 << "]";
+        unlockPlayersStates();
+
         lockPlayingArea();
         nbRackets = PongShared::playingArea.nbRackets();
         ballPos = PongShared::playingArea.ballPos();
 
-        out << ballPos << _playerIndex << nbRackets-1 << nbPlayers << loserIndex << gameState << downCounter;
+        out << ballPos << _playerIndex << nbRackets-1 << nbPlayers << loserIndex << gameState << discarded << downCounter;
         for(qint32 playerIndex=0;
             playerIndex < nbPlayers && playerIndex < nbRackets;
             ++playerIndex)
