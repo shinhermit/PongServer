@@ -65,7 +65,7 @@
         </size>
        </property>
        <property name="text">
-        <string>192.168.1.110</string>
+        <string>10.1.13.137</string>
        </property>
       </widget>
      </item>
@@ -85,7 +85,7 @@
         <number>65535</number>
        </property>
        <property name="value">
-        <number>6666</number>
+        <number>6668</number>
        </property>
       </widget>
      </item>

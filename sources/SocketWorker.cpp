@@ -26,7 +26,7 @@ SocketWorker::~SocketWorker()
 void SocketWorker::operator>>(QDataStream &out)
 {
     qint32 nbRackets, nbPlayers, loserIndex, gameState, downCounter=-1;
-    bool discarded;
+    bool discarded = false;
     QPointF ballPos;
     QLineF racketLine;
 
@@ -237,7 +237,7 @@ void SocketWorker::disconnected()
 bool SocketWorker::_running_state()
 {
     PongTypes::E_GameState gameState;
-    PongTypes::E_PlayerState playerState;
+    PongTypes::E_PlayerState playerState = PongTypes::CONNECTED;
 
     if(!_disconnected)
     {
@@ -262,6 +262,9 @@ bool SocketWorker::_running_state()
                 &&
                 playerState != PongTypes::DISCONNECTED);
     }
+
+    else
+        return false;
 }
 
 bool SocketWorker::_active_player()

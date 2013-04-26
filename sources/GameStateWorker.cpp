@@ -212,7 +212,7 @@ void GameStateWorker::_check_collisions()
 
 void GameStateWorker::_manage_goal(const int & cageIndex)
 {
-    qint32 credit, nbActive;
+    qint32 credit=0, nbActive;
 
     emit stopMovingBall();
 
