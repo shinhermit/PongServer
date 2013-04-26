@@ -23,6 +23,8 @@ public class ServerListener extends Thread {
 			try {
 				System.out.println("En attente d'une connection");
 				socket = _serverSocket.accept();
+				_lobby.set_serverAddress(socket.getInetAddress());
+				_lobby.set_serverPort(6666);
 				System.out.println("Reçu une connection");
 			} catch (IOException e) {
 				System.out.println("Impossible de mettre en écoute la socket TCP " + e);
@@ -37,7 +39,7 @@ public class ServerListener extends Thread {
 		while(_lobby.get_state().equals(LobbyState.WAITING))
 		{}
 		if(_lobby.get_state().equals(LobbyState.STARTING))
-				_sendString(Integer.toString( _lobby.get_playersVector().size()), _outputStream);
+			_sendString(Integer.toString( _lobby.get_playersVector().size()), _outputStream);
 		
 		
 	}

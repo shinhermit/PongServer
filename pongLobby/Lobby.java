@@ -12,53 +12,8 @@ public class Lobby {
 		boolean addressGiven = false;
 		Lobby lobby=null;
 		InetAddress serverAddress= null;
-		int serverPort=0, localPort=0;
-		int nbParameter=0;
-		for(int i=0;i<args.length;i+=2)
-		{
-			if(args[i].equals("-h"))
-			{
-				try{
-					serverAddress = InetAddress.getByName(args[i+1]);
-				}
-				catch(UnknownHostException ex)
-				{
-					System.out.println("Addresse du serveur inconnue: " + ex);
-					System.exit(1);
-				}
-				addressGiven=true;
-			}
-			else if(args[i].equals("-lp")){
-				localPort=Integer.parseInt(args[i+1]);
-				nbParameter+=1;
-			}
-			else if(args[i].equals("-sp")){
-				serverPort=Integer.parseInt(args[i+1]);
-				nbParameter+=1;
-			}
-			else
-			{
-				System.out.println("Argument " + args[i] + " inconnu.");
-			}
-			
-		}
-		
-		if(!addressGiven || (nbParameter==1))
-		
-		{
-			System.out.println("Merci d'utiliser le logiciel comme suit:");
-			System.out.println("-h pour spécifier l'addresse ou le nom du serveur de jeu");
-			System.out.println("-lp pour spécifier le port du lobby");
-			System.out.println("-sp pour spécifier le port du serveur de jeu");			
-			System.out.println("merci de spécifier au moins l'addresse du serveur de jeu");
-		}
-		else{
-			if(nbParameter==2)
-				lobby = new Lobby(serverAddress, localPort, localPort-1, serverPort);
-			else
-				lobby = new Lobby(serverAddress);
-			lobby.startNetworkThreads();
-		}
+		lobby = new Lobby(serverAddress);
+		lobby.startNetworkThreads();
 			
 	}
 	
@@ -155,20 +110,29 @@ public class Lobby {
 				else if(str.toLowerCase().equals("s") && get_playersVector().size()>=2)
 					set_state(LobbyState.STARTING);
 			}
-			sc.close();
 
 			while(get_state().equals(LobbyState.READY_TO_START))
 			{
 				System.out.println("Lancement du jeu.");
 			}
 			if(get_state().equals(LobbyState.STARTING))
+			{
 				System.out.println("Jeu lancé");
+				try {
+					Thread.currentThread();
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				set_state(LobbyState.WAITING);
+			}
 			if(get_state().equals(LobbyState.STARTED))
 			{
 				System.out.println("Lobby fermé.");
 				System.exit(0);
 			}
 		}
+		sc.close();
 	}
 	
 	//getters/setters

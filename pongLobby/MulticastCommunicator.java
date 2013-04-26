@@ -114,7 +114,6 @@ public class MulticastCommunicator extends Thread {
 					+ exception);
 		}
 		String str = new String(packet.getData(), 0, packet.getLength());
-		System.out.println(str);
 		return str;
 	}
 
