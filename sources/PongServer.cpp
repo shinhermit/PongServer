@@ -30,7 +30,7 @@ PongServer::PongServer(const qint16 & port):
 
     _gameStateChecker.moveToThread(&_gameStateCheckerThread);
     _ballMover.moveToThread(&_ballMoverThread);
-    //_lobbyAgent.moveToThread(&_lobbyAgentThread);
+//    _lobbyAgent.moveToThread(&_lobbyAgentThread);
 
     connect( this, SIGNAL(startService()), &_playerLogger, SLOT(waitConnections()) );
     connect( &_playerLogger, SIGNAL(appendStatusSignal(QString)), &_view, SLOT(appendStatusSlot(QString)) );
@@ -51,7 +51,7 @@ void PongServer::start()
 
     _gameStateCheckerThread.start();
     _ballMoverThread.start();
-    //_lobbyAgentThread.start();
+//    _lobbyAgentThread.start();
 
     emit newGameSignal();
 }
@@ -223,5 +223,5 @@ void PongServer::_reset_playersStates()
 
 bool PongServer::_all_threads_finished()
 {
-    return ( _gameStateCheckerThread.isFinished() && _ballMoverThread.isFinished() );
+    return ( _gameStateCheckerThread.isFinished() && _ballMoverThread.isFinished() && _lobbyAgentThread.isFinished() );
 }

@@ -47,7 +47,6 @@ void LobbyAgent::operator<<(QDataStream & in)
 
 void LobbyAgent::ordersReceived()
 {
-    qDebug() << "LobbyAgent::ordersReceived : available = " << _socket->bytesAvailable();
     QByteArray raw;
     QDataStream rawStream(raw);
     QDataStream socketStream(_socket);
@@ -56,6 +55,8 @@ void LobbyAgent::ordersReceived()
     {
         socketStream >> raw;
         (*this) << rawStream;
+
+        qDebug() << "LobbyAgent::ordersReceived : _nbPlayersToWait=" << _nbPlayersTowait;
 
         emit beginCheckNbPlayers();
     }
