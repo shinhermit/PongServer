@@ -93,6 +93,7 @@ public class UnicastListener extends Thread {
 					+ exception);
 		}
 		String str = new String(packet.getData(), 0, packet.getLength());
+		System.out.println(str);
 		String[] strl= str.split(" ");
 		if(strl[0].equals("ACK"))
 		{

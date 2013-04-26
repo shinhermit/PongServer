@@ -69,6 +69,7 @@ public class Lobby {
 		set_unicastPort(6664);
 		set_serverPort(6666);
 		set_serverAddress(serverAddress);
+		set_isServerReady(false);
 	}
 	
 	Lobby(InetAddress serverAddress, int unicastPort, int multicastPort, int serverPort)
@@ -79,14 +80,17 @@ public class Lobby {
 		set_multicastPort(multicastPort);
 		set_serverPort(serverPort);
 		set_serverAddress(serverAddress);
+		set_isServerReady(false);
 	}
 	
 	public void startNetworkThreads(){
 		_multicastCommunicator = new MulticastCommunicator(this);
 		_unicastListener = new UnicastListener(this);
+		_serverListener = new ServerListener(this);
 		set_state(LobbyState.WAITING);
 		_multicastCommunicator.start();
 		_unicastListener.start();
+		_serverListener.start();
 		_displayMenu();
 	}
 	
@@ -127,40 +131,43 @@ public class Lobby {
 	/*******************/
 	private void _displayMenu()
 	{
+		_quit = false;
 		Scanner sc = new Scanner(System.in);
 		String str = "";
-		while(get_state().equals(LobbyState.WAITING))
+		while(!_quit)
 		{
-			System.out.println("En écoute, " + get_playersVector().size() + " joueurs connectés.");
-			System.out.println("a: actualiser cette ligne.");
-			System.out.println("l: afficher la liste des joueurs.");
-			System.out.println("q: quitter sans lancer la partie.");
-			if(get_playersVector().size()>=2)
-				System.out.println("s: lancer la partie.");
-			str=sc.nextLine();
-			if(str.toLowerCase().equals("l"))
-				System.out.println(displayPlayers());
-			else if(str.toLowerCase().equals("q"))
-				set_state(LobbyState.STARTED);
-			else if(str.toLowerCase().equals("s") && get_playersVector().size()>=2)
-				set_state(LobbyState.STARTING);
-		}
-		sc.close();
-		
-		while(get_state().equals(LobbyState.READY_TO_START))
-		{
-			System.out.println("Lancement du jeu.");
-		}
-		if(get_state().equals(LobbyState.STARTING))
-			System.out.println("Jeu lancé, fermeture du serveur du lobby.");
-		while(get_state().equals(LobbyState.STARTING))
-		{
+			while(get_state().equals(LobbyState.WAITING))
+			{
+				System.out.println("En écoute, " + get_playersVector().size() + " joueurs connectés.");
+				System.out.println("a: actualiser cette ligne.");
+				System.out.println("l: afficher la liste des joueurs.");
+				System.out.println("q: quitter sans lancer la partie.");
+				if(get_playersVector().size()>=2)
+					System.out.println("s: lancer la partie.");
+				str=sc.nextLine();
+				if(str.toLowerCase().equals("l"))
+					System.out.println(displayPlayers());
+				else if(str.toLowerCase().equals("q"))
+				{
+					set_state(LobbyState.STARTED);
+					_quit = true;
+				}
+				else if(str.toLowerCase().equals("s") && get_playersVector().size()>=2)
+					set_state(LobbyState.STARTING);
+			}
+			sc.close();
 
-		}
-		if(get_state().equals(LobbyState.STARTED))
-		{
-			System.out.println("Lobby fermé.");
-			System.exit(0);
+			while(get_state().equals(LobbyState.READY_TO_START))
+			{
+				System.out.println("Lancement du jeu.");
+			}
+			if(get_state().equals(LobbyState.STARTING))
+				System.out.println("Jeu lancé");
+			if(get_state().equals(LobbyState.STARTED))
+			{
+				System.out.println("Lobby fermé.");
+				System.exit(0);
+			}
 		}
 	}
 	
@@ -228,13 +235,24 @@ public class Lobby {
 		this._serverAddress = _serverAddress;
 	}
 
+	public boolean is_isServerReady() {
+		return _isServerReady;
+	}
+
+	public void set_isServerReady(boolean _isServerReady) {
+		this._isServerReady = _isServerReady;
+	}
+
+	private boolean _quit;
 	private Vector<Player> _playersVector;
 	private LobbyState _state;
 	private MulticastCommunicator _multicastCommunicator;
 	private UnicastListener _unicastListener;
+	private ServerListener _serverListener;
 	private int _multicastPort;
 	private int _unicastPort;
 	private int _serverPort;
 	private InetAddress _serverAddress;
+	private boolean _isServerReady;
 
 }
