@@ -26,7 +26,7 @@ public class MulticastCommunicator extends Thread {
 		long id=0;
 		int port=0;
 		InetAddress address = null;
-		while(_lobby.get_state().equals(LobbyState.WAITING))
+		while(!_lobby.get_state().equals(LobbyState.STARTED))
 		{
 			str="";
 			str= _receiveString();

@@ -108,7 +108,10 @@ public class Lobby {
 					_quit = true;
 				}
 				else if(str.toLowerCase().equals("s") && get_playersVector().size()>=2)
+				    {
 					set_state(LobbyState.STARTING);
+					notifyAll();
+				    }
 			}
 
 			while(get_state().equals(LobbyState.READY_TO_START))
