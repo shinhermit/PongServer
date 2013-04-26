@@ -34,7 +34,7 @@ void BallMover::startMoving()
         _timer.start(_period);
 
     else
-        emit finishedSignal();
+        _finish();
 }
 
 void BallMover::moveBall()
@@ -49,7 +49,7 @@ void BallMover::moveBall()
     else
     {
         _timer.stop();
-        emit finishedSignal();
+        _finish();
     }
 }
 
@@ -61,7 +61,7 @@ void BallMover::stopMoving()
         _timer.stop();
 
     if( _exit_requested() )
-        emit finishedSignal();
+        _finish();
 }
 
 void BallMover::notBusyQuit()
@@ -69,5 +69,5 @@ void BallMover::notBusyQuit()
     if( _timer.isActive() )
         _timer.stop();
 
-    emit finishedSignal();
+    _finish();
 }

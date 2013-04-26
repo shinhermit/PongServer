@@ -25,7 +25,7 @@ void GameStateWorker::waitStartSlot()
         _wait_start_routine();
 
     if(state == PongTypes::EXIT_REQUESTED)
-        emit finishedSignal();
+        _finish();
 }
 
 void GameStateWorker::_wait_start_routine()
@@ -41,7 +41,7 @@ void GameStateWorker::_wait_start_routine()
         QTimer::singleShot( 5, this, SLOT(_wait_start_routine()) );
 
     else if( state == PongTypes::EXIT_REQUESTED )
-        emit finishedSignal();
+        _finish();
     else
         emit checkInitSignal();
 }
@@ -71,7 +71,7 @@ void GameStateWorker::checkInitSlot()
     }
 
     else
-        emit finishedSignal();
+        _finish();
 }
 
 void GameStateWorker::_countDownSlot()
@@ -92,7 +92,7 @@ void GameStateWorker::_countDownSlot()
         if( !_exit_requested() )
             emit checkRunningSignal();
         else
-            emit finishedSignal();
+            _finish();
     }
 }
 
@@ -152,7 +152,7 @@ void GameStateWorker::_check_running_routine()
         emit appendStatusSignal("GameStateWorker::checkRunningSlot: leaving checkRunning routine");
 
         emit stopMovingBall();
-        emit finishedSignal();
+        _finish();
     }
 }
 
@@ -217,8 +217,14 @@ void GameStateWorker::_manage_goal(const int & cageIndex)
     emit stopMovingBall();
 
     lockPlayersStates();
-    PongShared::playersStates[cageIndex].decreaseCredit();
-    credit = PongShared::playersStates[cageIndex].credit();
+    if( 0 <= cageIndex && cageIndex < PongShared::playersStates.size() )
+    {
+        PongShared::playersStates[cageIndex].decreaseCredit();
+        credit = PongShared::playersStates[cageIndex].credit();
+    }
+
+    else
+        qDebug() << "GameStateWorker::_manage_goal(" << cageIndex << "): index out of bounds [0," << PongShared::playersStates.size()-1 << "]";
     unlockPlayersStates();
 
     lockGameState();
@@ -254,8 +260,14 @@ void GameStateWorker::_manage_goal(const int & cageIndex)
 void GameStateWorker::_discard_player(const int & racketIndex)
 {
     lockPlayersStates();
-    PongShared::playersStates[racketIndex].setState(PongTypes::DISCARDED);
-    PongShared::playersStates[racketIndex].setRacket(500,500,500,500);
+    if( 0 <= racketIndex && racketIndex < PongShared::playersStates.size() )
+    {
+        PongShared::playersStates[racketIndex].setState(PongTypes::DISCARDED);
+        PongShared::playersStates[racketIndex].setRacket(500,500,500,500);
+    }
+
+    else
+        qDebug() << "GameStateWorker::_discard_player(" << racketIndex << ") : indexout of bounds [0," << PongShared::playersStates.size()-1 << "]";
     unlockPlayersStates();
 
     lockPlayingArea();

@@ -5,7 +5,8 @@ SocketWorker::SocketWorker(QTcpSocket * socket,
                            QObject *parent):
     Concurrent(parent),
     _playerIndex(playerIndex),
-    _socket(socket)
+    _socket(socket),
+    _disconnected(false)
 {
     connect( _socket, SIGNAL(readyRead()), this, SLOT(getDataSlot()) );
     connect( this, SIGNAL(sendDataSignal()), this, SLOT(sendDataSlot()) );
@@ -16,7 +17,7 @@ SocketWorker::SocketWorker(QTcpSocket * socket,
 
 SocketWorker::~SocketWorker()
 {
-    if( _socket->isOpen() )
+    if( _socket && _socket->isOpen() )
         _socket->close();
 
     _socket->deleteLater();
@@ -28,34 +29,35 @@ void SocketWorker::operator>>(QDataStream &out)
     QPointF ballPos;
     QLineF racketLine;
 
-
-    lockGameState();
-    loserIndex = PongShared::gameState.loserIndex();
-    gameState = PongShared::gameState.state();
-    nbPlayers = PongShared::gameState.nbPlayers();
-
-    if( gameState == PongTypes::INITIALIZING )
-        downCounter = PongShared::gameState.downCounter();
-    unlockGameState();
-
-    lockPlayingArea();
-    nbRackets = PongShared::playingArea.nbRackets();
-    ballPos = PongShared::playingArea.ballPos();
-
-    out << ballPos << _playerIndex << nbRackets-1 << nbPlayers << loserIndex << gameState << downCounter;
-    for(qint32 playerIndex=0;
-        playerIndex<nbPlayers && playerIndex < nbRackets;
-        ++playerIndex)
+    if(!_disconnected)
     {
-        if(playerIndex != _playerIndex)
+        lockGameState();
+        loserIndex = PongShared::gameState.loserIndex();
+        gameState = PongShared::gameState.state();
+        nbPlayers = PongShared::gameState.nbPlayers();
+
+        if( gameState == PongTypes::INITIALIZING )
+            downCounter = PongShared::gameState.downCounter();
+        unlockGameState();
+
+        lockPlayingArea();
+        nbRackets = PongShared::playingArea.nbRackets();
+        ballPos = PongShared::playingArea.ballPos();
+
+        out << ballPos << _playerIndex << nbRackets-1 << nbPlayers << loserIndex << gameState << downCounter;
+        for(qint32 playerIndex=0;
+            playerIndex < nbPlayers && playerIndex < nbRackets;
+            ++playerIndex)
         {
-            racketLine = PongShared::playingArea.racketLine(playerIndex);
+            if(playerIndex != _playerIndex)
+            {
+                racketLine = PongShared::playingArea.racketLine(playerIndex);
 
-            out << playerIndex << racketLine.p1() << racketLine.p2();
+                out << playerIndex << racketLine.p1() << racketLine.p2();
+            }
         }
+        unlockPlayingArea();
     }
-    unlockPlayingArea();
-
 }
 
 void SocketWorker::operator<<(QDataStream & in)
@@ -63,13 +65,22 @@ void SocketWorker::operator<<(QDataStream & in)
     QPointF point1, point2;
     qint32 id;
 
-    in >> id >> point1 >> point2;
+    if(!_disconnected)
+    {
+        in >> id >> point1 >> point2;
 
-    QLineF racket(point1,point2);
-    lockPlayersStates();
-    if( _active_player() )
-        PongShared::playersStates[_playerIndex].setRacket(racket);
-    unlockPlayersStates();
+        QLineF racket(point1,point2);
+        lockPlayersStates();
+        if( _active_player() )
+        {
+            if(_playerIndex < PongShared::playersStates.size())
+                PongShared::playersStates[_playerIndex].setRacket(racket);
+
+            else
+                qDebug() << "SocketWorker::operator<< : index " << _playerIndex << " is out of bounds [0," << PongShared::playersStates.size()-1 << "]";
+        }
+        unlockPlayersStates();
+    }
 }
 
 QDataStream & operator<<(QDataStream &out, SocketWorker &sckw)
@@ -88,20 +99,24 @@ QDataStream & operator>>(QDataStream &in, SocketWorker &sckw)
 
 void SocketWorker::beginInteract()
 {
-    if( !_exit_requested() )
-    {
-        //debug
-        emit appendStatusSignal("SocketWorker::beginInteract: Entering interact routine");
 
-        emit sendDataSignal();
-    }
-
-    else
+    if(!_disconnected)
     {
-        if( _socket->isOpen() )
-            _socket->close();
-        //debug
-        emit appendStatusSignal("SocketWorker::beginInteract: exit requested, can not enter interact routine");
+        if( !_exit_requested() )
+        {
+            //debug
+            emit appendStatusSignal("SocketWorker::beginInteract: Entering interact routine");
+
+            emit sendDataSignal();
+        }
+
+        else
+        {
+            if( _socket->isOpen() )
+                _socket->close();
+            //debug
+            emit appendStatusSignal("SocketWorker::beginInteract: exit requested, can not enter interact routine");
+        }
     }
 }
 
@@ -111,19 +126,22 @@ void SocketWorker::sendDataSlot()
     QDataStream socketStream(_socket);
     QDataStream rawStream(&raw, QIODevice::ReadWrite);
 
-    if( !_exit_requested() )
+    if(!_disconnected)
     {
-        //debug
-        (*this) >> rawStream;
-        socketStream << raw;
-    }
+        if( !_exit_requested() )
+        {
+            //debug
+            (*this) >> rawStream;
+            socketStream << raw;
+        }
 
-    else
-    {
-        if( _socket->isOpen() )
-            _socket->close();
-        //debug
-        emit appendStatusSignal("SocketWorker::sendDataSlot: exit requested, leaving interact routine");
+        else
+        {
+            if( _socket->isOpen() )
+                _socket->close();
+            //debug
+            emit appendStatusSignal("SocketWorker::sendDataSlot: exit requested, leaving interact routine");
+        }
     }
 }
 
@@ -133,34 +151,44 @@ void SocketWorker::getDataSlot()
     QDataStream socketStream(_socket);
     QDataStream rawStream(&raw, QIODevice::ReadWrite);
 
-    if( !_exit_requested() )
+    if(!_disconnected)
     {
-        socketStream >> raw;
-        (*this) << rawStream;
-        emit sendDataSignal();
-    }
+        if( !_exit_requested() )
+        {
+            socketStream >> raw;
+            (*this) << rawStream;
+            emit sendDataSignal();
+        }
 
-    else
-    {
-        if( _socket->isOpen() )
-            _socket->close();
-        //debug
-        emit appendStatusSignal("SocketWorker::getDataSlot: exit requested, leaving interact routine");
+        else
+        {
+            if( _socket->isOpen() )
+                _socket->close();
+            //debug
+            emit appendStatusSignal("SocketWorker::getDataSlot: exit requested, leaving interact routine");
+        }
     }
 }
 
 void SocketWorker::socketError(QAbstractSocket::SocketError socketError)
 {
-    lockPlayersStates();
-    PongShared::playersStates[_playerIndex].setState(PongTypes::SOCKET_ERROR);
-    unlockPlayersStates();
+    if(!_disconnected)
+    {
+        lockPlayersStates();
+        if( _playerIndex < PongShared::playersStates.size() )
+            PongShared::playersStates[_playerIndex].setState(PongTypes::SOCKET_ERROR);
 
-    qDebug() << "SocketWorker::socketError: error code = " << QString::number(socketError) << endl;
+        else
+            qDebug() << "SocketWorker::socketError : index " << _playerIndex << " is out of bounds [0," << PongShared::playersStates.size()-1<< "]";
+        unlockPlayersStates();
 
-    if( _socket->isOpen() )
-        _socket->close();
-    //debug
-    emit appendStatusSignal( "SocketWorker::socketError: error code = " + QString::number(socketError) );
+        qDebug() << "SocketWorker::socketError: error code = " << QString::number(socketError) << endl;
+
+        if( _socket->isOpen() )
+            _socket->close();
+        //debug
+        emit appendStatusSignal( "SocketWorker::socketError: error code = " + QString::number(socketError) );
+    }
 }
 
 void SocketWorker::disconnected()
@@ -168,9 +196,17 @@ void SocketWorker::disconnected()
     //debug
     emit appendStatusSignal("SocketWorker::disconnected: players "+QString::number(_playerIndex)+" disconnected");
 
+    _disconnected = true;
+
     lockPlayersStates();
-    PongShared::playersStates[_playerIndex].setState(PongTypes::DISCONNECTED);
-    PongShared::playersStates[_playerIndex].setRacket(500,500,500,500);
+    if( _playerIndex < PongShared::playersStates.size() )
+    {
+        PongShared::playersStates[_playerIndex].setState(PongTypes::DISCONNECTED);
+        PongShared::playersStates[_playerIndex].setRacket(500,500,500,500);
+    }
+
+    else
+        qDebug() << "SocketWorker::disconnected: index " << _playerIndex << " is out of bounds [0," << PongShared::playersStates.size()-1<< "]";
     unlockPlayersStates();
 
     lockGameState();
@@ -185,6 +221,7 @@ void SocketWorker::disconnected()
 
     if( _socket->isOpen() )
         _socket->close();
+
     deleteLater();
 }
 
@@ -193,33 +230,48 @@ bool SocketWorker::_running_state()
     PongTypes::E_GameState gameState;
     PongTypes::E_PlayerState playerState;
 
-    lockGameState();
-    gameState = PongShared::gameState.state();
-    unlockGameState();
+    if(!_disconnected)
+    {
+        lockGameState();
+        gameState = PongShared::gameState.state();
+        unlockGameState();
 
-    lockPlayersStates();
-    playerState = PongShared::playersStates[_playerIndex].state();
-    unlockPlayersStates();
+        lockPlayersStates();
+        if( _playerIndex < PongShared::playersStates.size() )
+            playerState = PongShared::playersStates[_playerIndex].state();
 
-    return (gameState != PongTypes::GAMEOVER
-            &&
-            gameState != PongTypes::EXIT_REQUESTED
-            &&
-            playerState != PongTypes::SOCKET_ERROR
-            &&
-            playerState != PongTypes::DISCONNECTED);
+
+        else
+            qDebug() << "SocketWorker::_running_state: index " << _playerIndex << " is out of bounds [0," << PongShared::playersStates.size()-1<< "]";
+        unlockPlayersStates();
+
+        return (gameState != PongTypes::GAMEOVER
+                &&
+                gameState != PongTypes::EXIT_REQUESTED
+                &&
+                playerState != PongTypes::SOCKET_ERROR
+                &&
+                playerState != PongTypes::DISCONNECTED);
+    }
 }
 
 bool SocketWorker::_active_player()
 {
-    bool active;
+    bool active=false;
 
-    lockPlayersStates();
-    active = (PongShared::playersStates[_playerIndex].state() != PongTypes::DISCARDED
-            &&
-            PongShared::playersStates[_playerIndex].state() != PongTypes::DISCONNECTED
-            );
-    unlockPlayersStates();
+    if(!_disconnected)
+    {
+        lockPlayersStates();
+        if( _playerIndex < PongShared::playersStates.size() )
+            active = (PongShared::playersStates[_playerIndex].state() != PongTypes::DISCARDED
+                    &&
+                    PongShared::playersStates[_playerIndex].state() != PongTypes::DISCONNECTED
+                    );
+
+        else
+            qDebug() << "SocketWorker::_active_players : index " << _playerIndex << " is out of bounds [0," << PongShared::playersStates.size()-1<< "]";
+        unlockPlayersStates();
+    }
 
     return active;
 }

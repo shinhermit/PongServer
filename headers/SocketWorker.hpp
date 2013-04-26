@@ -44,8 +44,8 @@ public slots:
 
 private:
     qint32 _playerIndex;
-
     QTcpSocket * _socket;
+    bool _disconnected;
 
     bool _running_state();
     bool _active_player();

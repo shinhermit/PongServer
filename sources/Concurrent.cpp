@@ -4,7 +4,8 @@ Concurrent::Concurrent(QObject * parent):
     QObject(parent),
     _I_locked_gameState(false),
     _I_locked_playingArea(false),
-    _I_locked_playersStates(false)
+    _I_locked_playersStates(false),
+    _finishEmitted(false)
 {}
 
 void Concurrent::lockGameState()
@@ -63,7 +64,11 @@ void Concurrent::unlockPlayersStates()
 
 void Concurrent::notBusyQuit()
 {
-    emit finishedSignal();
+    if(!_finishEmitted )
+    {
+        _finishEmitted = true;
+        emit finishedSignal();
+    }
 }
 
 bool Concurrent::_exit_requested()
@@ -75,4 +80,13 @@ bool Concurrent::_exit_requested()
     unlockGameState();
 
     return requested;
+}
+
+void Concurrent::_finish()
+{
+    if(!_finishEmitted )
+    {
+        _finishEmitted = true;
+        emit finishedSignal();
+    }
 }

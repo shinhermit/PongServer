@@ -25,6 +25,7 @@ public slots:
 
 protected:
     bool _exit_requested();
+    void _finish();
 
 signals:
     void finishedSignal();
@@ -33,7 +34,7 @@ private:
     bool _I_locked_gameState;
     bool _I_locked_playingArea;
     bool _I_locked_playersStates;
-    QString _lockerName;//debug
+    bool _finishEmitted;
 };
 
 #endif // CONCURRENT_HPP

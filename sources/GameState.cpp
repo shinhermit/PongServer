@@ -76,7 +76,7 @@ void GameState::setStartRequested()
 
 void GameState::setResetRequested()
 {
-    _state = PongTypes::EXIT_REQUESTED;
+    _state = PongTypes::RESET_REQUESTED;
 }
 
 void GameState::setLoserIndex(const qint32 &index)

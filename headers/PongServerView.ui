@@ -65,7 +65,7 @@
         </size>
        </property>
        <property name="text">
-        <string>127.0.0.1</string>
+        <string>192.168.1.110</string>
        </property>
       </widget>
      </item>

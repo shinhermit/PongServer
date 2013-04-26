@@ -25,20 +25,29 @@ void LobbyAgent::connectToLobby(const QString & host, const qint16 &port)
         _socket->connectToHost( host, port );
 
     else
-        emit finishedSignal();
+        _finish();
 }
 
-void LobbyAgent::operator <<(QDataStream & in)
+void LobbyAgent::operator<<(QDataStream & in)
 {
+    QString nbPlayers;
+
     if( !_exit_requested() )
-        in >> _nbPlayersTowait;
+    {
+        in >> nbPlayers;
+        qDebug() << "LobbyAgent::operator<<: nbPlayers = " << nbPlayers;
+
+        if( nbPlayers != "" && nbPlayers.toInt() > 0 )
+            _nbPlayersTowait = nbPlayers.toInt();
+    }
 
     else
-        emit finishedSignal();
+        _finish();
 }
 
 void LobbyAgent::ordersReceived()
 {
+    qDebug() << "LobbyAgent::ordersReceived : available = " << _socket->bytesAvailable();
     QByteArray raw;
     QDataStream rawStream(raw);
     QDataStream socketStream(_socket);
@@ -52,7 +61,7 @@ void LobbyAgent::ordersReceived()
     }
 
     else
-        emit finishedSignal();
+        _finish();
 
 }
 
@@ -64,7 +73,7 @@ void LobbyAgent::checkNbPlayers()
         QTimer::singleShot( 5, this, SLOT(_check_NbPlayers_routine()) );
 
     else
-        emit finishedSignal();
+        _finish();
 }
 
 void LobbyAgent::_check_NbPlayers_routine()
@@ -81,7 +90,7 @@ void LobbyAgent::_check_NbPlayers_routine()
         QTimer::singleShot( 500, this, SLOT(_check_NbPlayers_routine()) );
 
     else
-        emit finishedSignal();
+        _finish();
 }
 
 void LobbyAgent::_socketError(QAbstractSocket::SocketError socketError)
@@ -98,7 +107,7 @@ void LobbyAgent::_socketError(QAbstractSocket::SocketError socketError)
     emit appendStatus("LobbyAgent::_socketError : an error occured");
 
     if( _exit_requested() )
-        emit finishedSignal();
+        _finish();
 }
 
 qint32 LobbyAgent::_nbPlayers()

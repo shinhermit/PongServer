@@ -8,6 +8,7 @@
 #include <QDataStream>
 #include <QByteArray>
 #include <QTimer>
+#include <QErrorMessage>
 
 #include "PongShared.hpp"
 #include "Concurrent.hpp"
