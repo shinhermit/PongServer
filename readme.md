@@ -7,3 +7,5 @@ This repo contains the server.The client is [available here](https://github.com/
 Features as of now:
 * From 2 to 6 players
 * automatic generation of the playing area
+
+[Documentation](http://shinhermit.github.io/PongServer/)
